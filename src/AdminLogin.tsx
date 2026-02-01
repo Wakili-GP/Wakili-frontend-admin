@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import { Shield, Eye, EyeOff } from "lucide-react";
 // import { useToast } from "@/hooks/use-toast";
 
@@ -22,7 +23,8 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  //   const navigate = useNavigate();
+  const navigate = useNavigate();
+
   //   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -41,7 +43,7 @@ const AdminLogin = () => {
       //     title: "تم تسجيل الدخول بنجاح",
       //     description: "مرحباً بك في لوحة التحكم",
       //   });
-      //   navigate("/admin/dashboard");
+      navigate("/dashboard");
     } else {
       //   toast({
       //     title: "خطأ في تسجيل الدخول",
