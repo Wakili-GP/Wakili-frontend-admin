@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminLayout from "./AdminLayout";
 import Login from "./AdminLogin";
-import Dashboard from "./admin/AdminDashboard";
+import AdminDashboard from "./admin/AdminDashboard";
+import LawyerVerification from "./admin/LawyerVerification";
 import "./App.css";
 function App() {
   return (
@@ -9,8 +10,8 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<AdminLayout />}>
-          <Route index path="dashboard" element={<Dashboard />} />
-          {/* add other nested routes here */}
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="verification" element={<LawyerVerification />} />{" "}
         </Route>
       </Routes>
     </BrowserRouter>
