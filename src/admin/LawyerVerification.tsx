@@ -31,7 +31,7 @@ import {
   Clock,
   Filter,
 } from "lucide-react";
-// import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 
 interface VerificationDocument {
   name: string;
@@ -346,7 +346,6 @@ const LawyerVerification = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  //   const { toast } = useToast();
 
   const filteredRequests = requests.filter((request) => {
     const matchesSearch =
@@ -363,10 +362,9 @@ const LawyerVerification = () => {
       ),
     );
     setViewDialogOpen(false);
-    // toast({
-    //   title: "تمت الموافقة",
-    //   description: "تم توثيق حساب المحامي بنجاح وإرسال إشعار له",
-    // });
+    toast.success("تمت الموافقة", {
+      description: "تم توثيق حساب المحامي بنجاح وإرسال إشعار له",
+    });
   };
 
   const handleReject = () => {
@@ -380,11 +378,9 @@ const LawyerVerification = () => {
     setRejectDialogOpen(false);
     setViewDialogOpen(false);
     setRejectionReason("");
-    // toast({
-    //   title: "تم الرفض",
-    //   description: "تم رفض طلب التوثيق وإرسال إشعار للمحامي بأسباب الرفض",
-    //   variant: "destructive",
-    // });
+    toast.error("تم الرفض", {
+      description: "تم رفض طلب التوثيق وإرسال إشعار للمحامي بأسباب الرفض",
+    });
   };
 
   const getStatusBadge = (status: string) => {

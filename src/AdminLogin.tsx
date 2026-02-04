@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Shield, Eye, EyeOff } from "lucide-react";
-// import { useToast } from "@/hooks/use-toast";
 import { toast } from "@/components/ui/sonner";
 
 const ADMIN_CREDENTIALS = {
