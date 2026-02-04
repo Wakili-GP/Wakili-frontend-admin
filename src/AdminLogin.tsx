@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,9 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
 import { Shield, Eye, EyeOff } from "lucide-react";
 // import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 
 const ADMIN_CREDENTIALS = {
   email: "admin@wakili.me",
@@ -24,7 +25,6 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
   // const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -39,17 +39,14 @@ const AdminLogin = () => {
       password === ADMIN_CREDENTIALS.password
     ) {
       localStorage.setItem("adminAuth", "true");
-      //   toast({
-      //     title: "تم تسجيل الدخول بنجاح",
-      //     description: "مرحباً بك في لوحة التحكم",
-      //   });
+      toast.success("تم تسجيل الدخول بنجاح", {
+        description: "مرحباً بك في لوحة التحكم",
+      });
       navigate("/dashboard");
     } else {
-      //   toast({
-      //     title: "خطأ في تسجيل الدخول",
-      //     description: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-      //     variant: "destructive",
-      //   });
+      toast.error("خطأ في تسجيل الدخول", {
+        description: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+      });
     }
 
     setIsLoading(false);
@@ -124,7 +121,7 @@ const AdminLogin = () => {
 
             <Button
               type="submit"
-              className="cursor-pointer w-full bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium py-5 shadow-lg shadow-amber-500/20"
+              className="w-full bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium py-5 shadow-lg shadow-amber-500/20"
               disabled={isLoading}
             >
               {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
