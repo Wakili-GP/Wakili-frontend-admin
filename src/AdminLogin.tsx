@@ -121,7 +121,7 @@ const AdminLogin = () => {
 
             <Button
               type="submit"
-              className="w-full bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium py-5 shadow-lg shadow-amber-500/20"
+              className="cursor-pointer w-full bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium py-5 shadow-lg shadow-amber-500/20"
               disabled={isLoading}
             >
               {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}

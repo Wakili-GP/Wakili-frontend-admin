@@ -44,7 +44,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-// import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 
 const stats = [
   {
@@ -211,17 +211,17 @@ const AdminDashboard = () => {
       role: "admin",
     });
     setShowAddAdminModal(false);
-    // toast.success("تمت إضافة المشرف بنجاح");
+    toast.success("تمت إضافة المشرف بنجاح");
   };
 
   const handleDeleteAdmin = (id: string) => {
     const admin = admins.find((a) => a.id === id);
     if (admin?.role === "super_admin") {
-      // toast.error("لا يمكن حذف المشرف الرئيسي");
+      toast.error("لا يمكن حذف المشرف الرئيسي");
       return;
     }
     setAdmins(admins.filter((a) => a.id !== id));
-    // toast.success("تم حذف المشرف");
+    toast.success("تم حذف المشرف");
   };
 
   const getRoleBadge = (role: string) => {
