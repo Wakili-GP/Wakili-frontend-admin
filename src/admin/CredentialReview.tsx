@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -33,7 +33,7 @@ import {
   Calendar,
   ExternalLink,
 } from "lucide-react";
-// import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 
 interface PendingCredential {
   id: string;
@@ -164,12 +164,22 @@ const CredentialReview = () => {
     );
     setShowReviewModal(false);
     setSelectedCredential(null);
-    // toast.success("تمت الموافقة على المستند بنجاح");
+    // toast.success("تمت الموافقة على المستند بنجاح", {
+    //   style: {
+    //     "--normal-bg":
+    //       "color-mix(in oklab, light-dark(var(--color-green-600), var(--color-green-400)) 10%, var(--background))",
+    //     "--normal-text":
+    //       "light-dark(var(--color-green-600), var(--color-green-400))",
+    //     "--normal-border":
+    //       "light-dark(var(--color-green-600), var(--color-green-400))",
+    //   } as React.CSSProperties,
+    // });
+    toast.success("تمت الموافقة على المستند بنجاح");
   };
 
   const handleReject = (id: string) => {
     if (!rejectionReason.trim()) {
-      //   toast.error("يرجى إدخال سبب الرفض");
+      toast.error("يرجى إدخال سبب الرفض");
       return;
     }
     setCredentials((prev) =>
@@ -180,7 +190,7 @@ const CredentialReview = () => {
     setShowReviewModal(false);
     setSelectedCredential(null);
     setRejectionReason("");
-    // toast.success("تم رفض المستند وإرسال إشعار للمحامي");
+    toast.success("تم رفض المستند وإرسال إشعار للمحامي");
   };
 
   const openReviewModal = (credential: PendingCredential) => {
