@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import {
   Shield,
@@ -10,8 +10,10 @@ import {
   Menu,
   X,
   BookOpen,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -24,6 +26,11 @@ const navItems = [
     path: "/verification",
     label: "توثيق المحامين",
     icon: UserCheck,
+  },
+  {
+    path: "/credentials",
+    label: "مراجعة المؤهلات",
+    icon: GraduationCap,
   },
   {
     path: "/users",
@@ -104,11 +111,11 @@ const AdminLayout = () => {
           {/* Logo */}
           <div className="p-6 border-b border-slate-700">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-linear-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center">
                 <Shield className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="font-bold text-white">وكيلي</h1>
+                <h1 className="font-bold text-white">وكيلك</h1>
                 <p className="text-xs text-slate-400">لوحة تحكم المشرف</p>
               </div>
             </div>

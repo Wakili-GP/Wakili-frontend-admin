@@ -514,25 +514,25 @@ const LawyerVerification = () => {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-center">
               <thead>
                 <tr className="border-b border-slate-700">
-                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
+                  <th className="text-center py-3 px-4 text-slate-400 font-medium">
                     المحامي
                   </th>
-                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
+                  <th className="text-center py-3 px-4 text-slate-400 font-medium">
                     التخصص
                   </th>
-                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
+                  <th className="text-center py-3 px-4 text-slate-400 font-medium">
                     تاريخ التقديم
                   </th>
-                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
+                  <th className="text-center py-3 px-4 text-slate-400 font-medium">
                     المستندات
                   </th>
-                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
+                  <th className="text-center py-3 px-4 text-slate-400 font-medium">
                     الحالة
                   </th>
-                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
+                  <th className="text-center py-3 px-4 text-slate-400 font-medium">
                     الإجراءات
                   </th>
                 </tr>
@@ -541,7 +541,7 @@ const LawyerVerification = () => {
                 {filteredRequests.map((request) => (
                   <tr
                     key={request.id}
-                    className="border-b border-slate-700/50 hover:bg-slate-700/20"
+                    className="text-center border-b border-slate-700/50 hover:bg-slate-700/20"
                   >
                     <td className="py-4 px-4">
                       <div>
@@ -558,7 +558,7 @@ const LawyerVerification = () => {
                       {request.submittedAt}
                     </td>
                     <td className="py-4 px-4">
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 items-center justify-center">
                         <div
                           className={`w-6 h-6 rounded flex items-center justify-center ${request.documents.governmentId ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
                         >
