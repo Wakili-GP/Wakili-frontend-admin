@@ -434,27 +434,27 @@ const AdminDashboard = () => {
           <Table>
             <TableHeader>
               <TableRow className="border-slate-700 hover:bg-slate-900/50">
-                <TableHead className="text-slate-400 text-right">
+                <TableHead className="text-slate-400 text-center">
                   الاسم
                 </TableHead>
-                <TableHead className="text-slate-400 text-right">
+                <TableHead className="text-slate-400 text-center">
                   البريد الإلكتروني
                 </TableHead>
-                <TableHead className="text-slate-400 text-right">
+                <TableHead className="text-slate-400 text-center">
                   الدور
                 </TableHead>
-                <TableHead className="text-slate-400 text-right">
+                <TableHead className="text-slate-400 text-center">
                   تاريخ الإضافة
                 </TableHead>
-                <TableHead className="text-slate-400 text-right">
+                <TableHead className="text-slate-400 text-center">
                   الحالة
                 </TableHead>
-                <TableHead className="text-slate-400 text-right">
+                <TableHead className="text-slate-400 text-center">
                   الإجراءات
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="text-center">
               {admins.map((admin) => (
                 <TableRow
                   key={admin.id}
@@ -487,7 +487,7 @@ const AdminDashboard = () => {
                       size="sm"
                       onClick={() => handleDeleteAdmin(admin.id)}
                       disabled={admin.role === "super_admin"}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                      className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
