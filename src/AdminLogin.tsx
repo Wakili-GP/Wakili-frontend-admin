@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Shield, Eye, EyeOff } from "lucide-react";
+import { Shield, Eye, EyeOff, Loader, AlertCircle } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
+import { authApi } from "@/services/auth.service";
+import type { LoginInput } from "@/lib/api-types";
 
-const ADMIN_CREDENTIALS = {
+// Mock credentials for development/fallback
+const MOCK_ADMIN = {
   email: "admin@wakili.me",
   password: "admin123",
+  token: "mock-admin-token-12345",
+};
+
+const MOCK_LOGIN_RESPONSE = {
+  token: MOCK_ADMIN.token,
+  admin: {
+    id: "1",
+    name: "المشرف الرئيسي",
+    email: MOCK_ADMIN.email,
+    role: "super_admin" as const,
+  },
 };
 
 const AdminLogin = () => {
@@ -23,31 +37,70 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Check if already authenticated on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("adminToken");
+      if (token) {
+        // Try to verify token with backend
+        const verified = await authApi.verify();
+        if (verified) {
+          navigate("/dashboard");
+        }
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const loginInput: LoginInput = { email, password };
 
-    if (
-      email === ADMIN_CREDENTIALS.email &&
-      password === ADMIN_CREDENTIALS.password
-    ) {
-      localStorage.setItem("adminAuth", "true");
-      toast.success("تم تسجيل الدخول بنجاح", {
-        description: "مرحباً بك في لوحة التحكم",
-      });
-      navigate("/dashboard");
-    } else {
-      toast.error("خطأ في تسجيل الدخول", {
-        description: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-      });
+      // Try API call first
+      let result = await authApi.login(loginInput);
+
+      // Fallback to mock for development
+      if (!result) {
+        if (email === MOCK_ADMIN.email && password === MOCK_ADMIN.password) {
+          result = MOCK_LOGIN_RESPONSE;
+        } else {
+          setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+          toast.error("خطأ في تسجيل الدخول", {
+            description: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Store token
+      if (result) {
+        localStorage.setItem("adminToken", result.token);
+        localStorage.setItem("adminAuth", "true");
+        localStorage.setItem("adminUser", JSON.stringify(result.admin));
+
+        toast.success("تم تسجيل الدخول بنجاح", {
+          description: "مرحباً بك في لوحة التحكم",
+        });
+        navigate("/dashboard");
+      } else {
+        setError("فشل تسجيل الدخول");
+        toast.error("خطأ في تسجيل الدخول");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("حدث خطأ أثناء محاولة تسجيل الدخول");
+      toast.error("خطأ في الاتصال");
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (
@@ -73,6 +126,14 @@ const AdminLogin = () => {
         </CardHeader>
 
         <CardContent>
+          {error && (
+            <div className="p-4 mb-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-red-400 font-medium">{error}</p>
+              </div>
+            </div>
+          )}
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-300">
@@ -119,10 +180,17 @@ const AdminLogin = () => {
 
             <Button
               type="submit"
-              className="cursor-pointer w-full bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium py-5 shadow-lg shadow-amber-500/20"
+              className="cursor-pointer w-full bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium py-5 shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isLoading}
             >
-              {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+              {isLoading ? (
+                <>
+                  <Loader className="w-4 h-4 ml-2 animate-spin" />
+                  جاري تسجيل الدخول...
+                </>
+              ) : (
+                "تسجيل الدخول"
+              )}
             </Button>
           </form>
 

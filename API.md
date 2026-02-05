@@ -12,7 +12,90 @@ Authorization: Bearer <token>
 
 ---
 
-## 1) Get Dashboard Overview
+## 1) Admin Login
+
+**POST** `/auth/login`
+
+Authenticate admin user and receive JWT token.
+
+**Request Body**
+
+```json
+{
+  "email": "admin@wakili.me",
+  "password": "admin123"
+}
+```
+
+**Response 200**
+
+```json
+{
+  "token": "eyJhbGc...",
+  "admin": {
+    "id": "1",
+    "name": "المشرف الرئيسي",
+    "email": "admin@wakili.me",
+    "role": "super_admin"
+  }
+}
+```
+
+---
+
+## 2) Verify Session
+
+**GET** `/auth/verify`
+
+Verify current admin session and get admin info.
+
+**Response 200**
+
+(same as login response)
+
+---
+
+## 3) Logout
+
+**POST** `/auth/logout`
+
+Logout admin user and invalidate token.
+
+**Request Body**
+
+```json
+{}
+```
+
+**Response 200**
+
+```json
+{
+  "message": "تم تسجيل الخروج بنجاح"
+}
+```
+
+---
+
+## 4) Refresh Token
+
+**POST** `/auth/refresh`
+
+Refresh authentication token.
+
+**Request Body**
+
+```json
+{}
+```
+
+**Response 200**
+
+(same as login response)
+
+---
+
+## 5) Get Dashboard Overview
 
 **GET** `/dashboard`
 
@@ -65,7 +148,7 @@ Returns all dashboard data in one response.
 
 ---
 
-## 2) Get Dashboard Stats
+## 6) Get Dashboard Stats
 
 **GET** `/dashboard/stats`
 
@@ -84,7 +167,7 @@ Returns all dashboard data in one response.
 
 ---
 
-## 3) Get Recent Activities
+## 7) Get Recent Activities
 
 **GET** `/dashboard/activities?limit=5`
 
@@ -107,7 +190,7 @@ Returns all dashboard data in one response.
 
 ---
 
-## 4) Get Account Status
+## 8) Get Account Status
 
 **GET** `/dashboard/account-status`
 
@@ -144,7 +227,7 @@ Returns all dashboard data in one response.
 
 ---
 
-## 6) Create Admin
+## 10) Create Admin
 
 **POST** `/admins`
 
@@ -174,7 +257,7 @@ Returns all dashboard data in one response.
 
 ---
 
-## 7) Update Admin
+## 11) Update Admin
 
 **PATCH** `/admins/{id}`
 
@@ -202,7 +285,7 @@ Returns all dashboard data in one response.
 
 ---
 
-## 8) Delete Admin
+## 12) Delete Admin
 
 **DELETE** `/admins/{id}`
 
@@ -215,7 +298,7 @@ Returns all dashboard data in one response.
 
 ---
 
-## 9) Get Verification Requests
+## 13) Get Verification Requests
 
 **GET** `/lawyer-verification?status=pending`
 
@@ -303,7 +386,7 @@ Returns all dashboard data in one response.
 
 ---
 
-## 11) Approve Verification
+## 15) Approve Verification
 
 **POST** `/lawyer-verification/{id}/approve`
 
@@ -327,7 +410,7 @@ Returns all dashboard data in one response.
 
 ---
 
-## 12) Reject Verification
+## 16) Reject Verification
 
 **POST** `/lawyer-verification/{id}/reject`
 
@@ -351,7 +434,7 @@ Returns all dashboard data in one response.
 
 ---
 
-## 13) Search Verification Requests
+## 17) Search Verification Requests
 
 **GET** `/lawyer-verification/search?q=أحمد`
 
@@ -364,7 +447,7 @@ Returns all dashboard data in one response.
 
 ---
 
-## 14) Get Reviews
+## 18) Get Reviews
 
 **GET** `/reviews`
 
@@ -392,7 +475,7 @@ Get all reviews with optional status filter.
 
 ---
 
-## 15) Get Review Stats
+## 19) Get Review Stats
 
 **GET** `/reviews/stats`
 
@@ -433,7 +516,7 @@ Get a single review by ID.
 
 ---
 
-## 17) Update Review Status
+## 21) Update Review Status
 
 **PATCH** `/reviews/{id}/status`
 
@@ -482,7 +565,7 @@ Approve a flagged review (marks as visible and removes flag).
 
 ---
 
-## 19) Delete Review
+## 23) Delete Review
 
 **DELETE** `/reviews/{id}`
 
@@ -494,7 +577,7 @@ No content
 
 ---
 
-## 20) Search Reviews
+## 24) Search Reviews
 
 **GET** `/reviews/search?q=أحمد`
 
@@ -510,7 +593,7 @@ Search reviews by client name, lawyer name, or content.
 
 ---
 
-## 21) Get Reviews for Lawyer
+## 25) Get Reviews For Lawyer
 
 **GET** `/reviews/lawyer/{lawyerId}`
 
@@ -522,7 +605,7 @@ Get all reviews for a specific lawyer.
 
 ---
 
-## 22) Get Users
+## 26) Get Users
 
 **GET** `/users`
 
@@ -551,7 +634,7 @@ Get all users with optional type filter.
 
 ---
 
-## 23) Get User Stats
+## 27) Get User Stats
 
 **GET** `/users/stats`
 
@@ -593,7 +676,7 @@ Get a single user by ID.
 
 ---
 
-## 25) Suspend User
+## 29) Suspend User
 
 **POST** `/users/{id}/suspend`
 
@@ -618,7 +701,7 @@ Suspend a user account.
 
 ---
 
-## 26) Reinstate User
+## 30) Reinstate User
 
 **POST** `/users/{id}/reinstate`
 
@@ -641,7 +724,7 @@ Reinstate/Unsuspend a user account.
 
 ---
 
-## 27) Search Users
+## 31) Search Users
 
 **GET** `/users/search?q=محمد`
 
@@ -657,7 +740,7 @@ Search users by name or email.
 
 ---
 
-## 28) Get Suspended Users
+## 32) Get Suspended Users
 
 **GET** `/users/suspended`
 
@@ -669,7 +752,7 @@ Get all suspended users.
 
 ---
 
-## 29) Get Credentials
+## 33) Get Credentials
 
 **GET** `/credentials?status=pending`
 
@@ -704,7 +787,7 @@ Get all credentials with optional status filter.
 
 ---
 
-## 30) Get Credential Stats
+## 34) Get Credential Stats
 
 **GET** `/credentials/stats`
 
@@ -735,7 +818,7 @@ Get a single credential by ID.
 
 ---
 
-## 32) Approve Credential
+## 36) Approve Credential
 
 **POST** `/credentials/{id}/approve`
 
@@ -758,7 +841,7 @@ Approve a credential submission.
 
 ---
 
-## 33) Reject Credential
+## 37) Reject Credential
 
 **POST** `/credentials/{id}/reject`
 
@@ -783,7 +866,7 @@ Reject a credential submission with reason.
 
 ---
 
-## 34) Search Credentials
+## 38) Search Credentials
 
 **GET** `/credentials/search?q=أحمد`
 
@@ -799,7 +882,7 @@ Search credentials by lawyer name or credential details.
 
 ---
 
-## 35) Get Credentials by Type
+## 39) Get Credentials By Type
 
 **GET** `/credentials/type/{type}`
 
