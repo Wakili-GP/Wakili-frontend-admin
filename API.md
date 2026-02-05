@@ -201,6 +201,152 @@ Returns all dashboard data in one response.
 
 ---
 
+## Lawyer Verification Endpoints
+
+---
+
+## 9) Get Verification Requests
+
+**GET** `/lawyer-verification?status=pending`
+
+**Query Params**
+- `status` (optional): `pending`, `approved`, `rejected`, or omit for all
+
+**Response 200**
+```json
+[
+  {
+    "id": "1",
+    "name": "أحمد محمد علي",
+    "email": "ahmed@example.com",
+    "phone": "+20 100 123 4567",
+    "specialty": ["القانون الجنائي", "القانون التجاري"],
+    "submittedAt": "2024-01-15",
+    "status": "pending",
+    "profileImage": "https://...",
+    "bio": "محامي متخصص...",
+    "location": {
+      "country": "مصر",
+      "city": "القاهرة"
+    },
+    "yearsExperience": 10,
+    "sessionTypes": ["مكتب", "هاتف"],
+    "education": [
+      {
+        "degreeType": "بكالوريوس",
+        "fieldOfStudy": "القانون",
+        "university": "جامعة القاهرة",
+        "graduationYear": "2012"
+      }
+    ],
+    "certifications": [
+      {
+        "name": "شهادة التحكيم التجاري الدولي",
+        "issuingOrg": "مركز القاهرة للتحكيم",
+        "yearObtained": "2018",
+        "documentUrl": "https://..."
+      }
+    ],
+    "workExperience": [
+      {
+        "jobTitle": "محامي رئيسي",
+        "organization": "مكتب العدالة للمحاماة",
+        "startYear": "2018",
+        "endYear": "",
+        "isCurrent": true,
+        "description": "إدارة القضايا..."
+      }
+    ],
+    "documents": {
+      "governmentId": true,
+      "governmentIdUrl": "https://...",
+      "professionalLicense": true,
+      "professionalLicenseUrl": "https://...",
+      "identityVerification": true,
+      "educationCertificates": [
+        {
+          "name": "شهادة البكالوريوس",
+          "url": "https://...",
+          "type": "pdf",
+          "uploadedAt": "2024-01-10"
+        }
+      ]
+    },
+    "licenseNumber": "12345",
+    "issuingAuthority": "نقابة المحامين المصرية",
+    "licenseYear": "2012",
+    "barNumber": "12345"
+  }
+]
+```
+
+---
+
+## 10) Get Single Verification Request
+
+**GET** `/lawyer-verification/{id}`
+
+**Response 200**
+(same structure as above for single request)
+
+---
+
+## 11) Approve Verification
+
+**POST** `/lawyer-verification/{id}/approve`
+
+**Request Body**
+```json
+{
+  "notes": "تم التحقق من جميع الوثائق"
+}
+```
+
+**Response 200**
+```json
+{
+  "id": "1",
+  "status": "approved",
+  // ... rest of verification request
+}
+```
+
+---
+
+## 12) Reject Verification
+
+**POST** `/lawyer-verification/{id}/reject`
+
+**Request Body**
+```json
+{
+  "reason": "الوثائق المرفقة غير صحيحة"
+}
+```
+
+**Response 200**
+```json
+{
+  "id": "1",
+  "status": "rejected",
+  // ... rest of verification request
+}
+```
+
+---
+
+## 13) Search Verification Requests
+
+**GET** `/lawyer-verification/search?q=أحمد`
+
+**Query Params**
+- `q` (required): Search query (name, email, etc.)
+
+**Response 200**
+(array of matching verification requests)
+
+---
+
 ## Errors
 
 **Response 4xx/5xx**

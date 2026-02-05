@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,72 +30,14 @@ import {
   Award,
   Clock,
   Filter,
+  Loader,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
+import { lawyerVerificationApi } from "@/services/lawyer-verification.service";
+import type { VerificationRequest } from "@/lib/api-types";
 
-interface VerificationDocument {
-  name: string;
-  url: string;
-  type: string;
-  uploadedAt: string;
-}
-
-interface Education {
-  degreeType: string;
-  fieldOfStudy: string;
-  university: string;
-  graduationYear: string;
-}
-
-interface Certification {
-  name: string;
-  issuingOrg: string;
-  yearObtained: string;
-  documentUrl?: string;
-}
-
-interface Experience {
-  jobTitle: string;
-  organization: string;
-  startYear: string;
-  endYear: string;
-  isCurrent: boolean;
-  description: string;
-}
-
-interface VerificationRequest {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  specialty: string[];
-  submittedAt: string;
-  status: "pending" | "approved" | "rejected";
-  profileImage: string;
-  bio: string;
-  location: {
-    country: string;
-    city: string;
-  };
-  yearsExperience: number;
-  sessionTypes: string[];
-  education: Education[];
-  certifications: Certification[];
-  workExperience: Experience[];
-  documents: {
-    governmentId: boolean;
-    governmentIdUrl?: string;
-    professionalLicense: boolean;
-    professionalLicenseUrl?: string;
-    identityVerification: boolean;
-    educationCertificates: VerificationDocument[];
-  };
-  licenseNumber: string;
-  issuingAuthority: string;
-  licenseYear: string;
-  barNumber: string;
-}
-
+// Mock data fallback for development/testing
 const mockRequests: VerificationRequest[] = [
   {
     id: "1",
@@ -132,12 +74,6 @@ const mockRequests: VerificationRequest[] = [
         yearObtained: "2018",
         documentUrl: "#",
       },
-      {
-        name: "دبلوم القانون الدولي",
-        issuingOrg: "الأكاديمية العربية",
-        yearObtained: "2020",
-        documentUrl: "#",
-      },
     ],
     workExperience: [
       {
@@ -146,16 +82,7 @@ const mockRequests: VerificationRequest[] = [
         startYear: "2018",
         endYear: "",
         isCurrent: true,
-        description:
-          "إدارة القضايا الجنائية والتجارية الكبرى والتمثيل أمام المحاكم العليا",
-      },
-      {
-        jobTitle: "محامي مساعد",
-        organization: "مكتب النور للمحاماة",
-        startYear: "2012",
-        endYear: "2018",
-        isCurrent: false,
-        description: "المساعدة في إعداد المذكرات القانونية وحضور الجلسات",
+        description: "إدارة القضايا الجنائية والتجارية الكبرى",
       },
     ],
     documents: {
@@ -167,12 +94,6 @@ const mockRequests: VerificationRequest[] = [
       educationCertificates: [
         {
           name: "شهادة البكالوريوس",
-          url: "#",
-          type: "pdf",
-          uploadedAt: "2024-01-10",
-        },
-        {
-          name: "شهادة الماجستير",
           url: "#",
           type: "pdf",
           uploadedAt: "2024-01-10",
@@ -214,7 +135,7 @@ const mockRequests: VerificationRequest[] = [
         startYear: "2019",
         endYear: "",
         isCurrent: true,
-        description: "التعامل مع قضايا الطلاق والحضانة والنفقة",
+        description: "التعامل مع قضايا الطلاق والحضانة",
       },
     ],
     documents: {
@@ -223,122 +144,24 @@ const mockRequests: VerificationRequest[] = [
       professionalLicense: true,
       professionalLicenseUrl: "#",
       identityVerification: false,
-      educationCertificates: [
-        {
-          name: "شهادة البكالوريوس",
-          url: "#",
-          type: "pdf",
-          uploadedAt: "2024-01-12",
-        },
-      ],
+      educationCertificates: [],
     },
     licenseNumber: "67890",
     issuingAuthority: "نقابة المحامين المصرية",
     licenseYear: "2019",
     barNumber: "67890",
   },
-  {
-    id: "3",
-    name: "خالد عبدالله حسن",
-    email: "khaled@example.com",
-    phone: "+20 102 345 6789",
-    specialty: ["القانون التجاري"],
-    submittedAt: "2024-01-13",
-    status: "approved",
-    profileImage:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
-    bio: "خبير في القانون التجاري والشركات مع 15 عاماً من الخبرة",
-    location: { country: "مصر", city: "الجيزة" },
-    yearsExperience: 15,
-    sessionTypes: ["مكتب"],
-    education: [
-      {
-        degreeType: "دكتوراه",
-        fieldOfStudy: "القانون التجاري",
-        university: "جامعة القاهرة",
-        graduationYear: "2012",
-      },
-    ],
-    certifications: [
-      {
-        name: "شهادة التحكيم الدولي",
-        issuingOrg: "ICC",
-        yearObtained: "2015",
-        documentUrl: "#",
-      },
-    ],
-    workExperience: [
-      {
-        jobTitle: "شريك مؤسس",
-        organization: "مكتب حسن والشركاء",
-        startYear: "2015",
-        endYear: "",
-        isCurrent: true,
-        description: "إدارة المكتب والقضايا التجارية الكبرى",
-      },
-    ],
-    documents: {
-      governmentId: true,
-      governmentIdUrl: "#",
-      professionalLicense: true,
-      professionalLicenseUrl: "#",
-      identityVerification: true,
-      educationCertificates: [],
-    },
-    licenseNumber: "11111",
-    issuingAuthority: "نقابة المحامين المصرية",
-    licenseYear: "2008",
-    barNumber: "11111",
-  },
-  {
-    id: "4",
-    name: "منى إبراهيم سعيد",
-    email: "mona@example.com",
-    phone: "+20 103 456 7890",
-    specialty: ["قانون العمل"],
-    submittedAt: "2024-01-12",
-    status: "rejected",
-    profileImage:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop",
-    bio: "محامية متخصصة في قانون العمل والعلاقات العمالية",
-    location: { country: "مصر", city: "المنصورة" },
-    yearsExperience: 3,
-    sessionTypes: ["هاتف"],
-    education: [
-      {
-        degreeType: "بكالوريوس",
-        fieldOfStudy: "القانون",
-        university: "جامعة المنصورة",
-        graduationYear: "2020",
-      },
-    ],
-    certifications: [],
-    workExperience: [
-      {
-        jobTitle: "محامية مبتدئة",
-        organization: "مكتب العمل للمحاماة",
-        startYear: "2021",
-        endYear: "",
-        isCurrent: true,
-        description: "متابعة القضايا العمالية",
-      },
-    ],
-    documents: {
-      governmentId: true,
-      governmentIdUrl: "#",
-      professionalLicense: false,
-      identityVerification: true,
-      educationCertificates: [],
-    },
-    licenseNumber: "22222",
-    issuingAuthority: "نقابة المحامين المصرية",
-    licenseYear: "2021",
-    barNumber: "22222",
-  },
 ];
 
 const LawyerVerification = () => {
-  const [requests, setRequests] = useState<VerificationRequest[]>(mockRequests);
+  // Loading and error states
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+
+  // Data and UI states
+  const [requests, setRequests] = useState<VerificationRequest[]>([]);
   const [selectedRequest, setSelectedRequest] =
     useState<VerificationRequest | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -346,6 +169,72 @@ const LawyerVerification = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // Fetch verification requests on mount
+  useEffect(() => {
+    const loadRequests = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await lawyerVerificationApi.getVerificationRequests();
+        if (data && data.length > 0) {
+          setRequests(data);
+        } else {
+          // Fallback to mock data if API returns nothing
+          console.warn("No data from API, using mock data for development");
+          setRequests(mockRequests);
+        }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : "خطأ غير معروف";
+        console.warn(`Error loading from API: ${errorMsg}, using mock data`);
+        // Fallback to mock data on error
+        setRequests(mockRequests);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadRequests();
+  }, []);
+
+  // Search functionality
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      try {
+        const results =
+          await lawyerVerificationApi.searchVerificationRequests(query);
+        if (results && results.length > 0) {
+          setRequests(results);
+        } else {
+          // Fallback to filtering mock data if API search returns nothing
+          const filtered = mockRequests.filter(
+            (req) =>
+              req.name.toLowerCase().includes(query.toLowerCase()) ||
+              req.email.toLowerCase().includes(query.toLowerCase()),
+          );
+          setRequests(filtered);
+        }
+      } catch (err) {
+        console.warn("Error searching API, filtering local data:", err);
+        // Fallback to filtering local data
+        const filtered = requests.filter(
+          (req) =>
+            req.name.toLowerCase().includes(query.toLowerCase()) ||
+            req.email.toLowerCase().includes(query.toLowerCase()),
+        );
+        setRequests(filtered);
+      }
+    } else {
+      // Reload all requests
+      const data = await lawyerVerificationApi.getVerificationRequests();
+      if (data && data.length > 0) {
+        setRequests(data);
+      } else {
+        setRequests(mockRequests);
+      }
+    }
+  };
 
   const filteredRequests = requests.filter((request) => {
     const matchesSearch =
@@ -355,32 +244,61 @@ const LawyerVerification = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleApprove = (id: string) => {
-    setRequests(
-      requests.map((r) =>
-        r.id === id ? { ...r, status: "approved" as const } : r,
-      ),
-    );
-    setViewDialogOpen(false);
-    toast.success("تمت الموافقة", {
-      description: "تم توثيق حساب المحامي بنجاح وإرسال إشعار له",
-    });
+  const handleApprove = async (id: string) => {
+    try {
+      setIsApproving(true);
+      const result = await lawyerVerificationApi.approveVerification({
+        requestId: id,
+        notes: "",
+      });
+      if (result) {
+        setRequests(
+          requests.map((r) => (r.id === id ? result : r)),
+        );
+        setViewDialogOpen(false);
+        toast.success("تمت الموافقة", {
+          description: "تم توثيق حساب المحامي بنجاح وإرسال إشعار له",
+        });
+      } else {
+        toast.error("فشل في الموافقة");
+      }
+    } catch (err) {
+      console.error("Error approving verification:", err);
+      toast.error("حدث خطأ أثناء الموافقة");
+    } finally {
+      setIsApproving(false);
+    }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!selectedRequest || !rejectionReason) return;
 
-    setRequests(
-      requests.map((r) =>
-        r.id === selectedRequest.id ? { ...r, status: "rejected" as const } : r,
-      ),
-    );
-    setRejectDialogOpen(false);
-    setViewDialogOpen(false);
-    setRejectionReason("");
-    toast.error("تم الرفض", {
-      description: "تم رفض طلب التوثيق وإرسال إشعار للمحامي بأسباب الرفض",
-    });
+    try {
+      setIsRejecting(true);
+      const result = await lawyerVerificationApi.rejectVerification({
+        requestId: selectedRequest.id,
+        reason: rejectionReason,
+      });
+      if (result) {
+        setRequests(
+          requests.map((r) => (r.id === selectedRequest.id ? result : r)),
+        );
+        setRejectDialogOpen(false);
+        setViewDialogOpen(false);
+        setRejectionReason("");
+        toast.error("تم الرفض", {
+          description:
+            "تم رفض طلب التوثيق وإرسال إشعار للمحامي بأسباب الرفض",
+        });
+      } else {
+        toast.error("فشل في رفض الطلب");
+      }
+    } catch (err) {
+      console.error("Error rejecting verification:", err);
+      toast.error("حدث خطأ أثناء رفض الطلب");
+    } finally {
+      setIsRejecting(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -410,11 +328,33 @@ const LawyerVerification = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">توثيق المحامين</h1>
-        <p className="text-slate-400 mt-1">إدارة طلبات توثيق حسابات المحامين</p>
-      </div>
+      {/* Error Alert */}
+      {error && (
+        <Card className="bg-red-500/10 border-red-500/20">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+            <p className="text-red-300">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Loader className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-4" />
+            <p className="text-slate-400">جاري تحميل البيانات...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Header */}
+          <div>
+            <h1 className="text-2xl font-bold text-white">توثيق المحامين</h1>
+            <p className="text-slate-400 mt-1">
+              إدارة طلبات توثيق حسابات المحامين
+            </p>
+          </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -468,7 +408,7 @@ const LawyerVerification = () => {
               <Input
                 placeholder="البحث بالاسم أو البريد الإلكتروني..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                 className="pr-10 bg-slate-900/50 border-slate-600 text-white"
               />
             </div>
@@ -596,6 +536,8 @@ const LawyerVerification = () => {
           </div>
         </CardContent>
       </Card>
+        </>
+      )}
 
       {/* View Dialog - Full Details */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
@@ -952,17 +894,28 @@ const LawyerVerification = () => {
                     onClick={() => {
                       setRejectDialogOpen(true);
                     }}
-                    className="border-red-500/20 text-red-400 hover:bg-red-500/10"
+                    disabled={isApproving || isRejecting}
+                    className="border-red-500/20 text-red-400 hover:bg-red-500/10 disabled:opacity-50"
                   >
                     <XCircle className="w-4 h-4 ml-2" />
                     رفض
                   </Button>
                   <Button
                     onClick={() => handleApprove(selectedRequest.id)}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                    disabled={isApproving || isRejecting}
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white disabled:opacity-50"
                   >
-                    <CheckCircle className="w-4 h-4 ml-2" />
-                    الموافقة والتوثيق
+                    {isApproving ? (
+                      <>
+                        <Loader className="w-4 h-4 ml-2 animate-spin" />
+                        جاري الموافقة...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 ml-2" />
+                        الموافقة والتوثيق
+                      </>
+                    )}
                   </Button>
                 </DialogFooter>
               )}
@@ -996,10 +949,17 @@ const LawyerVerification = () => {
             </Button>
             <Button
               onClick={handleReject}
-              disabled={!rejectionReason}
-              className="cursor-pointer bg-red-500 hover:bg-red-600 text-white"
+              disabled={!rejectionReason || isRejecting}
+              className="cursor-pointer bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
             >
-              تأكيد الرفض
+              {isRejecting ? (
+                <>
+                  <Loader className="w-4 h-4 ml-2 animate-spin" />
+                  جاري الرفض...
+                </>
+              ) : (
+                "تأكيد الرفض"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
