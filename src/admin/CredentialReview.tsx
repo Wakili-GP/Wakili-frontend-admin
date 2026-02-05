@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,37 +32,15 @@ import {
   User,
   Calendar,
   ExternalLink,
+  Loader,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
+import { credentialReviewApi } from "@/services/credential-review.service";
+import type { PendingCredential } from "@/lib/api-types";
 
-interface PendingCredential {
-  id: string;
-  lawyerId: string;
-  lawyerName: string;
-  lawyerImage: string;
-  type: "education" | "certificate" | "experience";
-  submittedAt: string;
-  status: "pending" | "approved" | "rejected";
-  // Education fields
-  degree?: string;
-  field?: string;
-  university?: string;
-  year?: string;
-  diplomaUrl?: string;
-  // Certificate fields
-  certName?: string;
-  certIssuer?: string;
-  certYear?: string;
-  certDocumentUrl?: string;
-  // Experience fields
-  expTitle?: string;
-  expCompany?: string;
-  expStartYear?: string;
-  expEndYear?: string;
-  expDescription?: string;
-}
-
-const initialCredentials: PendingCredential[] = [
+// Mock data for fallback
+const mockCredentials: PendingCredential[] = [
   {
     id: "1",
     lawyerId: "1",
@@ -140,13 +118,39 @@ const initialCredentials: PendingCredential[] = [
 ];
 
 const CredentialReview = () => {
-  const [credentials, setCredentials] =
-    useState<PendingCredential[]>(initialCredentials);
+  const [credentials, setCredentials] = useState<PendingCredential[]>([]);
   const [selectedCredential, setSelectedCredential] =
     useState<PendingCredential | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+
+  // Load credentials on mount
+  useEffect(() => {
+    const loadCredentials = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await credentialReviewApi.getCredentials();
+        if (data && data.length > 0) {
+          setCredentials(data);
+        } else {
+          setCredentials(mockCredentials);
+        }
+      } catch (err) {
+        console.error("Failed to load credentials:", err);
+        setCredentials(mockCredentials);
+        setError("فشل في تحميل البيانات");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadCredentials();
+  }, []);
 
   const pendingCount = credentials.filter((c) => c.status === "pending").length;
   const approvedCount = credentials.filter(
@@ -156,31 +160,54 @@ const CredentialReview = () => {
     (c) => c.status === "rejected",
   ).length;
 
-  const handleApprove = (id: string) => {
-    setCredentials((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, status: "approved" as const } : c,
-      ),
-    );
-    setShowReviewModal(false);
-    setSelectedCredential(null);
-    toast.success("تمت الموافقة على المستند بنجاح");
+  const handleApprove = async (id: string) => {
+    try {
+      setIsApproving(true);
+      const result = await credentialReviewApi.approveCredential({
+        credentialId: id,
+      });
+      if (result) {
+        setCredentials((prev) => prev.map((c) => (c.id === id ? result : c)));
+        setShowReviewModal(false);
+        setSelectedCredential(null);
+        toast.success("تمت الموافقة على المستند بنجاح");
+      } else {
+        toast.error("فشل في الموافقة على المستند");
+      }
+    } catch (err) {
+      console.error("Error approving credential:", err);
+      toast.error("حدث خطأ أثناء الموافقة");
+    } finally {
+      setIsApproving(false);
+    }
   };
 
-  const handleReject = (id: string) => {
+  const handleReject = async (id: string) => {
     if (!rejectionReason.trim()) {
       toast.error("يرجى إدخال سبب الرفض");
       return;
     }
-    setCredentials((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, status: "rejected" as const } : c,
-      ),
-    );
-    setShowReviewModal(false);
-    setSelectedCredential(null);
-    setRejectionReason("");
-    toast.success("تم رفض المستند وإرسال إشعار للمحامي");
+    try {
+      setIsRejecting(true);
+      const result = await credentialReviewApi.rejectCredential({
+        credentialId: id,
+        reason: rejectionReason,
+      });
+      if (result) {
+        setCredentials((prev) => prev.map((c) => (c.id === id ? result : c)));
+        setShowReviewModal(false);
+        setSelectedCredential(null);
+        setRejectionReason("");
+        toast.success("تم رفض المستند وإرسال إشعار للمحامي");
+      } else {
+        toast.error("فشل في رفض المستند");
+      }
+    } catch (err) {
+      console.error("Error rejecting credential:", err);
+      toast.error("حدث خطأ أثناء رفض المستند");
+    } finally {
+      setIsRejecting(false);
+    }
   };
 
   const openReviewModal = (credential: PendingCredential) => {
@@ -263,8 +290,30 @@ const CredentialReview = () => {
     return true;
   });
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <Loader className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-4" />
+          <p className="text-slate-400">جاري تحميل البيانات...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-red-400 font-medium">{error}</p>
+            <p className="text-red-300/70 text-sm mt-1">
+              تم تحميل بيانات تجريبية بدلاً من ذلك
+            </p>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white">
@@ -639,24 +688,35 @@ const CredentialReview = () => {
                 <Button
                   variant="outline"
                   onClick={() => handleReject(selectedCredential.id)}
-                  className="cursor-pointer border-red-500/50 text-red-400 hover:bg-red-500/10"
+                  disabled={isRejecting || isApproving}
+                  className="cursor-pointer border-red-500/50 text-red-400 hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <XCircle className="w-4 h-4 ml-2" />
-                  رفض
+                  {isRejecting ? (
+                    <Loader className="w-4 h-4 ml-2 animate-spin" />
+                  ) : (
+                    <XCircle className="w-4 h-4 ml-2" />
+                  )}
+                  {isRejecting ? "جاري الرفض..." : "رفض"}
                 </Button>
                 <Button
                   onClick={() => handleApprove(selectedCredential.id)}
-                  className="cursor-pointer bg-emerald-600 hover:bg-emerald-700"
+                  disabled={isApproving || isRejecting}
+                  className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <CheckCircle className="w-4 h-4 ml-2" />
-                  موافقة
+                  {isApproving ? (
+                    <Loader className="w-4 h-4 ml-2 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4 ml-2" />
+                  )}
+                  {isApproving ? "جاري الموافقة..." : "موافقة"}
                 </Button>
               </>
             )}
             <Button
               variant="ghost"
               onClick={() => setShowReviewModal(false)}
-              className="cursor-pointer text-slate-400 hover:text-slate-300"
+              disabled={isApproving || isRejecting}
+              className="cursor-pointer text-slate-400 hover:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               إغلاق
             </Button>

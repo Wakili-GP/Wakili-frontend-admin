@@ -669,6 +669,152 @@ Get all suspended users.
 
 ---
 
+## 29) Get Credentials
+
+**GET** `/credentials?status=pending`
+
+Get all credentials with optional status filter.
+
+**Query Params**
+
+- `status` (optional): pending | approved | rejected
+
+**Response 200**
+
+(array of credentials)
+
+```json
+[
+  {
+    "id": "1",
+    "lawyerId": "1",
+    "lawyerName": "د. أحمد سليمان",
+    "lawyerImage": "https://...",
+    "type": "education",
+    "submittedAt": "2024-12-01",
+    "status": "pending",
+    "degree": "دكتوراه",
+    "field": "القانون الدولي",
+    "university": "جامعة الأزهر",
+    "year": "2023",
+    "diplomaUrl": "#diploma-doc"
+  }
+]
+```
+
+---
+
+## 30) Get Credential Stats
+
+**GET** `/credentials/stats`
+
+Get credential review statistics.
+
+**Response 200**
+
+```json
+{
+  "totalCredentials": 150,
+  "pendingCredentials": 25,
+  "approvedCredentials": 110,
+  "rejectedCredentials": 15
+}
+```
+
+---
+
+## 31) Get Single Credential
+
+**GET** `/credentials/{id}`
+
+Get a single credential by ID.
+
+**Response 200**
+
+(single credential object)
+
+---
+
+## 32) Approve Credential
+
+**POST** `/credentials/{id}/approve`
+
+Approve a credential submission.
+
+**Request Body**
+
+```json
+{}
+```
+
+**Response 200**
+
+```json
+{
+  "id": "1",
+  "status": "approved"
+}
+```
+
+---
+
+## 33) Reject Credential
+
+**POST** `/credentials/{id}/reject`
+
+Reject a credential submission with reason.
+
+**Request Body**
+
+```json
+{
+  "reason": "المستند غير واضح"
+}
+```
+
+**Response 200**
+
+```json
+{
+  "id": "1",
+  "status": "rejected"
+}
+```
+
+---
+
+## 34) Search Credentials
+
+**GET** `/credentials/search?q=أحمد`
+
+Search credentials by lawyer name or credential details.
+
+**Query Params**
+
+- `q` (required): Search query
+
+**Response 200**
+
+(array of matching credentials)
+
+---
+
+## 35) Get Credentials by Type
+
+**GET** `/credentials/type/{type}`
+
+Get credentials filtered by type.
+
+**Path Params**
+
+- `type`: education | certificate | experience
+
+**Response 200**
+
+(array of credentials of specified type)
+
+---
+
 ## Errors
 
 **Response 4xx/5xx**

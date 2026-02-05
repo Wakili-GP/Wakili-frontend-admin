@@ -197,3 +197,50 @@ export interface SuspendUserInput {
 export interface ReinstateUserInput {
   userId: string;
 }
+
+/**
+ * Credential Review API Types
+ */
+
+export interface PendingCredential {
+  id: string;
+  lawyerId: string;
+  lawyerName: string;
+  lawyerImage: string;
+  type: "education" | "certificate" | "experience";
+  submittedAt: string;
+  status: "pending" | "approved" | "rejected";
+  // Education fields
+  degree?: string;
+  field?: string;
+  university?: string;
+  year?: string;
+  diplomaUrl?: string;
+  // Certificate fields
+  certName?: string;
+  certIssuer?: string;
+  certYear?: string;
+  certDocumentUrl?: string;
+  // Experience fields
+  expTitle?: string;
+  expCompany?: string;
+  expStartYear?: string;
+  expEndYear?: string;
+  expDescription?: string;
+}
+
+export interface CredentialReviewStats {
+  totalCredentials: number;
+  pendingCredentials: number;
+  approvedCredentials: number;
+  rejectedCredentials: number;
+}
+
+export interface ApproveCredentialInput {
+  credentialId: string;
+}
+
+export interface RejectCredentialInput {
+  credentialId: string;
+  reason: string;
+}
