@@ -130,3 +130,38 @@ export interface RejectVerificationInput {
   requestId: string;
   reason: string;
 }
+
+/**
+ * Review Moderation API Types
+ */
+
+export interface Review {
+  id: string;
+  clientName: string;
+  lawyerName: string;
+  rating: number;
+  content: string;
+  createdAt: string;
+  status: "visible" | "hidden" | "flagged";
+  flagReason?: string;
+}
+
+export interface ReviewModerationStats {
+  totalReviews: number;
+  visibleReviews: number;
+  flaggedReviews: number;
+  hiddenReviews: number;
+}
+
+export interface UpdateReviewStatusInput {
+  reviewId: string;
+  status: "visible" | "hidden" | "flagged";
+}
+
+export interface ApproveReviewInput {
+  reviewId: string;
+}
+
+export interface DeleteReviewInput {
+  reviewId: string;
+}

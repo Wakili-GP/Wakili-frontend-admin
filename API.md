@@ -19,6 +19,7 @@ Authorization: Bearer <token>
 Returns all dashboard data in one response.
 
 **Response 200**
+
 ```json
 {
   "stats": [
@@ -69,6 +70,7 @@ Returns all dashboard data in one response.
 **GET** `/dashboard/stats`
 
 **Response 200**
+
 ```json
 [
   {
@@ -87,9 +89,11 @@ Returns all dashboard data in one response.
 **GET** `/dashboard/activities?limit=5`
 
 **Query Params**
+
 - `limit` (number, optional)
 
 **Response 200**
+
 ```json
 [
   {
@@ -108,6 +112,7 @@ Returns all dashboard data in one response.
 **GET** `/dashboard/account-status`
 
 **Response 200**
+
 ```json
 {
   "activeLawyers": 342,
@@ -123,6 +128,7 @@ Returns all dashboard data in one response.
 **GET** `/admins`
 
 **Response 200**
+
 ```json
 [
   {
@@ -143,6 +149,7 @@ Returns all dashboard data in one response.
 **POST** `/admins`
 
 **Request Body**
+
 ```json
 {
   "name": "أحمد محمد",
@@ -153,6 +160,7 @@ Returns all dashboard data in one response.
 ```
 
 **Response 201**
+
 ```json
 {
   "id": "2",
@@ -171,6 +179,7 @@ Returns all dashboard data in one response.
 **PATCH** `/admins/{id}`
 
 **Request Body** (partial)
+
 ```json
 {
   "role": "moderator",
@@ -179,6 +188,7 @@ Returns all dashboard data in one response.
 ```
 
 **Response 200**
+
 ```json
 {
   "id": "2",
@@ -210,9 +220,11 @@ Returns all dashboard data in one response.
 **GET** `/lawyer-verification?status=pending`
 
 **Query Params**
+
 - `status` (optional): `pending`, `approved`, `rejected`, or omit for all
 
 **Response 200**
+
 ```json
 [
   {
@@ -296,6 +308,7 @@ Returns all dashboard data in one response.
 **POST** `/lawyer-verification/{id}/approve`
 
 **Request Body**
+
 ```json
 {
   "notes": "تم التحقق من جميع الوثائق"
@@ -303,10 +316,11 @@ Returns all dashboard data in one response.
 ```
 
 **Response 200**
+
 ```json
 {
   "id": "1",
-  "status": "approved",
+  "status": "approved"
   // ... rest of verification request
 }
 ```
@@ -318,6 +332,7 @@ Returns all dashboard data in one response.
 **POST** `/lawyer-verification/{id}/reject`
 
 **Request Body**
+
 ```json
 {
   "reason": "الوثائق المرفقة غير صحيحة"
@@ -325,10 +340,11 @@ Returns all dashboard data in one response.
 ```
 
 **Response 200**
+
 ```json
 {
   "id": "1",
-  "status": "rejected",
+  "status": "rejected"
   // ... rest of verification request
 }
 ```
@@ -340,6 +356,7 @@ Returns all dashboard data in one response.
 **GET** `/lawyer-verification/search?q=أحمد`
 
 **Query Params**
+
 - `q` (required): Search query (name, email, etc.)
 
 **Response 200**
@@ -347,9 +364,168 @@ Returns all dashboard data in one response.
 
 ---
 
+## 14) Get Reviews
+
+**GET** `/reviews`
+
+Get all reviews with optional status filter.
+
+**Query Params**
+
+- `status` (optional): `visible`, `hidden`, `flagged`, or omit for all
+
+**Response 200**
+
+```json
+[
+  {
+    "id": "1",
+    "clientName": "محمد أحمد",
+    "lawyerName": "أحمد محمد علي",
+    "rating": 5,
+    "content": "محامي ممتاز ومتعاون جداً...",
+    "createdAt": "2024-01-15",
+    "status": "visible"
+  }
+]
+```
+
+---
+
+## 15) Get Review Stats
+
+**GET** `/reviews/stats`
+
+Get review moderation statistics.
+
+**Response 200**
+
+```json
+{
+  "totalReviews": 124,
+  "visibleReviews": 110,
+  "flaggedReviews": 8,
+  "hiddenReviews": 6
+}
+```
+
+---
+
+## 16) Get Single Review
+
+**GET** `/reviews/{id}`
+
+Get a single review by ID.
+
+**Response 200**
+
+```json
+{
+  "id": "1",
+  "clientName": "محمد أحمد",
+  "lawyerName": "أحمد محمد علي",
+  "rating": 5,
+  "content": "محامي ممتاز...",
+  "createdAt": "2024-01-15",
+  "status": "visible"
+}
+```
+
+---
+
+## 17) Update Review Status
+
+**PATCH** `/reviews/{id}/status`
+
+Update review visibility status.
+
+**Request Body**
+
+```json
+{
+  "status": "hidden"
+}
+```
+
+**Response 200**
+
+```json
+{
+  "id": "1",
+  "status": "hidden"
+}
+```
+
+---
+
+## 18) Approve Flagged Review
+
+**POST** `/reviews/{id}/approve`
+
+Approve a flagged review (marks as visible and removes flag).
+
+**Request Body**
+
+```json
+{}
+```
+
+**Response 200**
+
+```json
+{
+  "id": "1",
+  "status": "visible",
+  "flagReason": null
+}
+```
+
+---
+
+## 19) Delete Review
+
+**DELETE** `/reviews/{id}`
+
+Permanently delete a review.
+
+**Response 204**
+
+No content
+
+---
+
+## 20) Search Reviews
+
+**GET** `/reviews/search?q=أحمد`
+
+Search reviews by client name, lawyer name, or content.
+
+**Query Params**
+
+- `q` (required): Search query
+
+**Response 200**
+
+(array of matching reviews)
+
+---
+
+## 21) Get Reviews for Lawyer
+
+**GET** `/reviews/lawyer/{lawyerId}`
+
+Get all reviews for a specific lawyer.
+
+**Response 200**
+
+(array of reviews for the lawyer)
+
+---
+
 ## Errors
 
 **Response 4xx/5xx**
+
 ```json
 {
   "message": "Error message",

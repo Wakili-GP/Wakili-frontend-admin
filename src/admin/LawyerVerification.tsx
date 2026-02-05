@@ -252,9 +252,7 @@ const LawyerVerification = () => {
         notes: "",
       });
       if (result) {
-        setRequests(
-          requests.map((r) => (r.id === id ? result : r)),
-        );
+        setRequests(requests.map((r) => (r.id === id ? result : r)));
         setViewDialogOpen(false);
         toast.success("تمت الموافقة", {
           description: "تم توثيق حساب المحامي بنجاح وإرسال إشعار له",
@@ -287,8 +285,7 @@ const LawyerVerification = () => {
         setViewDialogOpen(false);
         setRejectionReason("");
         toast.error("تم الرفض", {
-          description:
-            "تم رفض طلب التوثيق وإرسال إشعار للمحامي بأسباب الرفض",
+          description: "تم رفض طلب التوثيق وإرسال إشعار للمحامي بأسباب الرفض",
         });
       } else {
         toast.error("فشل في رفض الطلب");
@@ -356,186 +353,188 @@ const LawyerVerification = () => {
             </p>
           </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-amber-500/10 border-amber-500/20">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-amber-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
-                {requests.filter((r) => r.status === "pending").length}
-              </p>
-              <p className="text-sm text-slate-400">طلبات معلقة</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-emerald-500/10 border-emerald-500/20">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
-                {requests.filter((r) => r.status === "approved").length}
-              </p>
-              <p className="text-sm text-slate-400">تمت الموافقة</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-red-500/10 border-red-500/20">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
-              <XCircle className="w-6 h-6 text-red-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
-                {requests.filter((r) => r.status === "rejected").length}
-              </p>
-              <p className="text-sm text-slate-400">مرفوضة</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                placeholder="البحث بالاسم أو البريد الإلكتروني..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pr-10 bg-slate-900/50 border-slate-600 text-white"
-              />
-            </div>
-            <Select
-              dir="rtl"
-              value={statusFilter}
-              onValueChange={setStatusFilter}
-            >
-              <SelectTrigger className="w-full md:w-48 bg-slate-900/50 border-slate-600 text-white">
-                <Filter className="w-4 h-4 ml-2" />
-                <SelectValue placeholder="فلترة حسب الحالة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem className="cursor-pointer" value="all">
-                  جميع الحالات
-                </SelectItem>
-                <SelectItem className="cursor-pointer" value="pending">
-                  معلق
-                </SelectItem>
-                <SelectItem className="cursor-pointer" value="approved">
-                  موافق عليه
-                </SelectItem>
-                <SelectItem className="cursor-pointer" value="rejected">
-                  مرفوض
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="bg-amber-500/10 border-amber-500/20">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">
+                    {requests.filter((r) => r.status === "pending").length}
+                  </p>
+                  <p className="text-sm text-slate-400">طلبات معلقة</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-emerald-500/10 border-emerald-500/20">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">
+                    {requests.filter((r) => r.status === "approved").length}
+                  </p>
+                  <p className="text-sm text-slate-400">تمت الموافقة</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-red-500/10 border-red-500/20">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+                  <XCircle className="w-6 h-6 text-red-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">
+                    {requests.filter((r) => r.status === "rejected").length}
+                  </p>
+                  <p className="text-sm text-slate-400">مرفوضة</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Requests Table */}
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-amber-500" />
-            طلبات التوثيق
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-center">
-              <thead>
-                <tr className="border-b border-slate-700">
-                  <th className="text-center py-3 px-4 text-slate-400 font-medium">
-                    المحامي
-                  </th>
-                  <th className="text-center py-3 px-4 text-slate-400 font-medium">
-                    التخصص
-                  </th>
-                  <th className="text-center py-3 px-4 text-slate-400 font-medium">
-                    تاريخ التقديم
-                  </th>
-                  <th className="text-center py-3 px-4 text-slate-400 font-medium">
-                    المستندات
-                  </th>
-                  <th className="text-center py-3 px-4 text-slate-400 font-medium">
-                    الحالة
-                  </th>
-                  <th className="text-center py-3 px-4 text-slate-400 font-medium">
-                    الإجراءات
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRequests.map((request) => (
-                  <tr
-                    key={request.id}
-                    className="text-center border-b border-slate-700/50 hover:bg-slate-700/20"
-                  >
-                    <td className="py-4 px-4">
-                      <div>
-                        <p className="text-white font-medium">{request.name}</p>
-                        <p className="text-xs text-slate-400">
-                          {request.email}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-slate-300">
-                      {request.specialty}
-                    </td>
-                    <td className="py-4 px-4 text-slate-300">
-                      {request.submittedAt}
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex gap-1 items-center justify-center">
-                        <div
-                          className={`w-6 h-6 rounded flex items-center justify-center ${request.documents.governmentId ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
-                        >
-                          <IdCard className="w-3 h-3" />
-                        </div>
-                        <div
-                          className={`w-6 h-6 rounded flex items-center justify-center ${request.documents.professionalLicense ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
-                        >
-                          <Award className="w-3 h-3" />
-                        </div>
-                        <div
-                          className={`w-6 h-6 rounded flex items-center justify-center ${request.documents.identityVerification ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
-                        >
-                          <FileText className="w-3 h-3" />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      {getStatusBadge(request.status)}
-                    </td>
-                    <td className="py-4 px-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedRequest(request);
-                          setViewDialogOpen(true);
-                        }}
-                        className="cursor-pointer text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+          {/* Filters */}
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    placeholder="البحث بالاسم أو البريد الإلكتروني..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="pr-10 bg-slate-900/50 border-slate-600 text-white"
+                  />
+                </div>
+                <Select
+                  dir="rtl"
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                >
+                  <SelectTrigger className="w-full md:w-48 bg-slate-900/50 border-slate-600 text-white">
+                    <Filter className="w-4 h-4 ml-2" />
+                    <SelectValue placeholder="فلترة حسب الحالة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem className="cursor-pointer" value="all">
+                      جميع الحالات
+                    </SelectItem>
+                    <SelectItem className="cursor-pointer" value="pending">
+                      معلق
+                    </SelectItem>
+                    <SelectItem className="cursor-pointer" value="approved">
+                      موافق عليه
+                    </SelectItem>
+                    <SelectItem className="cursor-pointer" value="rejected">
+                      مرفوض
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Requests Table */}
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-amber-500" />
+                طلبات التوثيق
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-center">
+                  <thead>
+                    <tr className="border-b border-slate-700">
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">
+                        المحامي
+                      </th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">
+                        التخصص
+                      </th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">
+                        تاريخ التقديم
+                      </th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">
+                        المستندات
+                      </th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">
+                        الحالة
+                      </th>
+                      <th className="text-center py-3 px-4 text-slate-400 font-medium">
+                        الإجراءات
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRequests.map((request) => (
+                      <tr
+                        key={request.id}
+                        className="text-center border-b border-slate-700/50 hover:bg-slate-700/20"
                       >
-                        <Eye className="w-4 h-4 ml-1" />
-                        عرض
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                        <td className="py-4 px-4">
+                          <div>
+                            <p className="text-white font-medium">
+                              {request.name}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              {request.email}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 text-slate-300">
+                          {request.specialty}
+                        </td>
+                        <td className="py-4 px-4 text-slate-300">
+                          {request.submittedAt}
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex gap-1 items-center justify-center">
+                            <div
+                              className={`w-6 h-6 rounded flex items-center justify-center ${request.documents.governmentId ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
+                            >
+                              <IdCard className="w-3 h-3" />
+                            </div>
+                            <div
+                              className={`w-6 h-6 rounded flex items-center justify-center ${request.documents.professionalLicense ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
+                            >
+                              <Award className="w-3 h-3" />
+                            </div>
+                            <div
+                              className={`w-6 h-6 rounded flex items-center justify-center ${request.documents.identityVerification ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
+                            >
+                              <FileText className="w-3 h-3" />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          {getStatusBadge(request.status)}
+                        </td>
+                        <td className="py-4 px-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedRequest(request);
+                              setViewDialogOpen(true);
+                            }}
+                            className="cursor-pointer text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+                          >
+                            <Eye className="w-4 h-4 ml-1" />
+                            عرض
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </>
       )}
 
