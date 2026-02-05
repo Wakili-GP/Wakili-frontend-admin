@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "./AdminLayout";
 import Login from "./AdminLogin";
 import AdminDashboard from "./admin/AdminDashboard";
@@ -17,10 +17,13 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<AdminLayout />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="verification" element={<LawyerVerification />} />
             <Route path="credentials" element={<CredentialReview />} />
             <Route path="users" element={<UserManagement />} />
+            <Route path="reviews" element={<NotFound />} />
+            <Route path="articles" element={<NotFound />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

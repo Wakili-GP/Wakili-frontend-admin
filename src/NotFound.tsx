@@ -33,8 +33,13 @@ const NotFound = () => {
           عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها إلى مكان آخر.
         </p>
 
-        <Button asChild variant="hero" size="lg">
-          <Link to="/" className="gap-2">
+        <Button
+          asChild
+          variant="default"
+          size="lg"
+          className="text-white cursor-pointer"
+        >
+          <Link to="/dashboard" className="gap-2">
             <Home className="w-5 h-5" />
             العودة للرئيسية
           </Link>
