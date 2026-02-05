@@ -42,11 +42,11 @@ const navItems = [
     label: "المراجعات والتقييمات",
     icon: MessageSquare,
   },
-  {
-    path: "/articles",
-    label: "إدارة المقالات",
-    icon: BookOpen,
-  },
+  // {
+  //   path: "/articles",
+  //   label: "إدارة المقالات",
+  //   icon: BookOpen,
+  // },
 ];
 
 const AdminLayout = () => {

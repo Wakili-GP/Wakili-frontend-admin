@@ -8,6 +8,7 @@ import UserManagement from "./admin/UserManagement";
 import NotFound from "./NotFound";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import ReviewModeration from "./admin/ReviewModeration";
 import "./App.css";
 function App() {
   return (
@@ -22,8 +23,7 @@ function App() {
             <Route path="verification" element={<LawyerVerification />} />
             <Route path="credentials" element={<CredentialReview />} />
             <Route path="users" element={<UserManagement />} />
-            <Route path="reviews" element={<NotFound />} />
-            <Route path="articles" element={<NotFound />} />
+            <Route path="reviews" element={<ReviewModeration />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
