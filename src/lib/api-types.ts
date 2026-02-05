@@ -165,3 +165,35 @@ export interface ApproveReviewInput {
 export interface DeleteReviewInput {
   reviewId: string;
 }
+
+/**
+ * User Management API Types
+ */
+
+export interface UserAccount {
+  id: string;
+  name: string;
+  email: string;
+  type: "client" | "lawyer";
+  status: "active" | "suspended";
+  createdAt: string;
+  lastActive: string;
+  specialty?: string;
+  totalAppointments?: number;
+}
+
+export interface UserManagementStats {
+  totalUsers: number;
+  totalClients: number;
+  totalLawyers: number;
+  suspendedUsers: number;
+}
+
+export interface SuspendUserInput {
+  userId: string;
+  reason?: string;
+}
+
+export interface ReinstateUserInput {
+  userId: string;
+}

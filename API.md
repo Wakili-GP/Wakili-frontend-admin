@@ -522,6 +522,153 @@ Get all reviews for a specific lawyer.
 
 ---
 
+## 22) Get Users
+
+**GET** `/users`
+
+Get all users with optional type filter.
+
+**Query Params**
+
+- `type` (optional): `client` or `lawyer`
+
+**Response 200**
+
+```json
+[
+  {
+    "id": "1",
+    "name": "محمد أحمد علي",
+    "email": "mohamed@example.com",
+    "type": "client",
+    "status": "active",
+    "createdAt": "2024-01-01",
+    "lastActive": "2024-01-15",
+    "totalAppointments": 5
+  }
+]
+```
+
+---
+
+## 23) Get User Stats
+
+**GET** `/users/stats`
+
+Get user management statistics.
+
+**Response 200**
+
+```json
+{
+  "totalUsers": 247,
+  "totalClients": 150,
+  "totalLawyers": 97,
+  "suspendedUsers": 12
+}
+```
+
+---
+
+## 24) Get Single User
+
+**GET** `/users/{id}`
+
+Get a single user by ID.
+
+**Response 200**
+
+```json
+{
+  "id": "1",
+  "name": "محمد أحمد علي",
+  "email": "mohamed@example.com",
+  "type": "client",
+  "status": "active",
+  "createdAt": "2024-01-01",
+  "lastActive": "2024-01-15",
+  "totalAppointments": 5
+}
+```
+
+---
+
+## 25) Suspend User
+
+**POST** `/users/{id}/suspend`
+
+Suspend a user account.
+
+**Request Body**
+
+```json
+{
+  "reason": "انتهاك قواعس المنصة"
+}
+```
+
+**Response 200**
+
+```json
+{
+  "id": "1",
+  "status": "suspended"
+}
+```
+
+---
+
+## 26) Reinstate User
+
+**POST** `/users/{id}/reinstate`
+
+Reinstate/Unsuspend a user account.
+
+**Request Body**
+
+```json
+{}
+```
+
+**Response 200**
+
+```json
+{
+  "id": "1",
+  "status": "active"
+}
+```
+
+---
+
+## 27) Search Users
+
+**GET** `/users/search?q=محمد`
+
+Search users by name or email.
+
+**Query Params**
+
+- `q` (required): Search query
+
+**Response 200**
+
+(array of matching users)
+
+---
+
+## 28) Get Suspended Users
+
+**GET** `/users/suspended`
+
+Get all suspended users.
+
+**Response 200**
+
+(array of suspended users)
+
+---
+
 ## Errors
 
 **Response 4xx/5xx**
