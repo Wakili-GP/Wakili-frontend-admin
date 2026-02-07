@@ -11,6 +11,7 @@ import {
   X,
   BookOpen,
   GraduationCap,
+  Scale,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -31,6 +32,11 @@ const navItems = [
     path: "/credentials",
     label: "مراجعة المؤهلات",
     icon: GraduationCap,
+  },
+  {
+    path: "/categories",
+    label: "فئات القانون",
+    icon: Scale,
   },
   {
     path: "/users",
@@ -111,7 +117,7 @@ const AdminLayout = () => {
           {/* Logo */}
           <div className="p-6 border-b border-slate-700">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-linear-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center">
                 <Shield className="w-5 h-5 text-white" />
               </div>
               <div>

@@ -908,3 +908,153 @@ Get credentials filtered by type.
   "error": "Optional error detail"
 }
 ```
+
+---
+
+## Law Categories Endpoints
+
+---
+
+## 40) Get Law Categories
+
+**GET** \/law-categories\
+
+Get all law categories.
+
+**Response 200**
+
+\\\json
+[
+  {
+    "id": "1",
+    "name": "القانون المدني",
+    "description": "يشمل العقود والمعاملات المدنية",
+    "createdAt": "2024-01-01"
+  },
+  {
+    "id": "2",
+    "name": "القانون الجنائي",
+    "description": "يتعامل مع الجرائم والعقوبات",
+    "createdAt": "2024-01-01"
+  }
+]
+\\\
+
+---
+
+## 41) Get Law Categories Stats
+
+**GET** \/law-categories/stats\
+
+Get law categories statistics.
+
+**Response 200**
+
+\\\json
+{
+  "totalCategories": 5
+}
+\\\
+
+---
+
+## 42) Get Single Law Category
+
+**GET** \/law-categories/{id}\
+
+Get a single law category by ID.
+
+**Response 200**
+
+\\\json
+{
+  "id": "1",
+  "name": "القانون المدني",
+  "description": "يشمل العقود والمعاملات المدنية",
+  "createdAt": "2024-01-01"
+}
+\\\
+
+---
+
+## 43) Create Law Category
+
+**POST** \/law-categories\
+
+Create a new law category.
+
+**Request Body**
+
+\\\json
+{
+  "name": "القانون المدني",
+  "description": "يشمل العقود والمعاملات المدنية"
+}
+\\\
+
+**Response 201**
+
+\\\json
+{
+  "id": "1",
+  "name": "القانون المدني",
+  "description": "يشمل العقود والمعاملات المدنية",
+  "createdAt": "2024-03-15"
+}
+\\\
+
+---
+
+## 44) Update Law Category
+
+**PATCH** \/law-categories/{id}\
+
+Update a law category.
+
+**Request Body** (partial)
+
+\\\json
+{
+  "name": "القانون المدني والتجاري",
+  "description": "يشمل العقود والمعاملات المدنية والتجارية"
+}
+\\\
+
+**Response 200**
+
+\\\json
+{
+  "id": "1",
+  "name": "القانون المدني والتجاري",
+  "description": "يشمل العقود والمعاملات المدنية والتجارية",
+  "createdAt": "2024-01-01"
+}
+\\\
+
+---
+
+## 45) Delete Law Category
+
+**DELETE** \/law-categories/{id}\
+
+Delete a law category.
+
+**Response 204**
+
+No content
+
+---
+
+## 46) Search Law Categories
+
+**GET** \/law-categories/search?q=مدني\
+
+Search law categories by name or description.
+
+**Query Params**
+
+- \q\ (required): Search query
+
+**Response 200**
+
+(array of matching law categories)
