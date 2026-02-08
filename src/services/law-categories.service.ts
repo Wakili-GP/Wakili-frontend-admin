@@ -1,31 +1,65 @@
-/**
- * Law Categories API Service
- * Handles all law category management operations
- */
-
 import { api } from "@/lib/api-client";
-import type {
-  LawCategory,
-  CreateLawCategoryInput,
-  UpdateLawCategoryInput,
-  LawCategoryStats,
-} from "@/lib/api-types";
+export interface LawCategory {
+  id: number;
+  name: string;
+  description: string;
+  isActive: boolean;
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+export interface CreateLawCategoryInput {
+  name: string;
+  description: string;
+  isActive: boolean;
+}
+
+export interface UpdateLawCategoryInput {
+  id: number;
+  name?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface LawCategoryStats {
+  totalCategories: number;
+}
 
 export const lawCategoriesApi = {
   /**
-   * Get all law categories
-   * GET /law-categories
+   * Get all specializations
+   * GET /Specializations
    */
   async getCategories(): Promise<LawCategory[] | null> {
     try {
-      const response = await api.get<LawCategory[]>("/law-categories");
+      const response = await api.get<LawCategory[]>("/Specializations");
       if (response.error) {
-        console.error("Error fetching law categories:", response.error);
+        console.error("Error fetching specializations:", response.error);
         return null;
       }
       return response.data || null;
     } catch (error) {
-      console.error("Error fetching law categories:", error);
+      console.error("Error fetching specializations:", error);
+      return null;
+    }
+  },
+
+  /**
+   * Get active specializations
+   * GET /Specializations/active
+   */
+  async getActiveCategories(): Promise<LawCategory[] | null> {
+    try {
+      const response = await api.get<LawCategory[]>("/Specializations/active");
+      if (response.error) {
+        console.error("Error fetching active specializations:", response.error);
+        return null;
+      }
+      return response.data || null;
+    } catch (error) {
+      console.error("Error fetching active specializations:", error);
       return null;
     }
   },
@@ -49,99 +83,99 @@ export const lawCategoriesApi = {
   },
 
   /**
-   * Get a single law category by ID
-   * GET /law-categories/{id}
+   * Get a single specialization by ID
+   * GET /Specializations/{id}
    */
-  async getCategory(id: string): Promise<LawCategory | null> {
+  async getCategory(id: number): Promise<LawCategory | null> {
     try {
-      const response = await api.get<LawCategory>(`/law-categories/${id}`);
+      const response = await api.get<LawCategory>(`/Specializations/${id}`);
       if (response.error) {
-        console.error("Error fetching law category:", response.error);
+        console.error("Error fetching specialization:", response.error);
         return null;
       }
       return response.data || null;
     } catch (error) {
-      console.error("Error fetching law category:", error);
+      console.error("Error fetching specialization:", error);
       return null;
     }
   },
 
   /**
-   * Create a new law category
-   * POST /law-categories
+   * Create a new specialization
+   * POST /Specializations
    */
   async createCategory(
     input: CreateLawCategoryInput,
   ): Promise<LawCategory | null> {
     try {
-      const response = await api.post<LawCategory>("/law-categories", input);
+      const response = await api.post<LawCategory>("/Specializations", input);
       if (response.error) {
-        console.error("Error creating law category:", response.error);
+        console.error("Error creating specialization:", response.error);
         return null;
       }
       return response.data || null;
     } catch (error) {
-      console.error("Error creating law category:", error);
+      console.error("Error creating specialization:", error);
       return null;
     }
   },
 
   /**
-   * Update a law category
-   * PATCH /law-categories/{id}
+   * Update a specialization
+   * PUT /Specializations/{id}
    */
   async updateCategory(
     input: UpdateLawCategoryInput,
   ): Promise<LawCategory | null> {
     try {
       const { id, ...updateData } = input;
-      const response = await api.patch<LawCategory>(
-        `/law-categories/${id}`,
+      const response = await api.put<LawCategory>(
+        `/Specializations/${id}`,
         updateData,
       );
       if (response.error) {
-        console.error("Error updating law category:", response.error);
+        console.error("Error updating specialization:", response.error);
         return null;
       }
       return response.data || null;
     } catch (error) {
-      console.error("Error updating law category:", error);
+      console.error("Error updating specialization:", error);
       return null;
     }
   },
 
   /**
-   * Delete a law category
-   * DELETE /law-categories/{id}
+   * Delete a specialization
+   * DELETE /Specializations/{id}
    */
-  async deleteCategory(id: string): Promise<boolean> {
+  async deleteCategory(id: number): Promise<boolean> {
     try {
-      const response = await api.delete(`/law-categories/${id}`);
+      const response = await api.delete(`/Specializations/${id}`);
       if (response.error) {
-        console.error("Error deleting law category:", response.error);
+        console.error("Error deleting specialization:", response.error);
         return false;
       }
       return true;
     } catch (error) {
-      console.error("Error deleting law category:", error);
+      console.error("Error deleting specialization:", error);
       return false;
     }
   },
 
   /**
-   * Search law categories
-   * GET /law-categories/search?q=search_query
+   * Search law categories (using local filtering for now)
    */
   async searchCategories(query: string): Promise<LawCategory[] | null> {
     try {
-      const response = await api.get<LawCategory[]>("/law-categories/search", {
-        q: query,
-      });
-      if (response.error) {
-        console.error("Error searching law categories:", response.error);
-        return null;
-      }
-      return response.data || null;
+      const categories = await this.getCategories();
+      if (!categories) return null;
+
+      const searchLower = query.toLowerCase();
+      return categories.filter(
+        (c) =>
+          c.name.toLowerCase().includes(searchLower) ||
+          c.description.toLowerCase().includes(searchLower),
+      );
     } catch (error) {
       console.error("Error searching law categories:", error);
       return null;

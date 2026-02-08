@@ -263,29 +263,3 @@ export interface RejectCredentialInput {
   credentialId: string;
   reason: string;
 }
-
-/**
- * Law Categories API Types
- */
-
-export interface LawCategory {
-  id: string;
-  name: string;
-  description: string;
-  createdAt: string;
-}
-
-export interface CreateLawCategoryInput {
-  name: string;
-  description?: string;
-}
-
-export interface UpdateLawCategoryInput {
-  id: string;
-  name?: string;
-  description?: string;
-}
-
-export interface LawCategoryStats {
-  totalCategories: number;
-}

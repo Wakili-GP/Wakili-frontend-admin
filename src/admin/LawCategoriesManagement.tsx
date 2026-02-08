@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -41,7 +42,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { lawCategoriesApi } from "@/services/law-categories.service";
-import type { LawCategory } from "@/lib/api-types";
+import type { LawCategory } from "@/services/law-categories.service";
 
 const initialCategories: LawCategory[] = [];
 
@@ -60,15 +61,20 @@ const LawCategoriesManagement = () => {
   const loadCategories = async () => {
     setIsLoading(true);
     try {
+      console.log("Loading categories...");
       const data = await lawCategoriesApi.getCategories();
+      console.log("Categories loaded:", data);
       if (data) {
         setCategories(data);
       } else {
+        console.warn("No data returned from getCategories");
         toast.error("فشل في تحميل فئات القانون");
       }
     } catch (error) {
-      toast.error("حدث خطأ في تحميل البيانات");
-      console.error(error);
+      console.error("Error loading categories:", error);
+      const errorMsg =
+        error instanceof Error ? error.message : "حدث خطأ في تحميل البيانات";
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -76,10 +82,14 @@ const LawCategoriesManagement = () => {
 
   // Modals state
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   // Form state
-  const [newCategory, setNewCategory] = useState({ name: "", description: "" });
+  const [newCategory, setNewCategory] = useState({
+    name: "",
+    description: "",
+    isActive: true,
+  });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const validateCategoryForm = () => {
@@ -99,11 +109,12 @@ const LawCategoriesManagement = () => {
       const result = await lawCategoriesApi.createCategory({
         name: newCategory.name.trim(),
         description: newCategory.description.trim(),
+        isActive: newCategory.isActive,
       });
 
       if (result) {
         setCategories([...categories, result]);
-        setNewCategory({ name: "", description: "" });
+        setNewCategory({ name: "", description: "", isActive: true });
         setShowAddCategoryModal(false);
         setFormErrors({});
         toast.success("تمت إضافة الفئة بنجاح");
@@ -117,8 +128,18 @@ const LawCategoriesManagement = () => {
       setIsSaving(false);
     }
   };
-
-  const handleDeleteCategory = async (id: string) => {
+  const handleToggleActive = (id: number) => {
+    setCategories(
+      categories.map((c) =>
+        c.id === id ? { ...c, isActive: !c.isActive } : c,
+      ),
+    );
+    const category = categories.find((c) => c.id === id);
+    if (category) {
+      toast.success(category.isActive ? "تم تعطيل الفئة" : "تم تفعيل الفئة");
+    }
+  };
+  const handleDeleteCategory = async (id: number) => {
     setIsSaving(true);
     try {
       const success = await lawCategoriesApi.deleteCategory(id);
@@ -212,6 +233,9 @@ const LawCategoriesManagement = () => {
                     الوصف
                   </TableHead>
                   <TableHead className="text-slate-400 text-center">
+                    الحالة
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
                     تاريخ الإنشاء
                   </TableHead>
                   <TableHead className="text-slate-400 text-center">
@@ -231,8 +255,23 @@ const LawCategoriesManagement = () => {
                     <TableCell className="text-slate-300 max-w-xs truncate">
                       {category.description}
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={category.isActive}
+                          onCheckedChange={() =>
+                            handleToggleActive(category.id)
+                          }
+                        />
+                        <span
+                          className={`text-sm ${category.isActive ? "text-green-400" : "text-slate-500"}`}
+                        >
+                          {category.isActive ? "مفعّل" : "معطّل"}
+                        </span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-slate-400">
-                      {category.createdAt}
+                      {new Date(category.createdAt).toLocaleDateString("ar-SA")}
                     </TableCell>
                     <TableCell>
                       <Button
@@ -301,8 +340,29 @@ const LawCategoriesManagement = () => {
                   })
                 }
                 placeholder="وصف موجز للفئة..."
-                className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
+                className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 min-h-25"
               />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isActive"
+                checked={newCategory.isActive}
+                onChange={(e) =>
+                  setNewCategory({
+                    ...newCategory,
+                    isActive: e.target.checked,
+                  })
+                }
+                className="w-4 h-4 text-primary bg-slate-900 border-slate-600 rounded focus:ring-primary focus:ring-2"
+              />
+              <Label
+                htmlFor="isActive"
+                className="text-slate-300 cursor-pointer"
+              >
+                الفئة نشطة
+              </Label>
             </div>
           </div>
 
@@ -313,7 +373,7 @@ const LawCategoriesManagement = () => {
               onClick={() => {
                 setShowAddCategoryModal(false);
                 setFormErrors({});
-                setNewCategory({ name: "", description: "" });
+                setNewCategory({ name: "", description: "", isActive: true });
               }}
               disabled={isSaving}
             >

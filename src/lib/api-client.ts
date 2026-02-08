@@ -1,10 +1,16 @@
+import axios from "axios";
+import type {
+  AxiosInstance,
+  InternalAxiosRequestConfig,
+  AxiosResponse,
+} from "axios";
+
 /**
  * API Client Configuration
  * Central place for configuring API requests
  */
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 interface RequestConfig {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
@@ -21,6 +27,52 @@ interface ApiResponse<T> {
 }
 
 /**
+ * Create axios instance with base URL
+ */
+const axiosInstance: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL.startsWith("http")
+    ? API_BASE_URL
+    : `${window.location.origin}${API_BASE_URL}`,
+  withCredentials: true,
+  timeout: 30000,
+});
+
+/**
+ * Request interceptor: Add auth token to headers
+ */
+axiosInstance.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = localStorage.getItem("adminToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error: unknown) => Promise.reject(error),
+);
+
+/**
+ * Response interceptor: Handle errors and token expiration
+ */
+axiosInstance.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  (error: unknown) => {
+    // Don't automatically redirect on 401 - let components handle it
+    // This allows for better UX and error handling
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      // Only redirect if we're not already on the login page
+      if (window.location.pathname !== "/login") {
+        // Log the error for debugging
+        console.warn("Unauthorized access - clearing tokens");
+        localStorage.removeItem("adminAuth");
+        localStorage.removeItem("adminToken");
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
+/**
  * Make API request with error handling and token management
  */
 export async function apiRequest<T>(
@@ -30,52 +82,35 @@ export async function apiRequest<T>(
   const { method = "GET", headers = {}, body, params } = config;
 
   try {
-    // Build URL with query params
-    const url = new URL(`${API_BASE_URL}${endpoint}`);
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        url.searchParams.append(key, String(value));
-      });
-    }
-
-    // Get auth token from localStorage
-    const token = localStorage.getItem("adminToken");
-    const defaultHeaders: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...headers,
-    };
-
-    if (token) {
-      defaultHeaders.Authorization = `Bearer ${token}`;
-    }
-
-    const response = await fetch(url.toString(), {
+    const response = await axiosInstance({
+      url: endpoint,
       method,
-      headers: defaultHeaders,
-      body: body ? JSON.stringify(body) : undefined,
+      data: body,
+      params,
+      headers,
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      // Handle auth errors
-      if (response.status === 401) {
-        localStorage.removeItem("adminAuth");
-        localStorage.removeItem("adminToken");
-        window.location.href = "/login";
-      }
+    return {
+      data: response.data?.data || response.data,
+      status: response.status,
+    };
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const responseData = error.response?.data as Record<string, unknown>;
+      const errorMessage =
+        (typeof responseData?.message === "string"
+          ? responseData.message
+          : null) ||
+        (typeof responseData?.error === "string" ? responseData.error : null) ||
+        error.message ||
+        "Request failed";
 
       return {
-        error: data.message || data.error || "Request failed",
-        status: response.status,
+        error: errorMessage,
+        status: error.response?.status || 0,
       };
     }
 
-    return {
-      data: data.data || data,
-      status: response.status,
-    };
-  } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Network error";
     return {
@@ -104,3 +139,5 @@ export const api = {
   delete: <T>(endpoint: string) =>
     apiRequest<T>(endpoint, { method: "DELETE" }),
 };
+
+export default axiosInstance;
