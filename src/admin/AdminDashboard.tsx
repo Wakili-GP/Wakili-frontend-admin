@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,10 +42,10 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Loader,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
+
 const stats = [
   {
     title: "إجمالي المستخدمين",
@@ -120,55 +120,61 @@ const notifications = [
   { type: "notification", count: 128, label: "إشعارات مُرسلة اليوم" },
 ];
 
-const AdminDashboard = () => {
-  // Loading and error states
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  // Dashboard data states
-  const [admins, setAdmins] = useState<AdminType[]>();
+interface Admin {
+  id: string;
+  name: string;
+  email: string;
+  role: "super_admin" | "admin" | "moderator";
+  createdAt: string;
+  status: "active" | "inactive";
+}
 
-  // Modal and form states
+const initialAdmins: Admin[] = [
+  {
+    id: "1",
+    name: "المشرف الرئيسي",
+    email: "admin@wakili.me",
+    role: "super_admin",
+    createdAt: "2024-01-01",
+    status: "active",
+  },
+  {
+    id: "2",
+    name: "أحمد محمد",
+    email: "ahmed@wakili.me",
+    role: "admin",
+    createdAt: "2024-03-15",
+    status: "active",
+  },
+  {
+    id: "3",
+    name: "سارة علي",
+    email: "sara@wakili.me",
+    role: "moderator",
+    createdAt: "2024-06-20",
+    status: "active",
+  },
+];
+
+const AdminDashboard = () => {
   const [showAddAdminModal, setShowAddAdminModal] = useState(false);
+  const [admins, setAdmins] = useState<Admin[]>(initialAdmins);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Form state
   const [newAdmin, setNewAdmin] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
     role: "admin" as "super_admin" | "admin" | "moderator",
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [isSubmittingAdmin, setIsSubmittingAdmin] = useState(false);
-
-  // Load dashboard data on mount
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await dashboardApi.getAdmins();
-        if (data) {
-          setAdmins(data);
-        }
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : "Unknown error";
-        setError(errorMsg);
-        console.error("Failed to load dashboard data:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadDashboardData();
-  }, []);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
 
-    if (!newAdmin.firstName.trim()) errors.firstName = "الاسم الأول مطلوب";
-    if (!newAdmin.lastName.trim()) errors.lastName = "الاسم الأخير مطلوب";
+    if (!newAdmin.name.trim()) errors.name = "الاسم مطلوب";
     if (!newAdmin.email.trim()) errors.email = "البريد الإلكتروني مطلوب";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newAdmin.email))
       errors.email = "بريد إلكتروني غير صالح";
@@ -184,82 +190,57 @@ const AdminDashboard = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleAddAdmin = async () => {
+  const handleAddAdmin = () => {
     if (!validateForm()) return;
 
-    try {
-      setIsSubmittingAdmin(true);
+    const admin: Admin = {
+      id: Date.now().toString(),
+      name: newAdmin.name,
+      email: newAdmin.email,
+      role: newAdmin.role,
+      createdAt: new Date().toISOString().split("T")[0],
+      status: "active",
+    };
 
-      // Call API to create admin
-      const createdAdmin = await dashboardApi.createAdmin({
-        firstName: newAdmin.firstName,
-        lastName: newAdmin.lastName,
-        email: newAdmin.email,
-        password: newAdmin.password,
-        role: newAdmin.role,
-      });
-
-      if (createdAdmin) {
-        setAdmins([...admins, createdAdmin]);
-        setNewAdmin({
-          firstName: "",
-          lastName: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-          role: "admin",
-        });
-        setShowAddAdminModal(false);
-        toast.success("تمت إضافة المشرف بنجاح");
-      } else {
-        toast.error("فشل في إضافة المشرف");
-      }
-    } catch (err) {
-      console.error("Error adding admin:", err);
-      toast.error("حدث خطأ أثناء إضافة المشرف");
-    } finally {
-      setIsSubmittingAdmin(false);
-    }
+    setAdmins([...admins, admin]);
+    setNewAdmin({
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      role: "admin",
+    });
+    setShowAddAdminModal(false);
+    toast.success("تمت إضافة المشرف بنجاح");
   };
 
-  const handleDeleteAdmin = async (id: string) => {
+  const handleDeleteAdmin = (id: string) => {
     const admin = admins.find((a) => a.id === id);
     if (admin?.role === "super_admin") {
       toast.error("لا يمكن حذف المشرف الرئيسي");
       return;
     }
-
-    try {
-      const success = await dashboardApi.deleteAdmin(id);
-      if (success) {
-        setAdmins(admins.filter((a) => a.id !== id));
-        toast.success("تم حذف المشرف");
-      } else {
-        toast.error("فشل في حذف المشرف");
-      }
-    } catch (err) {
-      console.error("Error deleting admin:", err);
-      toast.error("حدث خطأ أثناء حذف المشرف");
-    }
+    setAdmins(admins.filter((a) => a.id !== id));
+    toast.success("تم حذف المشرف");
   };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "super_admin":
         return (
-          <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/20">
+          <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
             مشرف رئيسي
           </Badge>
         );
       case "admin":
         return (
-          <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/20">
+          <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
             مشرف
           </Badge>
         );
       case "moderator":
         return (
-          <Badge className="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20">
+          <Badge className="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30">
             مراقب
           </Badge>
         );
@@ -270,436 +251,435 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Error Alert */}
-      {error && (
-        <Card className="bg-red-500/10 border-red-500/20">
-          <CardContent className="p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-            <p className="text-red-300">{error}</p>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">نظرة عامة</h1>
+          <p className="text-slate-400 mt-1">مرحباً بك في لوحة تحكم المشرف</p>
+        </div>
+        <Button
+          onClick={() => setShowAddAdminModal(true)}
+          className="cursor-pointer bg-primary hover:bg-primary/90"
+        >
+          <UserPlus className="w-4 h-4 ml-2" />
+          إضافة مشرف جديد
+        </Button>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat, index) => (
+          <Card key={index} className="bg-slate-800/50 border-slate-700">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-slate-400">{stat.title}</p>
+                  <p className="text-3xl font-bold text-white mt-2">
+                    {stat.value}
+                  </p>
+                  <div className="flex items-center gap-1 mt-2">
+                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                    <span className="text-sm text-emerald-400">
+                      {stat.change}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      من الشهر الماضي
+                    </span>
+                  </div>
+                </div>
+                <div
+                  className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}
+                >
+                  <stat.icon className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Activity */}
+        <Card className="lg:col-span-2 bg-slate-800/50 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Clock className="w-5 h-5 text-amber-500" />
+              النشاط الأخير
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {recentActivities.map((activity, index) => (
+              <div
+                key={index}
+                className="flex items-start gap-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700/50 hover:bg-slate-900/70 transition-colors duration-200"
+              >
+                <div
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    activity.status === "success"
+                      ? "bg-emerald-500/10 text-emerald-400"
+                      : activity.status === "pending"
+                        ? "bg-amber-500/10 text-amber-400"
+                        : "bg-red-500/10 text-red-400"
+                  }`}
+                >
+                  <activity.icon className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-white">{activity.message}</p>
+                  <p className="text-xs text-slate-500 mt-1">{activity.time}</p>
+                </div>
+                <Badge
+                  variant={
+                    activity.status === "success"
+                      ? "default"
+                      : activity.status === "pending"
+                        ? "secondary"
+                        : "destructive"
+                  }
+                  className="text-xs"
+                >
+                  {activity.status === "success"
+                    ? "مكتمل"
+                    : activity.status === "pending"
+                      ? "معلق"
+                      : "مُبلغ عنه"}
+                </Badge>
+              </div>
+            ))}
           </CardContent>
         </Card>
-      )}
 
-      {/* Loading State */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <Loader className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-4" />
-            <p className="text-slate-400">جاري تحميل البيانات...</p>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">نظرة عامة</h1>
-              <p className="text-slate-400 mt-1">
-                مرحباً بك في لوحة تحكم المشرف
-              </p>
-            </div>
-            <Button
-              onClick={() => setShowAddAdminModal(true)}
-              className="cursor-pointer bg-primary hover:bg-primary/90"
-            >
-              <UserPlus className="w-4 h-4 ml-2" />
-              إضافة مشرف جديد
-            </Button>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {stats.map((stat, index) => (
-              <Card key={index} className="bg-slate-800/50 border-slate-700">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm text-slate-400">{stat.title}</p>
-                      <p className="text-3xl font-bold text-white mt-2">
-                        {stat.value}
-                      </p>
-                      <div className="flex items-center gap-1 mt-2">
-                        <TrendingUp className="w-4 h-4 text-emerald-400" />
-                        <span className="text-sm text-emerald-400">
-                          {stat.change}
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          من الشهر الماضي
-                        </span>
-                      </div>
-                    </div>
-                    <div
-                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}
-                    >
-                      <stat.icon className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Recent Activity */}
-            <Card className="lg:col-span-2 bg-slate-800/50 border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-amber-500" />
-                  النشاط الأخير
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {recentActivities.map((activity, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700/50"
-                  >
-                    <div
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        activity.status === "success"
-                          ? "bg-emerald-500/10 text-emerald-400"
-                          : activity.status === "pending"
-                            ? "bg-amber-500/10 text-amber-400"
-                            : "bg-red-500/10 text-red-400"
-                      }`}
-                    >
-                      <activity.icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-white">{activity.message}</p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {activity.time}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={
-                        activity.status === "success"
-                          ? "default"
-                          : activity.status === "pending"
-                            ? "secondary"
-                            : "destructive"
-                      }
-                      className="text-xs"
-                    >
-                      {activity.status === "success"
-                        ? "مكتمل"
-                        : activity.status === "pending"
-                          ? "معلق"
-                          : "مُبلغ عنه"}
-                    </Badge>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <div className="space-y-4">
-              {/* Notification Stats */}
-              <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg flex items-center gap-2">
-                    <Bell className="w-5 h-5 text-amber-500" />
-                    حالة الإشعارات
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {notifications.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50"
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                        {item.type === "email" ? (
-                          <Mail className="w-5 h-5 text-blue-400" />
-                        ) : (
-                          <Bell className="w-5 h-5 text-blue-400" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-white">
-                          {item.count}
-                        </p>
-                        <p className="text-xs text-slate-400">{item.label}</p>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Account Status */}
-              <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg flex items-center gap-2">
-                    <Users className="w-5 h-5 text-amber-500" />
-                    حالة الحسابات
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-emerald-400" />
-                        <span className="text-sm text-slate-300">
-                          محامون نشطون
-                        </span>
-                      </div>
-                      <span className="font-bold text-white">342</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-amber-400" />
-                        <span className="text-sm text-slate-300">
-                          في انتظار التوثيق
-                        </span>
-                      </div>
-                      <span className="font-bold text-white">23</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50">
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-red-400" />
-                        <span className="text-sm text-slate-300">
-                          حسابات معلقة
-                        </span>
-                      </div>
-                      <span className="font-bold text-white">5</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Admins Table */}
+        {/* Quick Stats */}
+        <div className="space-y-4">
+          {/* Notification Stats */}
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Shield className="w-5 h-5 text-amber-500" />
-                إدارة المشرفين
+              <CardTitle className="text-white text-lg flex items-center gap-2">
+                <Bell className="w-5 h-5 text-amber-500" />
+                حالة الإشعارات
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-slate-700 hover:bg-slate-900/50">
-                    <TableHead className="text-slate-400 text-center">
-                      الاسم
-                    </TableHead>
-                    <TableHead className="text-slate-400 text-center">
-                      البريد الإلكتروني
-                    </TableHead>
-                    <TableHead className="text-slate-400 text-center">
-                      الدور
-                    </TableHead>
-                    <TableHead className="text-slate-400 text-center">
-                      تاريخ الإضافة
-                    </TableHead>
-                    <TableHead className="text-slate-400 text-center">
-                      الحالة
-                    </TableHead>
-                    <TableHead className="text-slate-400 text-center">
-                      الإجراءات
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="text-center">
-                  {admins.map((admin) => (
-                    <TableRow
-                      key={admin.id}
-                      className="border-slate-700 hover:bg-slate-900/50"
-                    >
-                      <TableCell className="text-white font-medium">
-                        {admin.name}
-                      </TableCell>
-                      <TableCell className="text-slate-300">
-                        {admin.email}
-                      </TableCell>
-                      <TableCell>{getRoleBadge(admin.role)}</TableCell>
-                      <TableCell className="text-slate-400">
-                        {admin.createdAt}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={
-                            admin.status === "active"
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : "bg-red-500/20 text-red-400"
-                          }
-                        >
-                          {admin.status === "active" ? "نشط" : "غير نشط"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteAdmin(admin.id)}
-                          disabled={admin.role === "super_admin"}
-                          className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <CardContent className="space-y-4">
+              {notifications.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 hover:bg-slate-900/70 transition-colors duration-200"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    {item.type === "email" ? (
+                      <Mail className="w-5 h-5 text-blue-400" />
+                    ) : (
+                      <Bell className="w-5 h-5 text-blue-400" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-white">
+                      {item.count}
+                    </p>
+                    <p className="text-xs text-slate-400">{item.label}</p>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
 
-          {/* Add Admin Modal */}
-          <Dialog open={showAddAdminModal} onOpenChange={setShowAddAdminModal}>
-            <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
-              <DialogHeader className="mt-4">
-                <DialogTitle className="text-white flex items-center justify-center gap-2">
-                  <UserPlus className="w-5 h-5 text-white" />
-                  إضافة مشرف جديد
-                </DialogTitle>
-                <DialogDescription className="text-slate-400 text-center">
-                  أدخل بيانات المشرف الجديد لإضافته إلى النظام
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label className="text-slate-300">الاسم الكامل</Label>
-                  <Input
-                    value={newAdmin.name}
-                    onChange={(e) =>
-                      setNewAdmin({ ...newAdmin, name: e.target.value })
-                    }
-                    placeholder="أدخل اسم المشرف"
-                    className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${formErrors.name ? "border-red-500" : ""}`}
-                  />
-                  {formErrors.name && (
-                    <p className="text-sm text-red-400">{formErrors.name}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-slate-300">البريد الإلكتروني</Label>
-                  <Input
-                    type="email"
-                    value={newAdmin.email}
-                    onChange={(e) =>
-                      setNewAdmin({ ...newAdmin, email: e.target.value })
-                    }
-                    placeholder="example@wakili.me"
-                    className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${formErrors.email ? "border-red-500" : ""}`}
-                  />
-                  {formErrors.email && (
-                    <p className="text-sm text-red-400">{formErrors.email}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-slate-300">كلمة المرور</Label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      value={newAdmin.password}
-                      onChange={(e) =>
-                        setNewAdmin({ ...newAdmin, password: e.target.value })
-                      }
-                      placeholder="أدخل كلمة مرور قوية"
-                      className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 pl-10 ${formErrors.password ? "border-red-500" : ""}`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
+          {/* Account Status */}
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white text-lg flex items-center gap-2">
+                <Users className="w-5 h-5 text-amber-500" />
+                حالة الحسابات
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 hover:bg-slate-900/70 transition-colors duration-200">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <span className="text-sm text-slate-300">محامون نشطون</span>
                   </div>
-                  {formErrors.password && (
-                    <p className="text-sm text-red-400">
-                      {formErrors.password}
-                    </p>
-                  )}
+                  <span className="font-bold text-white">342</span>
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="text-slate-300">تأكيد كلمة المرور</Label>
-                  <Input
-                    type="password"
-                    value={newAdmin.confirmPassword}
-                    onChange={(e) =>
-                      setNewAdmin({
-                        ...newAdmin,
-                        confirmPassword: e.target.value,
-                      })
-                    }
-                    placeholder="أعد إدخال كلمة المرور"
-                    className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${formErrors.confirmPassword ? "border-red-500" : ""}`}
-                  />
-                  {formErrors.confirmPassword && (
-                    <p className="text-sm text-red-400">
-                      {formErrors.confirmPassword}
-                    </p>
-                  )}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 hover:bg-slate-900/70 transition-colors duration-200">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-amber-400" />
+                    <span className="text-sm text-slate-300">
+                      في انتظار التوثيق
+                    </span>
+                  </div>
+                  <span className="font-bold text-white">23</span>
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="text-slate-300">الدور</Label>
-                  <Select
-                    dir="rtl"
-                    value={newAdmin.role}
-                    onValueChange={(
-                      value: "super_admin" | "admin" | "moderator",
-                    ) => setNewAdmin({ ...newAdmin, role: value })}
-                  >
-                    <SelectTrigger className="cursor-pointer bg-slate-900 border-slate-600 text-white w-40">
-                      <SelectValue placeholder="اختر الدور" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700">
-                      <SelectItem
-                        value="admin"
-                        className="cursor-pointer text-white hover:bg-slate-700"
-                      >
-                        مشرف
-                      </SelectItem>
-                      <SelectItem
-                        value="moderator"
-                        className="cursor-pointer text-white hover:bg-slate-700"
-                      >
-                        مراقب
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 hover:bg-slate-900/70 transition-colors duration-200">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-400" />
+                    <span className="text-sm text-slate-300">حسابات معلقة</span>
+                  </div>
+                  <span className="font-bold text-white">5</span>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
-              <DialogFooter className="mt-6 gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddAdminModal(false)}
-                  className="cursor-pointer border-slate-600 text-slate-300 hover:bg-slate-700"
+      {/* Admins Table */}
+      <Card className="bg-slate-800/50 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Shield className="w-5 h-5 text-amber-500" />
+            إدارة المشرفين
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow className="border-slate-700 bg-slate-800/50">
+                <TableHead className="text-slate-400 text-center">
+                  الاسم
+                </TableHead>
+                <TableHead className="text-slate-400 text-center">
+                  البريد الإلكتروني
+                </TableHead>
+                <TableHead className="text-slate-400 text-center">
+                  الدور
+                </TableHead>
+                <TableHead className="text-slate-400 text-center">
+                  تاريخ الإضافة
+                </TableHead>
+                <TableHead className="text-slate-400 text-center">
+                  الحالة
+                </TableHead>
+                <TableHead className="text-slate-400 text-center">
+                  الإجراءات
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {admins.map((admin) => (
+                <TableRow
+                  key={admin.id}
+                  className="border-slate-700 hover:bg-slate-900/70 transition-colors duration-200 cursor-pointer"
                 >
-                  إلغاء
-                </Button>
-                <Button
-                  onClick={handleAddAdmin}
-                  disabled={isSubmittingAdmin}
-                  className="cursor-pointer bg-primary hover:bg-primary/10"
-                >
-                  {isSubmittingAdmin ? (
-                    <>
-                      <Loader className="w-4 h-4 ml-2 animate-spin" />
-                      جاري الإضافة...
-                    </>
-                  ) : (
-                    "إضافة المشرف"
+                  <TableCell className="text-white font-medium text-center">
+                    {admin.name}
+                  </TableCell>
+                  <TableCell className="text-slate-300 text-center">
+                    {admin.email}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {getRoleBadge(admin.role)}
+                  </TableCell>
+                  <TableCell className="text-slate-400 text-center">
+                    {admin.createdAt}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge
+                      className={
+                        admin.status === "active"
+                          ? "bg-emerald-500/20 text-emerald-400"
+                          : "bg-red-500/20 text-red-400"
+                      }
+                    >
+                      {admin.status === "active" ? "نشط" : "غير نشط"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteAdmin(admin.id)}
+                      disabled={admin.role === "super_admin"}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Add Admin Modal */}
+      <Dialog open={showAddAdminModal} onOpenChange={setShowAddAdminModal}>
+        <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+          <DialogHeader className="mt-4">
+            <DialogTitle className="text-white flex items-center justify-center gap-2">
+              <UserPlus className="w-5 h-5" />
+              إضافة مشرف جديد
+            </DialogTitle>
+            <DialogDescription className="text-slate-400 text-center">
+              أدخل بيانات المشرف الجديد لإضافته إلى النظام
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            {/* Name Row */}
+            <div className="space-y-2">
+              <Label className="text-slate-300">الاسم</Label>
+              <div className="flex gap-4">
+                {/* First Name */}
+                <div className="flex-1">
+                  <Input
+                    value={newAdmin.firstName || ""}
+                    onChange={(e) =>
+                      setNewAdmin({ ...newAdmin, firstName: e.target.value })
+                    }
+                    placeholder="الاسم الأول"
+                    className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
+                      formErrors.firstName ? "border-red-500" : ""
+                    }`}
+                  />
+                  {formErrors.firstName && (
+                    <p className="text-sm text-red-400">
+                      {formErrors.firstName}
+                    </p>
                   )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </>
-      )}
+                </div>
+
+                {/* Last Name */}
+                <div className="flex-1">
+                  <Input
+                    value={newAdmin.lastName || ""}
+                    onChange={(e) =>
+                      setNewAdmin({ ...newAdmin, lastName: e.target.value })
+                    }
+                    placeholder="اسم العائلة"
+                    className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
+                      formErrors.lastName ? "border-red-500" : ""
+                    }`}
+                  />
+                  {formErrors.lastName && (
+                    <p className="text-sm text-red-400">
+                      {formErrors.lastName}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <Label className="text-slate-300">البريد الإلكتروني</Label>
+              <Input
+                type="email"
+                value={newAdmin.email}
+                onChange={(e) =>
+                  setNewAdmin({ ...newAdmin, email: e.target.value })
+                }
+                placeholder="example@wakili.me"
+                className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
+                  formErrors.email ? "border-red-500" : ""
+                }`}
+              />
+              {formErrors.email && (
+                <p className="text-sm text-red-400">{formErrors.email}</p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <Label className="text-slate-300">كلمة المرور</Label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={newAdmin.password}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, password: e.target.value })
+                  }
+                  placeholder="أدخل كلمة مرور قوية"
+                  className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 pl-10 ${
+                    formErrors.password ? "border-red-500" : ""
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              {formErrors.password && (
+                <p className="text-sm text-red-400">{formErrors.password}</p>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <Label className="text-slate-300">تأكيد كلمة المرور</Label>
+              <Input
+                type="password"
+                value={newAdmin.confirmPassword}
+                onChange={(e) =>
+                  setNewAdmin({
+                    ...newAdmin,
+                    confirmPassword: e.target.value,
+                  })
+                }
+                placeholder="أعد إدخال كلمة المرور"
+                className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
+                  formErrors.confirmPassword ? "border-red-500" : ""
+                }`}
+              />
+              {formErrors.confirmPassword && (
+                <p className="text-sm text-red-400">
+                  {formErrors.confirmPassword}
+                </p>
+              )}
+            </div>
+
+            {/* Role */}
+            <div className="space-y-2">
+              <Label className="text-slate-300">الدور</Label>
+              <Select
+                value={newAdmin.role}
+                onValueChange={(value: "super_admin" | "admin" | "moderator") =>
+                  setNewAdmin({ ...newAdmin, role: value })
+                }
+              >
+                <SelectTrigger className="cursor-pointer bg-slate-900 border-slate-600 text-white justify-end">
+                  <SelectValue placeholder="اختر الدور" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  <SelectItem
+                    value="admin"
+                    className="text-white hover:bg-slate-700 cursor-pointer justify-end"
+                  >
+                    مشرف
+                  </SelectItem>
+                  <SelectItem
+                    value="moderator"
+                    className="text-white hover:bg-slate-700 cursor-pointer justify-end"
+                  >
+                    مراقب
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="mt-6 flex justify-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowAddAdminModal(false)}
+              className="cursor-pointer border-red-500/40 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors duration-200"
+            >
+              إلغاء
+            </Button>
+
+            <Button
+              onClick={handleAddAdmin}
+              className="cursor-pointer bg-emerald-600 text-white hover:bg-emerald-500 transition-colors duration-200"
+            >
+              إضافة المشرف
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

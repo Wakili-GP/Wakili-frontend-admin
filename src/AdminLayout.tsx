@@ -1,5 +1,10 @@
-import { useEffect } from "react";
-import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
+import {
+  Outlet,
+  useNavigate,
+  useLocation,
+  Link,
+  Navigate,
+} from "react-router-dom";
 import {
   Shield,
   Users,
@@ -16,6 +21,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "@/components/ui/sonner";
 
 const navItems = [
   {
@@ -59,6 +66,21 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isAuthenticated, isLoading, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    toast.success("تم تسجيل الخروج بنجاح");
+    navigate("/login", { replace: true });
+  };
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-slate-900" dir="rtl" />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-900" dir="rtl">

@@ -4,7 +4,10 @@ import axios, {
   type AxiosResponse,
 } from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+const API_BASE_URL =
+  import.meta.env.MODE === "development"
+    ? "/api"
+    : import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 const httpClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -25,7 +28,18 @@ httpClient.interceptors.request.use(
 );
 
 httpClient.interceptors.response.use(
-  (response: AxiosResponse) => response,
+  (response: AxiosResponse) => {
+    console.log(response);
+    if (
+      response.data &&
+      typeof response.data === "object" &&
+      "success" in response.data &&
+      "data" in response.data
+    ) {
+      response.data = response.data.data;
+    }
+    return response;
+  },
   (error) => {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       localStorage.removeItem("adminToken");

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,44 +10,34 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Shield, Eye, EyeOff, Loader, AlertCircle } from "lucide-react";
+import { Shield, Eye, EyeOff, Loader } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
-import AuthServices, {
-  type AdminLoginInput,
-  type AuthAdmin,
-} from "./services/auth.service";
+import { type AdminLoginInput } from "./services/auth.service";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { useAuth } from "@/context/AuthContext";
 const AdminLogin = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const { login } = useAuth();
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<AdminLoginInput>();
 
-  useEffect(() => {
-    const token = localStorage.getItem("adminToken");
-    if (token) navigate("/dashboard");
-  }, [navigate]);
-
-  const loginMutation = useMutation<AuthAdmin, Error, AdminLoginInput>({
-    mutationFn: AuthServices.login,
-    onSuccess: (data) => {
-      localStorage.setItem("adminToken", data.accessToken);
-      localStorage.setItem("adminAuth", "true");
-      localStorage.setItem("adminUser", JSON.stringify(data.user));
-
+  const loginMutation = useMutation<void, Error, AdminLoginInput>({
+    mutationFn: (credentials) => login(credentials),
+    onSuccess: () => {
       toast.success("تم تسجيل الدخول بنجاح", {
         description: "مرحباً بك في لوحة التحكم",
       });
 
       navigate("/dashboard");
     },
-    onError: (err: Error) => {
+    onError: () => {
       toast.error("خطأ في تسجيل الدخول", {
-        description: err.message,
+        description: "حاول تسجيل الدخول مرة اخري",
       });
     },
   });
@@ -74,16 +64,6 @@ const AdminLogin = () => {
         </CardHeader>
 
         <CardContent>
-          {loginMutation.isError && (
-            <div className="p-4 mb-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-red-400 font-medium">
-                  {loginMutation.error?.message}
-                </p>
-              </div>
-            </div>
-          )}
           <form
             onSubmit={handleSubmit((onSubmit) =>
               loginMutation.mutate(onSubmit),

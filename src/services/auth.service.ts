@@ -24,7 +24,6 @@ export interface Admin {
 export interface AuthAdmin extends Token {
   user: Admin;
 }
-
 const AuthServices = {
   login: async ({ email, password }: AdminLoginInput): Promise<AuthAdmin> => {
     const res = await httpClient.post<AuthAdmin>("/Auth/admin-login", {
