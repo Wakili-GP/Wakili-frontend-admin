@@ -60,18 +60,6 @@ const AdminLayout = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    const isAuth = localStorage.getItem("adminAuth");
-    if (!isAuth) {
-      navigate("/login");
-    }
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("adminAuth");
-    navigate("/login");
-  };
-
   return (
     <div className="min-h-screen bg-slate-900" dir="rtl">
       {/* Mobile Header */}

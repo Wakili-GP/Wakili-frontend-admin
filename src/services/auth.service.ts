@@ -1,3 +1,5 @@
+import httpClient from "@/lib/HttpClient";
+
 export interface AdminLoginInput {
   email: string;
   password: string;
@@ -22,3 +24,15 @@ export interface Admin {
 export interface AuthAdmin extends Token {
   user: Admin;
 }
+
+const AuthServices = {
+  login: async ({ email, password }: AdminLoginInput): Promise<AuthAdmin> => {
+    const res = await httpClient.post<AuthAdmin>("/Auth/admin-login", {
+      email,
+      password,
+    });
+    return res.data;
+  },
+};
+
+export default AuthServices;

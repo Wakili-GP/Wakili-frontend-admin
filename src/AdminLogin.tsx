@@ -12,85 +12,45 @@ import {
 } from "@/components/ui/card";
 import { Shield, Eye, EyeOff, Loader, AlertCircle } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
-
-// Mock credentials for development/fallback
-const MOCK_ADMIN = {
-  email: "admin@wakili.me",
-  password: "admin123",
-  token: "mock-admin-token-12345",
-};
-
-const MOCK_LOGIN_RESPONSE = {
-  token: MOCK_ADMIN.token,
-  admin: {
-    id: "1",
-    name: "المشرف الرئيسي",
-    email: MOCK_ADMIN.email,
-    role: "super_admin" as const,
-  },
-};
-
+import AuthServices, {
+  type AdminLoginInput,
+  type AuthAdmin,
+} from "./services/auth.service";
+import { useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 const AdminLogin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<AdminLoginInput>();
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     if (token) navigate("/dashboard");
   }, [navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+  const loginMutation = useMutation<AuthAdmin, Error, AdminLoginInput>({
+    mutationFn: AuthServices.login,
+    onSuccess: (data) => {
+      localStorage.setItem("adminToken", data.accessToken);
+      localStorage.setItem("adminAuth", "true");
+      localStorage.setItem("adminUser", JSON.stringify(data.user));
 
-    try {
-      const loginInput: LoginInput = { email, password };
+      toast.success("تم تسجيل الدخول بنجاح", {
+        description: "مرحباً بك في لوحة التحكم",
+      });
 
-      // Try API call first
-      let result = await authApi.login(loginInput);
-
-      // Fallback to mock for development
-      if (!result) {
-        if (email === MOCK_ADMIN.email && password === MOCK_ADMIN.password) {
-          result = MOCK_LOGIN_RESPONSE;
-        } else {
-          setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
-          toast.error("خطأ في تسجيل الدخول", {
-            description: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-          });
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      // Store token
-      if (result) {
-        localStorage.setItem("adminToken", result.token);
-        localStorage.setItem("adminAuth", "true");
-        localStorage.setItem("adminUser", JSON.stringify(result.admin));
-
-        toast.success("تم تسجيل الدخول بنجاح", {
-          description: "مرحباً بك في لوحة التحكم",
-        });
-        navigate("/dashboard");
-      } else {
-        setError("فشل تسجيل الدخول");
-        toast.error("خطأ في تسجيل الدخول");
-      }
-    } catch (err) {
-      console.error("Login error:", err);
-      setError("حدث خطأ أثناء محاولة تسجيل الدخول");
-      toast.error("خطأ في الاتصال");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+      navigate("/dashboard");
+    },
+    onError: (err: Error) => {
+      toast.error("خطأ في تسجيل الدخول", {
+        description: err.message,
+      });
+    },
+  });
   return (
     <div
       className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4"
@@ -114,15 +74,22 @@ const AdminLogin = () => {
         </CardHeader>
 
         <CardContent>
-          {error && (
+          {loginMutation.isError && (
             <div className="p-4 mb-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
               <div>
-                <p className="text-red-400 font-medium">{error}</p>
+                <p className="text-red-400 font-medium">
+                  {loginMutation.error?.message}
+                </p>
               </div>
             </div>
           )}
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form
+            onSubmit={handleSubmit((onSubmit) =>
+              loginMutation.mutate(onSubmit),
+            )}
+            className="space-y-5"
+          >
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-300">
                 البريد الإلكتروني
@@ -130,12 +97,12 @@ const AdminLogin = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@wakili.me"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                {...register("email", { required: "البريد الإلكتروني مطلوب" })}
                 className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500/20"
-                required
               />
+              {errors.email && (
+                <p className="text-red-400 text-sm">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -146,11 +113,8 @@ const AdminLogin = () => {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  {...register("password", { required: "كلمة المرور مطلوبة" })}
                   className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500/20 pl-10"
-                  required
                 />
                 <button
                   type="button"
@@ -163,15 +127,20 @@ const AdminLogin = () => {
                     <Eye className="w-4 h-4" />
                   )}
                 </button>
+                {errors.password && (
+                  <p className="text-red-400 text-sm mt-1">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
             </div>
 
             <Button
               type="submit"
               className="cursor-pointer w-full bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium py-5 shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isLoading}
+              disabled={loginMutation.isPending}
             >
-              {isLoading ? (
+              {loginMutation.isPending ? (
                 <>
                   <Loader className="w-4 h-4 ml-2 animate-spin" />
                   جاري تسجيل الدخول...
@@ -181,16 +150,6 @@ const AdminLogin = () => {
               )}
             </Button>
           </form>
-
-          <div className="mt-6 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
-            <p className="text-xs text-slate-400 text-center">
-              بيانات الدخول التجريبية:
-              <br />
-              <span className="text-amber-400 font-mono">
-                admin@wakili.me / admin123
-              </span>
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

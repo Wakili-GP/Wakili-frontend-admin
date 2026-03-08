@@ -10,8 +10,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ReviewModeration from "./admin/ReviewModeration";
 import LawCategoriesManagement from "./admin/LawCategoriesManagement";
-import "./App.css";
 import ArticlesManagement from "./admin/ArticlesManagement";
+import "./App.css";
 function App() {
   return (
     <TooltipProvider>
