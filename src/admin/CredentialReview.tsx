@@ -33,13 +33,12 @@ import {
   Calendar,
   ExternalLink,
   Loader,
-  AlertCircle,
 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
-import { credentialReviewApi } from "@/services/credential-review.service";
 import type { PendingCredential } from "@/lib/api-types";
 
-// Mock data for fallback
+/* ---------------- MOCK DATA ---------------- */
+
 const mockCredentials: PendingCredential[] = [
   {
     id: "1",
@@ -54,7 +53,7 @@ const mockCredentials: PendingCredential[] = [
     field: "القانون الدولي",
     university: "جامعة الأزهر",
     year: "2023",
-    diplomaUrl: "#diploma-doc",
+    diplomaUrl: "#",
   },
   {
     id: "2",
@@ -68,7 +67,7 @@ const mockCredentials: PendingCredential[] = [
     certName: "شهادة المحكم الدولي",
     certIssuer: "غرفة التجارة الدولية",
     certYear: "2024",
-    certDocumentUrl: "#cert-doc",
+    certDocumentUrl: "#",
   },
   {
     id: "3",
@@ -83,138 +82,96 @@ const mockCredentials: PendingCredential[] = [
     expCompany: "بنك مصر",
     expStartYear: "2020",
     expEndYear: "2024",
-    expDescription:
-      "تقديم الاستشارات القانونية للبنك في المعاملات التجارية الدولية",
-  },
-  {
-    id: "4",
-    lawyerId: "1",
-    lawyerName: "د. أحمد سليمان",
-    lawyerImage:
-      "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=100&h=100&fit=crop",
-    type: "certificate",
-    submittedAt: "2024-11-20",
-    status: "approved",
-    certName: "شهادة التحكيم التجاري",
-    certIssuer: "مركز القاهرة للتحكيم",
-    certYear: "2023",
-    certDocumentUrl: "#cert-doc-2",
-  },
-  {
-    id: "5",
-    lawyerId: "4",
-    lawyerName: "منى الشافعي",
-    lawyerImage:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop",
-    type: "education",
-    submittedAt: "2024-11-18",
-    status: "rejected",
-    degree: "ماجستير",
-    field: "القانون الجنائي",
-    university: "جامعة عين شمس",
-    year: "2022",
-    diplomaUrl: "#diploma-doc-2",
+    expDescription: "تقديم الاستشارات القانونية للبنك",
   },
 ];
+
+/* ---------------- COMPONENT ---------------- */
 
 const CredentialReview = () => {
   const [credentials, setCredentials] = useState<PendingCredential[]>([]);
   const [selectedCredential, setSelectedCredential] =
     useState<PendingCredential | null>(null);
+
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+
   const [activeTab, setActiveTab] = useState("pending");
+
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
 
-  // Load credentials on mount
+  /* ---------------- LOAD MOCK DATA ---------------- */
+
   useEffect(() => {
-    const loadCredentials = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await credentialReviewApi.getCredentials();
-        if (data && data.length > 0) {
-          setCredentials(data);
-        } else {
-          setCredentials(mockCredentials);
-        }
-      } catch (err) {
-        console.error("Failed to load credentials:", err);
-        setCredentials(mockCredentials);
-        setError("فشل في تحميل البيانات");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadCredentials();
+    setTimeout(() => {
+      setCredentials(mockCredentials);
+      setIsLoading(false);
+    }, 600);
   }, []);
 
+  /* ---------------- COUNTS ---------------- */
+
   const pendingCount = credentials.filter((c) => c.status === "pending").length;
+
   const approvedCount = credentials.filter(
     (c) => c.status === "approved",
   ).length;
+
   const rejectedCount = credentials.filter(
     (c) => c.status === "rejected",
   ).length;
 
-  const handleApprove = async (id: string) => {
-    try {
-      setIsApproving(true);
-      const result = await credentialReviewApi.approveCredential({
-        credentialId: id,
-      });
-      if (result) {
-        setCredentials((prev) => prev.map((c) => (c.id === id ? result : c)));
-        setShowReviewModal(false);
-        setSelectedCredential(null);
-        toast.success("تمت الموافقة على المستند بنجاح");
-      } else {
-        toast.error("فشل في الموافقة على المستند");
-      }
-    } catch (err) {
-      console.error("Error approving credential:", err);
-      toast.error("حدث خطأ أثناء الموافقة");
-    } finally {
+  /* ---------------- ACTIONS ---------------- */
+
+  const handleApprove = (id: string) => {
+    setIsApproving(true);
+
+    setTimeout(() => {
+      setCredentials((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, status: "approved" } : c)),
+      );
+
+      setShowReviewModal(false);
+      setSelectedCredential(null);
       setIsApproving(false);
-    }
+
+      toast.success("تمت الموافقة على المستند");
+    }, 600);
   };
 
-  const handleReject = async (id: string) => {
+  const handleReject = (id: string) => {
     if (!rejectionReason.trim()) {
       toast.error("يرجى إدخال سبب الرفض");
       return;
     }
-    try {
-      setIsRejecting(true);
-      const result = await credentialReviewApi.rejectCredential({
-        credentialId: id,
-        reason: rejectionReason,
-      });
-      if (result) {
-        setCredentials((prev) => prev.map((c) => (c.id === id ? result : c)));
-        setShowReviewModal(false);
-        setSelectedCredential(null);
-        setRejectionReason("");
-        toast.success("تم رفض المستند وإرسال إشعار للمحامي");
-      } else {
-        toast.error("فشل في رفض المستند");
-      }
-    } catch (err) {
-      console.error("Error rejecting credential:", err);
-      toast.error("حدث خطأ أثناء رفض المستند");
-    } finally {
+
+    setIsRejecting(true);
+
+    setTimeout(() => {
+      setCredentials((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, status: "rejected", rejectionReason } : c,
+        ),
+      );
+
+      setShowReviewModal(false);
+      setSelectedCredential(null);
+      setRejectionReason("");
+
       setIsRejecting(false);
-    }
+
+      toast.success("تم رفض المستند");
+    }, 600);
   };
 
-  const openReviewModal = (credential: PendingCredential) => {
-    setSelectedCredential(credential);
+  const openReviewModal = (cred: PendingCredential) => {
+    setSelectedCredential(cred);
     setShowReviewModal(true);
-    setRejectionReason("");
   };
+
+  /* ---------------- HELPERS ---------------- */
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -229,57 +186,29 @@ const CredentialReview = () => {
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case "education":
-        return "مؤهل علمي";
-      case "certificate":
-        return "شهادة مهنية";
-      case "experience":
-        return "خبرة عملية";
-      default:
-        return type;
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
         return (
-          <Badge className="bg-amber-500/20 text-amber-400 hover:bg-amber-500/20">
+          <Badge className="bg-amber-500/20 text-amber-400">
             <Clock className="w-3 h-3 ml-1" />
             قيد المراجعة
           </Badge>
         );
       case "approved":
         return (
-          <Badge className="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20">
+          <Badge className="bg-emerald-500/20 text-emerald-400">
             <CheckCircle className="w-3 h-3 ml-1" />
             موافق عليه
           </Badge>
         );
       case "rejected":
         return (
-          <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/20">
+          <Badge className="bg-red-500/20 text-red-400">
             <XCircle className="w-3 h-3 ml-1" />
             مرفوض
           </Badge>
         );
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
-  const getCredentialTitle = (cred: PendingCredential) => {
-    switch (cred.type) {
-      case "education":
-        return `${cred.degree} في ${cred.field}`;
-      case "certificate":
-        return cred.certName;
-      case "experience":
-        return `${cred.expTitle} - ${cred.expCompany}`;
-      default:
-        return "";
     }
   };
 
@@ -290,193 +219,111 @@ const CredentialReview = () => {
     return true;
   });
 
+  /* ---------------- LOADING ---------------- */
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <Loader className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-4" />
-          <p className="text-slate-400">جاري تحميل البيانات...</p>
-        </div>
+      <div className="flex justify-center py-12">
+        <Loader className="w-10 h-10 animate-spin text-amber-500" />
       </div>
     );
   }
 
+  /* ---------------- UI ---------------- */
+
   return (
     <div className="space-y-6">
-      {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-red-400 font-medium">{error}</p>
-            <p className="text-red-300/70 text-sm mt-1">
-              تم تحميل بيانات تجريبية بدلاً من ذلك
-            </p>
-          </div>
-        </div>
-      )}
       {/* Header */}
+
       <div>
         <h1 className="text-2xl font-bold text-white">
           مراجعة المؤهلات والشهادات
         </h1>
-        <p className="text-slate-400 mt-1">
-          مراجعة واعتماد المؤهلات والشهادات المقدمة من المحامين
+        <p className="text-slate-400">
+          مراجعة واعتماد المؤهلات المقدمة من المحامين
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+      <div className="grid grid-cols-3 gap-4">
         <Card className="bg-slate-800/50 border-slate-700">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">في انتظار المراجعة</p>
-                <p className="text-3xl font-bold text-amber-400 mt-1">
-                  {pendingCount}
-                </p>
-              </div>
-              <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-amber-400" />
-              </div>
-            </div>
+          <CardContent className="p-6 text-center">
+            <p className="text-slate-400">قيد المراجعة</p>
+            <p className="text-3xl text-amber-400">{pendingCount}</p>
           </CardContent>
         </Card>
+
         <Card className="bg-slate-800/50 border-slate-700">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">تمت الموافقة</p>
-                <p className="text-3xl font-bold text-emerald-400 mt-1">
-                  {approvedCount}
-                </p>
-              </div>
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-emerald-400" />
-              </div>
-            </div>
+          <CardContent className="p-6 text-center">
+            <p className="text-slate-400">موافق عليها</p>
+            <p className="text-3xl text-emerald-400">{approvedCount}</p>
           </CardContent>
         </Card>
+
         <Card className="bg-slate-800/50 border-slate-700">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">مرفوضة</p>
-                <p className="text-3xl font-bold text-red-400 mt-1">
-                  {rejectedCount}
-                </p>
-              </div>
-              <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
-                <XCircle className="w-6 h-6 text-red-400" />
-              </div>
-            </div>
+          <CardContent className="p-6 text-center">
+            <p className="text-slate-400">مرفوضة</p>
+            <p className="text-3xl text-red-400">{rejectedCount}</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Tabs */}
-      <Tabs dir="rtl" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-slate-800 border-slate-700">
-          <TabsTrigger
-            value="pending"
-            className="cursor-pointer data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400"
-          >
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl">
+        <TabsList>
+          <TabsTrigger value="pending">
             قيد المراجعة ({pendingCount})
           </TabsTrigger>
-          <TabsTrigger
-            value="approved"
-            className="cursor-pointer data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400"
-          >
+
+          <TabsTrigger value="approved">
             موافق عليها ({approvedCount})
           </TabsTrigger>
-          <TabsTrigger
-            value="rejected"
-            className="cursor-pointer data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400"
-          >
-            مرفوضة ({rejectedCount})
-          </TabsTrigger>
+
+          <TabsTrigger value="rejected">مرفوضة ({rejectedCount})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value={activeTab} className="mt-4">
+        <TabsContent value={activeTab}>
           <Card className="bg-slate-800/50 border-slate-700">
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-slate-700 hover:bg-slate-900/50">
-                    <TableHead className="text-center text-slate-400">
-                      المحامي
-                    </TableHead>
-                    <TableHead className="text-center text-slate-400">
-                      النوع
-                    </TableHead>
-                    <TableHead className="text-center text-slate-400">
-                      التفاصيل
-                    </TableHead>
-                    <TableHead className="text-center text-slate-400">
-                      تاريخ التقديم
-                    </TableHead>
-                    <TableHead className="text-center text-slate-400">
-                      الحالة
-                    </TableHead>
-                    <TableHead className="text-center text-slate-400">
-                      الإجراءات
-                    </TableHead>
+                  <TableRow>
+                    <TableHead>المحامي</TableHead>
+                    <TableHead>النوع</TableHead>
+                    <TableHead>التاريخ</TableHead>
+                    <TableHead>الحالة</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody className="text-center">
-                  {filteredCredentials.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={6}
-                        className="text-center text-slate-400 py-8"
-                      >
-                        لا توجد طلبات في هذه الفئة
+
+                <TableBody>
+                  {filteredCredentials.map((cred) => (
+                    <TableRow key={cred.id}>
+                      <TableCell>{cred.lawyerName}</TableCell>
+
+                      <TableCell className="flex items-center gap-2">
+                        {getTypeIcon(cred.type)}
+                        {cred.type}
+                      </TableCell>
+
+                      <TableCell>{cred.submittedAt}</TableCell>
+
+                      <TableCell>{getStatusBadge(cred.status)}</TableCell>
+
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openReviewModal(cred)}
+                        >
+                          <Eye className="w-4 h-4 ml-1" />
+                          مراجعة
+                        </Button>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    filteredCredentials.map((cred) => (
-                      <TableRow
-                        key={cred.id}
-                        className="text-center border-slate-700 hover:bg-slate-900/50"
-                      >
-                        <TableCell>
-                          <div className="flex items-center gap-3 justify-center">
-                            <img
-                              src={cred.lawyerImage}
-                              alt={cred.lawyerName}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                            <span className="text-white font-medium">
-                              {cred.lawyerName}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-center gap-2 text-slate-300">
-                            {getTypeIcon(cred.type)}
-                            <span>{getTypeLabel(cred.type)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-slate-300 max-w-xs truncate">
-                          {getCredentialTitle(cred)}
-                        </TableCell>
-                        <TableCell className="text-slate-400">
-                          {cred.submittedAt}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(cred.status)}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openReviewModal(cred)}
-                            className="cursor-pointer text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-                          >
-                            <Eye className="w-4 h-4 ml-1" />
-                            مراجعة
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>
@@ -484,240 +331,44 @@ const CredentialReview = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Review Modal */}
+      {/* Modal */}
+
       <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
-        <DialogContent
-          className="bg-slate-800 border-slate-700 max-w-2xl"
-          dir="rtl"
-        >
-          <DialogHeader className="mt-4">
-            <DialogTitle className="text-white flex items-center justify-center gap-2">
-              <Eye className="text-white w-7 h-7" />
-              مراجعة{" "}
-              {selectedCredential && getTypeLabel(selectedCredential.type)}
-            </DialogTitle>
-            <DialogDescription className="text-slate-400 text-center">
-              راجع التفاصيل والمستندات المرفقة قبل اتخاذ القرار
+        <DialogContent className="bg-slate-800 border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">مراجعة المستند</DialogTitle>
+
+            <DialogDescription>
+              تحقق من البيانات قبل اتخاذ القرار
             </DialogDescription>
           </DialogHeader>
 
-          {selectedCredential && (
-            <div className="space-y-6 mt-4">
-              {/* Lawyer Info */}
-              <div className="flex items-center gap-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
-                <img
-                  src={selectedCredential.lawyerImage}
-                  alt={selectedCredential.lawyerName}
-                  className="w-16 h-16 rounded-full object-cover"
-                />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-slate-400" />
-                    <span className="text-white font-medium">
-                      {selectedCredential.lawyerName}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Calendar className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-400 text-sm">
-                      تاريخ التقديم: {selectedCredential.submittedAt}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Credential Details */}
-              <div className="p-4 bg-slate-900/50 rounded-lg border border-slate-700 space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  {getTypeIcon(selectedCredential.type)}
-                  <span className="text-white font-medium">
-                    {getTypeLabel(selectedCredential.type)}
-                  </span>
-                  {getStatusBadge(selectedCredential.status)}
-                </div>
-
-                {selectedCredential.type === "education" && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-slate-400">الدرجة العلمية</p>
-                      <p className="text-white font-medium">
-                        {selectedCredential.degree}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-400">التخصص</p>
-                      <p className="text-white font-medium">
-                        {selectedCredential.field}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-400">الجامعة</p>
-                      <p className="text-white font-medium">
-                        {selectedCredential.university}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-400">سنة التخرج</p>
-                      <p className="text-white font-medium">
-                        {selectedCredential.year}
-                      </p>
-                    </div>
-                    {selectedCredential.diplomaUrl && (
-                      <div className="col-span-2">
-                        <p className="text-sm text-slate-400 mb-2">
-                          شهادة التخرج
-                        </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          asChild
-                          className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                        >
-                          <a
-                            href={selectedCredential.diplomaUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <FileText className="w-4 h-4 ml-2" />
-                            عرض المستند
-                            <ExternalLink className="w-3 h-3 mr-2" />
-                          </a>
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {selectedCredential.type === "certificate" && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2">
-                      <p className="text-sm text-slate-400">اسم الشهادة</p>
-                      <p className="text-white font-medium">
-                        {selectedCredential.certName}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-400">الجهة المانحة</p>
-                      <p className="text-white font-medium">
-                        {selectedCredential.certIssuer}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-400">سنة الحصول</p>
-                      <p className="text-white font-medium">
-                        {selectedCredential.certYear}
-                      </p>
-                    </div>
-                    {selectedCredential.certDocumentUrl && (
-                      <div className="col-span-2">
-                        <p className="text-sm text-slate-400 mb-2">
-                          المستند المرفق
-                        </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          asChild
-                          className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                        >
-                          <a
-                            href={selectedCredential.certDocumentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <FileText className="w-4 h-4 ml-2" />
-                            عرض المستند
-                            <ExternalLink className="w-3 h-3 mr-2" />
-                          </a>
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {selectedCredential.type === "experience" && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-slate-400">المسمى الوظيفي</p>
-                      <p className="text-white font-medium">
-                        {selectedCredential.expTitle}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-400">جهة العمل</p>
-                      <p className="text-white font-medium">
-                        {selectedCredential.expCompany}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-400">فترة العمل</p>
-                      <p className="text-white font-medium">
-                        {selectedCredential.expStartYear} -{" "}
-                        {selectedCredential.expEndYear}
-                      </p>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-sm text-slate-400">الوصف</p>
-                      <p className="text-slate-300">
-                        {selectedCredential.expDescription}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Rejection Reason (only for pending) */}
-              {selectedCredential.status === "pending" && (
-                <div className="space-y-2">
-                  <label className="text-sm text-slate-300 mb-2">
-                    سبب الرفض (مطلوب في حالة الرفض)
-                  </label>
-                  <Textarea
-                    value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
-                    placeholder="أدخل سبب الرفض ليتم إرساله للمحامي..."
-                    className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500"
-                  />
-                </div>
-              )}
-            </div>
+          {selectedCredential?.status === "pending" && (
+            <Textarea
+              placeholder="سبب الرفض"
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              className="bg-slate-900 border-slate-600 text-white"
+            />
           )}
 
-          <DialogFooter className="gap-2 mt-4">
+          <DialogFooter>
             {selectedCredential?.status === "pending" && (
               <>
                 <Button
                   variant="outline"
                   onClick={() => handleReject(selectedCredential.id)}
-                  disabled={isRejecting || isApproving}
-                  className="cursor-pointer border-red-500/50 text-red-400 hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isRejecting ? (
-                    <Loader className="w-4 h-4 ml-2 animate-spin" />
-                  ) : (
-                    <XCircle className="w-4 h-4 ml-2" />
-                  )}
-                  {isRejecting ? "جاري الرفض..." : "رفض"}
+                  رفض
                 </Button>
-                <Button
-                  onClick={() => handleApprove(selectedCredential.id)}
-                  disabled={isApproving || isRejecting}
-                  className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isApproving ? (
-                    <Loader className="w-4 h-4 ml-2 animate-spin" />
-                  ) : (
-                    <CheckCircle className="w-4 h-4 ml-2" />
-                  )}
-                  {isApproving ? "جاري الموافقة..." : "موافقة"}
+
+                <Button onClick={() => handleApprove(selectedCredential.id)}>
+                  موافقة
                 </Button>
               </>
             )}
-            <Button
-              variant="ghost"
-              onClick={() => setShowReviewModal(false)}
-              disabled={isApproving || isRejecting}
-              className="cursor-pointer text-slate-400 hover:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+
+            <Button variant="ghost" onClick={() => setShowReviewModal(false)}>
               إغلاق
             </Button>
           </DialogFooter>

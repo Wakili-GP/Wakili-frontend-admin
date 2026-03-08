@@ -46,117 +46,94 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/sonner";
-import { dashboardApi } from "@/services/dashboard.service";
-import type {
-  Activity,
-  DashboardStat,
-  Admin as AdminType,
-  AccountStatus,
-} from "@/lib/api-types";
-
-// Icon mappings for activity types
-const activityIconMap: Record<
-  string,
-  React.ComponentType<{ className?: string }>
-> = {
-  verification: UserCheck,
-  review: MessageSquare,
-  user: Users,
-  appointment: Calendar,
-  success: CheckCircle,
-  pending: Clock,
-  flagged: AlertCircle,
-};
-
-const getActivityIcon = (
-  type: string,
-): React.ComponentType<{ className?: string }> => {
-  return activityIconMap[type] || Clock;
-};
-
-// Fallback data for UI structure (will be replaced by API data)
-const defaultStats: DashboardStat[] = [
+const stats = [
   {
     title: "إجمالي المستخدمين",
-    value: "0",
-    change: "0%",
+    value: "2,847",
+    change: "+12%",
     icon: Users,
     color: "from-blue-500 to-blue-600",
   },
   {
     title: "طلبات التوثيق المعلقة",
-    value: "0",
-    change: "0%",
+    value: "23",
+    change: "-5%",
     icon: UserCheck,
     color: "from-amber-500 to-amber-600",
   },
   {
     title: "المواعيد هذا الشهر",
-    value: "0",
-    change: "0%",
+    value: "1,284",
+    change: "+18%",
     icon: Calendar,
     color: "from-emerald-500 to-emerald-600",
   },
   {
     title: "المراجعات الجديدة",
-    value: "0",
-    change: "0%",
+    value: "156",
+    change: "+8%",
     icon: MessageSquare,
     color: "from-purple-500 to-purple-600",
   },
 ];
 
-const defaultActivities: Activity[] = [
+const recentActivities = [
   {
     type: "verification",
-    message: "جاري تحميل البيانات...",
-    time: "الآن",
+    message: "طلب توثيق جديد من المحامي أحمد محمد",
+    time: "منذ 5 دقائق",
+    icon: UserCheck,
     status: "pending",
   },
-];
-
-const defaultNotifications = [
-  { type: "email", count: 0, label: "رسائل مُرسلة اليوم" },
-  { type: "notification", count: 0, label: "إشعارات مُرسلة اليوم" },
-];
-
-const defaultAccountStatus: AccountStatus = {
-  activeLawyers: 0,
-  pendingVerification: 0,
-  suspendedAccounts: 0,
-};
-
-const defaultAdmins: AdminType[] = [
   {
-    id: "1",
-    name: "المشرف الرئيسي",
-    email: "admin@wakili.me",
-    role: "super_admin",
-    createdAt: "2024-01-01",
-    status: "active",
+    type: "review",
+    message: "تم الإبلاغ عن مراجعة للمحامي سارة أحمد",
+    time: "منذ 15 دقيقة",
+    icon: MessageSquare,
+    status: "flagged",
   },
+  {
+    type: "user",
+    message: "تم تسجيل عميل جديد: محمد علي",
+    time: "منذ 30 دقيقة",
+    icon: Users,
+    status: "success",
+  },
+  {
+    type: "appointment",
+    message: "تم إكمال 15 جلسة استشارية اليوم",
+    time: "منذ ساعة",
+    icon: Calendar,
+    status: "success",
+  },
+  {
+    type: "verification",
+    message: "تمت الموافقة على توثيق المحامي خالد عبدالله",
+    time: "منذ ساعتين",
+    icon: CheckCircle,
+    status: "success",
+  },
+];
+
+const notifications = [
+  { type: "email", count: 45, label: "رسائل مُرسلة اليوم" },
+  { type: "notification", count: 128, label: "إشعارات مُرسلة اليوم" },
 ];
 
 const AdminDashboard = () => {
   // Loading and error states
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Data states
-  const [stats, setStats] = useState<DashboardStat[]>(defaultStats);
-  const [recentActivities, setRecentActivities] =
-    useState<Activity[]>(defaultActivities);
-  const [notifications, setNotifications] = useState(defaultNotifications);
-  const [accountStatus, setAccountStatus] =
-    useState<AccountStatus>(defaultAccountStatus);
-  const [admins, setAdmins] = useState<AdminType[]>(defaultAdmins);
+  // Dashboard data states
+  const [admins, setAdmins] = useState<AdminType[]>();
 
   // Modal and form states
   const [showAddAdminModal, setShowAddAdminModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const [newAdmin, setNewAdmin] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -171,27 +148,9 @@ const AdminDashboard = () => {
       try {
         setIsLoading(true);
         setError(null);
-
-        // Fetch dashboard data
-        const [data, accountStatusData] = await Promise.all([
-          dashboardApi.getDashboardData(),
-          dashboardApi.getAccountStatus(),
-        ]);
+        const data = await dashboardApi.getAdmins();
         if (data) {
-          setStats(data.stats || defaultStats);
-          setRecentActivities(data.recentActivities || defaultActivities);
-          setNotifications(data.notifications || defaultNotifications);
-          setAccountStatus(
-            accountStatusData || data.accountStatus || defaultAccountStatus,
-          );
-          setAdmins(data.admins || defaultAdmins);
-        } else {
-          // API not available, use defaults
-          setStats(defaultStats);
-          setRecentActivities(defaultActivities);
-          setNotifications(defaultNotifications);
-          setAccountStatus(accountStatusData || defaultAccountStatus);
-          setAdmins(defaultAdmins);
+          setAdmins(data);
         }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : "Unknown error";
@@ -208,7 +167,8 @@ const AdminDashboard = () => {
   const validateForm = () => {
     const errors: Record<string, string> = {};
 
-    if (!newAdmin.name.trim()) errors.name = "الاسم مطلوب";
+    if (!newAdmin.firstName.trim()) errors.firstName = "الاسم الأول مطلوب";
+    if (!newAdmin.lastName.trim()) errors.lastName = "الاسم الأخير مطلوب";
     if (!newAdmin.email.trim()) errors.email = "البريد الإلكتروني مطلوب";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newAdmin.email))
       errors.email = "بريد إلكتروني غير صالح";
@@ -232,7 +192,8 @@ const AdminDashboard = () => {
 
       // Call API to create admin
       const createdAdmin = await dashboardApi.createAdmin({
-        name: newAdmin.name,
+        firstName: newAdmin.firstName,
+        lastName: newAdmin.lastName,
         email: newAdmin.email,
         password: newAdmin.password,
         role: newAdmin.role,
@@ -241,7 +202,8 @@ const AdminDashboard = () => {
       if (createdAdmin) {
         setAdmins([...admins, createdAdmin]);
         setNewAdmin({
-          name: "",
+          firstName: "",
+          lastName: "",
           email: "",
           password: "",
           confirmPassword: "",
@@ -367,15 +329,9 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                     <div
-                      className={`w-12 h-12 rounded-xl bg-linear-to-br ${stat.color} flex items-center justify-center`}
+                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}
                     >
-                      {stat.icon &&
-                        (() => {
-                          const IconComponent = stat.icon;
-                          return (
-                            <IconComponent className="w-6 h-6 text-white" />
-                          );
-                        })()}
+                      <stat.icon className="w-6 h-6 text-white" />
                     </div>
                   </div>
                 </CardContent>
@@ -407,10 +363,7 @@ const AdminDashboard = () => {
                             : "bg-red-500/10 text-red-400"
                       }`}
                     >
-                      {(() => {
-                        const IconComponent = getActivityIcon(activity.type);
-                        return <IconComponent className="w-5 h-5" />;
-                      })()}
+                      <activity.icon className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm text-white">{activity.message}</p>
@@ -490,9 +443,7 @@ const AdminDashboard = () => {
                           محامون نشطون
                         </span>
                       </div>
-                      <span className="font-bold text-white">
-                        {accountStatus.activeLawyers}
-                      </span>
+                      <span className="font-bold text-white">342</span>
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50">
                       <div className="flex items-center gap-2">
@@ -501,9 +452,7 @@ const AdminDashboard = () => {
                           في انتظار التوثيق
                         </span>
                       </div>
-                      <span className="font-bold text-white">
-                        {accountStatus.pendingVerification}
-                      </span>
+                      <span className="font-bold text-white">23</span>
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50">
                       <div className="flex items-center gap-2">
@@ -512,9 +461,7 @@ const AdminDashboard = () => {
                           حسابات معلقة
                         </span>
                       </div>
-                      <span className="font-bold text-white">
-                        {accountStatus.suspendedAccounts}
-                      </span>
+                      <span className="font-bold text-white">5</span>
                     </div>
                   </div>
                 </CardContent>

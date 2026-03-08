@@ -41,139 +41,159 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { lawCategoriesApi } from "@/services/law-categories.service";
-import type { LawCategory } from "@/services/law-categories.service";
 
-const initialCategories: LawCategory[] = [];
+type LawCategory = {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  isActive: boolean;
+};
+
+const initialCategories: LawCategory[] = [
+  {
+    id: "1",
+    name: "القانون المدني",
+    description: "يشمل العقود والمعاملات المدنية",
+    createdAt: "2024-01-01",
+    isActive: true,
+  },
+  {
+    id: "2",
+    name: "القانون الجنائي",
+    description: "يتعامل مع الجرائم والعقوبات",
+    createdAt: "2024-01-01",
+    isActive: true,
+  },
+  {
+    id: "3",
+    name: "قانون الأسرة",
+    description: "يشمل الزواج والطلاق والحضانة",
+    createdAt: "2024-01-01",
+    isActive: true,
+  },
+  {
+    id: "4",
+    name: "القانون التجاري",
+    description: "يتعامل مع الشركات والأعمال التجارية",
+    createdAt: "2024-01-01",
+    isActive: true,
+  },
+  {
+    id: "5",
+    name: "قانون العمل",
+    description: "ينظم علاقات العمل بين الموظفين وأصحاب العمل",
+    createdAt: "2024-01-01",
+    isActive: true,
+  },
+];
 
 const LawCategoriesManagement = () => {
   const [categories, setCategories] =
     useState<LawCategory[]>(initialCategories);
+  const [filteredCategories, setFilteredCategories] =
+    useState<LawCategory[]>(initialCategories);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Load categories on component mount
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
-    setIsLoading(true);
-    try {
-      console.log("Loading categories...");
-      const data = await lawCategoriesApi.getCategories();
-      console.log("Categories loaded:", data);
-      if (data) {
-        setCategories(data);
-      } else {
-        console.warn("No data returned from getCategories");
-        toast.error("فشل في تحميل فئات القانون");
-      }
-    } catch (error) {
-      console.error("Error loading categories:", error);
-      const errorMsg =
-        error instanceof Error ? error.message : "حدث خطأ في تحميل البيانات";
-      toast.error(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Modals state
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Form state
+  const [formErrors, setFormErrors] = useState<{ name?: string }>({});
+
   const [newCategory, setNewCategory] = useState({
     name: "",
     description: "",
     isActive: true,
   });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const validateCategoryForm = () => {
-    const errors: Record<string, string> = {};
-    if (!newCategory.name.trim()) errors.name = "اسم الفئة مطلوب";
-    if (categories.some((c) => c.name === newCategory.name.trim()))
-      errors.name = "هذه الفئة موجودة بالفعل";
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+  useEffect(() => {
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+  }, []);
 
-  const handleAddCategory = async () => {
-    if (!validateCategoryForm()) return;
+  useEffect(() => {
+    const filtered = categories.filter(
+      (cat) =>
+        cat.name.includes(searchQuery) || cat.description.includes(searchQuery),
+    );
 
-    setIsSaving(true);
-    try {
-      const result = await lawCategoriesApi.createCategory({
-        name: newCategory.name.trim(),
-        description: newCategory.description.trim(),
-        isActive: newCategory.isActive,
-      });
+    setFilteredCategories(filtered);
+  }, [searchQuery, categories]);
 
-      if (result) {
-        setCategories([...categories, result]);
-        setNewCategory({ name: "", description: "", isActive: true });
-        setShowAddCategoryModal(false);
-        setFormErrors({});
-        toast.success("تمت إضافة الفئة بنجاح");
-      } else {
-        toast.error("فشل في إضافة الفئة");
-      }
-    } catch (error) {
-      toast.error("حدث خطأ في إضافة الفئة");
-      console.error(error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-  const handleToggleActive = (id: number) => {
-    setCategories(
-      categories.map((c) =>
-        c.id === id ? { ...c, isActive: !c.isActive } : c,
+  const handleToggleActive = (id: string) => {
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.id === id ? { ...cat, isActive: !cat.isActive } : cat,
       ),
     );
-    const category = categories.find((c) => c.id === id);
-    if (category) {
-      toast.success(category.isActive ? "تم تعطيل الفئة" : "تم تفعيل الفئة");
-    }
-  };
-  const handleDeleteCategory = async (id: number) => {
-    setIsSaving(true);
-    try {
-      const success = await lawCategoriesApi.deleteCategory(id);
-      if (success) {
-        setCategories(categories.filter((c) => c.id !== id));
-        setDeleteConfirmId(null);
-        toast.success("تم حذف الفئة بنجاح");
-      } else {
-        toast.error("فشل في حذف الفئة");
-      }
-    } catch (error) {
-      toast.error("حدث خطأ في حذف الفئة");
-      console.error(error);
-    } finally {
-      setIsSaving(false);
-    }
+
+    toast.success("تم تحديث حالة الفئة");
   };
 
-  const filteredCategories = categories.filter(
-    (c) => c.name.includes(searchQuery) || c.description.includes(searchQuery),
-  );
+  const handleAddCategory = () => {
+    setFormErrors({});
+
+    if (!newCategory.name.trim()) {
+      setFormErrors({ name: "اسم الفئة مطلوب" });
+      return;
+    }
+
+    setIsSaving(true);
+
+    setTimeout(() => {
+      const category: LawCategory = {
+        id: Date.now().toString(),
+        name: newCategory.name,
+        description: newCategory.description,
+        createdAt: new Date().toISOString(),
+        isActive: newCategory.isActive,
+      };
+
+      setCategories((prev) => [...prev, category]);
+
+      toast.success("تم إضافة الفئة بنجاح");
+
+      setNewCategory({
+        name: "",
+        description: "",
+        isActive: true,
+      });
+
+      setShowAddCategoryModal(false);
+      setIsSaving(false);
+    }, 600);
+  };
+
+  const handleDeleteCategory = (id: string) => {
+    setIsSaving(true);
+
+    setTimeout(() => {
+      setCategories((prev) => prev.filter((cat) => cat.id !== id));
+      setDeleteConfirmId(null);
+
+      toast.success("تم حذف الفئة");
+      setIsSaving(false);
+    }, 500);
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">إدارة فئات القانون</h1>
           <p className="text-slate-400 mt-1">إنشاء وإدارة فئات القانون</p>
         </div>
+
         <Button
           onClick={() => setShowAddCategoryModal(true)}
           disabled={isLoading}
-          className="cursor-pointer bg-primary hover:bg-primary/90"
+          className="bg-primary hover:bg-primary/90"
         >
           <Plus className="w-4 h-4 ml-2" />
           إضافة فئة
@@ -181,12 +201,14 @@ const LawCategoriesManagement = () => {
       </div>
 
       {/* Stats */}
+
       <Card className="bg-slate-800/50 border-slate-700">
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center">
               <Scale className="w-6 h-6 text-white" />
             </div>
+
             <div>
               <p className="text-sm text-slate-400">فئات القانون</p>
               <p className="text-3xl font-bold text-white">
@@ -198,8 +220,10 @@ const LawCategoriesManagement = () => {
       </Card>
 
       {/* Search */}
+
       <div className="relative">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -208,7 +232,8 @@ const LawCategoriesManagement = () => {
         />
       </div>
 
-      {/* Categories Table */}
+      {/* Table */}
+
       <Card className="bg-slate-800/50 border-slate-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -216,70 +241,84 @@ const LawCategoriesManagement = () => {
             فئات القانون ({filteredCategories.length})
           </CardTitle>
         </CardHeader>
+
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 text-slate-400 animate-spin mr-2" />
+              <Loader2 className="w-8 h-8 animate-spin text-slate-400 mr-2" />
               <p className="text-slate-400">جاري تحميل البيانات...</p>
             </div>
           ) : filteredCategories.length > 0 ? (
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-700 hover:bg-slate-900/50">
-                  <TableHead className="text-slate-400 text-center">
+                <TableRow className="border-slate-700">
+                  <TableHead className="text-center text-slate-400">
                     اسم الفئة
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+
+                  <TableHead className="text-center text-slate-400">
                     الوصف
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+
+                  <TableHead className="text-center text-slate-400">
                     الحالة
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+
+                  <TableHead className="text-center text-slate-400">
                     تاريخ الإنشاء
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+
+                  <TableHead className="text-center text-slate-400">
                     الإجراءات
                   </TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {filteredCategories.map((category) => (
                   <TableRow
                     key={category.id}
-                    className="text-center border-slate-700 hover:bg-slate-900/50"
+                    className="border-slate-700 text-center"
                   >
                     <TableCell className="text-white font-medium">
                       {category.name}
                     </TableCell>
+
                     <TableCell className="text-slate-300 max-w-xs truncate">
                       {category.description}
                     </TableCell>
+
                     <TableCell>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center gap-2">
                         <Switch
                           checked={category.isActive}
                           onCheckedChange={() =>
                             handleToggleActive(category.id)
                           }
                         />
+
                         <span
-                          className={`text-sm ${category.isActive ? "text-green-400" : "text-slate-500"}`}
+                          className={`text-sm ${
+                            category.isActive
+                              ? "text-green-400"
+                              : "text-slate-500"
+                          }`}
                         >
                           {category.isActive ? "مفعّل" : "معطّل"}
                         </span>
                       </div>
                     </TableCell>
+
                     <TableCell className="text-slate-400">
                       {new Date(category.createdAt).toLocaleDateString("ar-SA")}
                     </TableCell>
+
                     <TableCell>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setDeleteConfirmId(category.id)}
-                        disabled={isSaving}
-                        className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -297,15 +336,15 @@ const LawCategoriesManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Add Category Modal */}
+      {/* Add Modal */}
+
       <Dialog
         open={showAddCategoryModal}
         onOpenChange={setShowAddCategoryModal}
       >
         <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
-          <DialogHeader className="text-center mt-4">
-            <DialogTitle className="text-white flex items-center justify-center gap-2">
-              <Scale className="w-7 h-7 text-center" />
+          <DialogHeader>
+            <DialogTitle className="text-white text-center">
               إضافة فئة قانون جديدة
             </DialogTitle>
             <DialogDescription className="text-center text-slate-400">
@@ -313,24 +352,26 @@ const LawCategoriesManagement = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 mt-4">
-            <div className="space-y-2">
+          <div className="space-y-4">
+            <div>
               <Label className="text-slate-300">اسم الفئة *</Label>
+
               <Input
                 value={newCategory.name}
                 onChange={(e) =>
                   setNewCategory({ ...newCategory, name: e.target.value })
                 }
-                placeholder="مثال: القانون المدني"
-                className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${formErrors.name ? "border-red-500" : ""}`}
+                className="bg-slate-900 border-slate-600 text-white"
               />
+
               {formErrors.name && (
-                <p className="text-sm text-red-400">{formErrors.name}</p>
+                <p className="text-red-400 text-sm mt-1">{formErrors.name}</p>
               )}
             </div>
 
-            <div className="space-y-2">
+            <div>
               <Label className="text-slate-300">الوصف</Label>
+
               <Textarea
                 value={newCategory.description}
                 onChange={(e) =>
@@ -339,68 +380,29 @@ const LawCategoriesManagement = () => {
                     description: e.target.value,
                   })
                 }
-                placeholder="وصف موجز للفئة..."
-                className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 min-h-25"
+                className="bg-slate-900 border-slate-600 text-white"
               />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={newCategory.isActive}
-                onChange={(e) =>
-                  setNewCategory({
-                    ...newCategory,
-                    isActive: e.target.checked,
-                  })
-                }
-                className="w-4 h-4 text-primary bg-slate-900 border-slate-600 rounded focus:ring-primary focus:ring-2"
-              />
-              <Label
-                htmlFor="isActive"
-                className="text-slate-300 cursor-pointer"
-              >
-                الفئة نشطة
-              </Label>
             </div>
           </div>
 
-          <DialogFooter className="mt-6">
+          <DialogFooter>
             <Button
-              className="cursor-pointer"
               variant="destructive"
-              onClick={() => {
-                setShowAddCategoryModal(false);
-                setFormErrors({});
-                setNewCategory({ name: "", description: "", isActive: true });
-              }}
-              disabled={isSaving}
+              onClick={() => setShowAddCategoryModal(false)}
             >
               إلغاء
             </Button>
-            <Button
-              className="cursor-pointer"
-              onClick={handleAddCategory}
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                  جاري الإضافة...
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4 ml-2" />
-                  إضافة الفئة
-                </>
-              )}
+
+            <Button onClick={handleAddCategory}>
+              <Plus className="w-4 h-4 ml-2" />
+              إضافة الفئة
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Dialog */}
+
       <AlertDialog
         open={!!deleteConfirmId}
         onOpenChange={() => setDeleteConfirmId(null)}
@@ -408,37 +410,25 @@ const LawCategoriesManagement = () => {
         <AlertDialogContent className="bg-slate-800 border-slate-700" dir="rtl">
           <AlertDialogHeader className="text-center">
             <AlertDialogTitle className="text-white flex items-center justify-center gap-2">
-              <AlertTriangle className="w-7 h-7 text-red-500" />
+              <AlertTriangle className="w-6 h-6 text-red-500" />
               تأكيد الحذف
             </AlertDialogTitle>
+
             <AlertDialogDescription className="text-slate-400">
-              هل أنت متأكد من حذف هذه الفئة؟ لا يمكن التراجع عن هذا الإجراء.
+              هل أنت متأكد من حذف هذه الفئة؟
             </AlertDialogDescription>
           </AlertDialogHeader>
+
           <AlertDialogFooter>
-            <AlertDialogCancel
-              className="cursor-pointer bg-slate-700 text-white hover:bg-slate-600"
-              disabled={isSaving}
-            >
-              إلغاء
-            </AlertDialogCancel>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+
             <AlertDialogAction
-              onClick={() => {
-                if (deleteConfirmId) {
-                  handleDeleteCategory(deleteConfirmId);
-                }
-              }}
-              disabled={isSaving}
-              className="cursor-pointer bg-red-500 hover:bg-red-600"
+              className="bg-red-500 hover:bg-red-600"
+              onClick={() =>
+                deleteConfirmId && handleDeleteCategory(deleteConfirmId)
+              }
             >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                  جاري الحذف...
-                </>
-              ) : (
-                "حذف"
-              )}
+              حذف
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

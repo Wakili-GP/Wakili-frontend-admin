@@ -12,8 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Shield, Eye, EyeOff, Loader, AlertCircle } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
-import { authApi } from "@/services/auth.service";
-import type { LoginInput } from "@/lib/api-types";
 
 // Mock credentials for development/fallback
 const MOCK_ADMIN = {
@@ -40,19 +38,9 @@ const AdminLogin = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Check if already authenticated on mount
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem("adminToken");
-      if (token) {
-        // Try to verify token with backend
-        const verified = await authApi.verify();
-        if (verified) {
-          navigate("/dashboard");
-        }
-      }
-    };
-    checkAuth();
+    const token = localStorage.getItem("adminToken");
+    if (token) navigate("/dashboard");
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {

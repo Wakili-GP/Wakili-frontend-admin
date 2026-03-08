@@ -9,8 +9,9 @@ import NotFound from "./NotFound";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ReviewModeration from "./admin/ReviewModeration";
-import "./App.css";
 import LawCategoriesManagement from "./admin/LawCategoriesManagement";
+import "./App.css";
+import ArticlesManagement from "./admin/ArticlesManagement";
 function App() {
   return (
     <TooltipProvider>
@@ -26,6 +27,7 @@ function App() {
             <Route path="users" element={<UserManagement />} />
             <Route path="reviews" element={<ReviewModeration />} />
             <Route path="categories" element={<LawCategoriesManagement />} />
+            <Route path="articles" element={<ArticlesManagement />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

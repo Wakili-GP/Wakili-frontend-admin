@@ -5,11 +5,6 @@ import type {
   AxiosResponse,
 } from "axios";
 
-/**
- * API Client Configuration
- * Central place for configuring API requests
- */
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 interface RequestConfig {
@@ -26,9 +21,6 @@ interface ApiResponse<T> {
   status: number;
 }
 
-/**
- * Create axios instance with base URL
- */
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_BASE_URL.startsWith("http")
     ? API_BASE_URL
@@ -37,9 +29,6 @@ const axiosInstance: AxiosInstance = axios.create({
   timeout: 30000,
 });
 
-/**
- * Request interceptor: Add auth token to headers
- */
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem("adminToken");
@@ -51,18 +40,11 @@ axiosInstance.interceptors.request.use(
   (error: unknown) => Promise.reject(error),
 );
 
-/**
- * Response interceptor: Handle errors and token expiration
- */
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: unknown) => {
-    // Don't automatically redirect on 401 - let components handle it
-    // This allows for better UX and error handling
     if (axios.isAxiosError(error) && error.response?.status === 401) {
-      // Only redirect if we're not already on the login page
       if (window.location.pathname !== "/login") {
-        // Log the error for debugging
         console.warn("Unauthorized access - clearing tokens");
         localStorage.removeItem("adminAuth");
         localStorage.removeItem("adminToken");
@@ -72,9 +54,6 @@ axiosInstance.interceptors.response.use(
   },
 );
 
-/**
- * Make API request with error handling and token management
- */
 export async function apiRequest<T>(
   endpoint: string,
   config: RequestConfig = {},
@@ -120,9 +99,6 @@ export async function apiRequest<T>(
   }
 }
 
-/**
- * Convenience methods for HTTP verbs
- */
 export const api = {
   get: <T>(endpoint: string, params?: Record<string, unknown>) =>
     apiRequest<T>(endpoint, { method: "GET", params }),
