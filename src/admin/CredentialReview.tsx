@@ -35,7 +35,6 @@ import {
   Loader,
 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
-import type { PendingCredential } from "@/lib/api-types";
 
 /* ---------------- MOCK DATA ---------------- */
 

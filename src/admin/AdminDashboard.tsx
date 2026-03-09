@@ -51,10 +51,9 @@ import {
   createAdminSchema,
   type CreateAdminFormData,
 } from "@/validation/admin.schema";
-import { useCreateAdmin } from "@/hooks/admins/useCreateAdmin";
-import { useAdmins } from "@/hooks/admins/useAdmins";
 import AdminServices from "@/services/admins.service";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Spinner } from "@/components/ui/spinner";
 const stats = [
   {
     title: "إجمالي المستخدمين",
@@ -132,25 +131,9 @@ const notifications = [
 const AdminDashboard = () => {
   const [showAddAdminModal, setShowAddAdminModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [adminToDelete, setAdminToDelete] = useState<string | null>(null);
 
-  // Fetching Admins
-  const queryClient = useQueryClient();
-  const { admins } = useAdmins();
-
-  const deleteAdminMutation = useMutation({
-    mutationFn: (id: string) => AdminServices.deleteAdmin(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["Admins"] });
-      toast.success("تم حذف المشرف");
-    },
-    onError: () => {
-      toast.error("حدث خطأ أثناء حذف المشرف");
-    },
-  });
-
-  const handleDeleteAdmin = (id: string) => {
-    deleteAdminMutation.mutate(id);
-  };
+  // Form Setup
   const {
     register,
     handleSubmit,
@@ -165,40 +148,79 @@ const AdminDashboard = () => {
       email: "",
       password: "",
       confirmPassword: "",
-      role: "Admin",
+      role: "admin",
     },
   });
 
+  // Fetching Admins
+  const {
+    data: admins,
+    isLoading: adminsLoading,
+    error: adminsError,
+  } = useQuery({
+    queryKey: ["admins"],
+    queryFn: AdminServices.getAllAdmins,
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+
+  const queryClient = useQueryClient();
+
   // Creating a new admin
-  const createAdminMutation = useCreateAdmin();
-  const onSubmit = (data: CreateAdminFormData) => {
-    createAdminMutation.mutate(
-      {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        password: data.password,
-        role: data.role,
-      },
-      {
-        onSuccess: () => {
-          toast.success("تمت إضافة المشرف بنجاح");
-          reset();
-          setShowAddAdminModal(false);
-        },
-      },
-    );
+  const createAdminMutation = useMutation({
+    mutationKey: ["admins", "create"],
+    mutationFn: (input: CreateAdminFormData) =>
+      AdminServices.createAdmin({
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        password: input.password,
+        role: "admin",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admins"] });
+      toast.success("تمت إضافة المشرف بنجاح");
+      reset();
+      setShowAddAdminModal(false);
+    },
+    onError: (error: Error) => {
+      console.error("Error creating admin", error);
+      toast.error("حدث خطأ أثناء إضافة المشرف");
+    },
+  });
+
+  const deleteAdminMutation = useMutation({
+    mutationKey: ["admins", "delete"],
+    mutationFn: (id: string) => AdminServices.deleteAdmin(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admins"] });
+      toast.success("تم حذف المشرف");
+    },
+    onError: (error: Error) => {
+      console.error("Error deleting admin", error);
+      toast.error("حدث خطأ أثناء حذف المشرف");
+    },
+  });
+
+  const handleDeleteAdmin = (id: string) => {
+    setAdminToDelete(id);
+  };
+  const confirmDelete = () => {
+    if (adminToDelete) {
+      deleteAdminMutation.mutate(adminToDelete);
+      setAdminToDelete(null);
+    }
   };
 
   const getRoleBadge = (role: string) => {
-    switch (role) {
-      case "Admin":
+    switch (role.toLowerCase()) {
+      case "admin":
         return (
           <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
             مشرف رئيسي
           </Badge>
         );
-      case "Moderator":
+      case "moderator":
         return (
           <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
             مشرف
@@ -209,27 +231,27 @@ const AdminDashboard = () => {
     }
   };
 
-  // if (adminsLoading) {
-  //   return (
-  //     <div className="flex items-center justify-center py-12">
-  //       <div className="text-center">
-  //         <Loader className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-4" />
-  //         <p className="text-slate-400">جاري تحميل البيانات...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (adminsLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <Spinner className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-4" />
+          <p className="text-slate-400">جاري تحميل البيانات...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // if (adminsError) {
-  //   return (
-  //     <Card className="bg-red-500/10 border-red-500/20">
-  //       <CardContent className="p-4 flex items-center gap-3">
-  //         <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-  //         <p className="text-red-300">{adminsError.message}</p>
-  //       </CardContent>
-  //     </Card>
-  //   );
-  // }
+  if (adminsError) {
+    return (
+      <Card className="bg-red-500/10 border-red-500/20">
+        <CardContent className="p-4 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+          <p className="text-red-300">{adminsError?.message}</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -437,7 +459,7 @@ const AdminDashboard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {admins.map((admin) => (
+              {admins?.map((admin) => (
                 <TableRow
                   key={admin.id}
                   className="border-slate-700 hover:bg-slate-900/70 transition-colors duration-200 cursor-pointer"
@@ -449,7 +471,9 @@ const AdminDashboard = () => {
                     {admin.email}
                   </TableCell>
                   <TableCell className="text-center">
-                    {getRoleBadge(admin.role)}
+                    <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
+                      مشرف رئيسي
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-slate-400 text-center">
                     {new Date(admin.createdAt).toLocaleDateString("ar-EG", {
@@ -474,8 +498,7 @@ const AdminDashboard = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteAdmin(admin.id)}
-                      disabled={admin.role === "Admin"}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                      className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -499,7 +522,9 @@ const AdminDashboard = () => {
               أدخل بيانات المشرف الجديد لإضافته إلى النظام
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form
+            onSubmit={handleSubmit((data) => createAdminMutation.mutate(data))}
+          >
             <div className="space-y-4 mt-4">
               {/* Name Row */}
               <div className="space-y-2">
@@ -605,35 +630,6 @@ const AdminDashboard = () => {
                   </p>
                 )}
               </div>
-
-              {/* Role */}
-              <div className="space-y-2">
-                <Label className="text-slate-300">الدور</Label>
-                <Select
-                  defaultValue="Admin"
-                  onValueChange={(value: "Admin" | "Moderator") =>
-                    setValue("role", value)
-                  }
-                >
-                  <SelectTrigger className="cursor-pointer bg-slate-900 border-slate-600 text-white justify-end">
-                    <SelectValue placeholder="اختر الدور" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem
-                      value="Admin"
-                      className="text-white hover:bg-slate-700 cursor-pointer justify-end"
-                    >
-                      مشرف
-                    </SelectItem>
-                    <SelectItem
-                      value="Moderator"
-                      className="text-white hover:bg-slate-700 cursor-pointer justify-end"
-                    >
-                      مراقب
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
             <DialogFooter className="mt-6 flex justify-center gap-3">
               <Button
@@ -656,6 +652,38 @@ const AdminDashboard = () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+      {/* Confirm Delete Admin */}
+      <Dialog
+        open={!!adminToDelete}
+        onOpenChange={() => setAdminToDelete(null)}
+      >
+        <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+          <DialogHeader className="mt-4">
+            <DialogTitle className="text-white text-center">
+              تأكيد الحذف
+            </DialogTitle>
+            <DialogDescription className="text-slate-400 text-center">
+              هل أنت متأكد من حذف هذا المشرف؟ لا يمكن التراجع عن هذا الإجراء.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-6 flex justify-center items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setAdminToDelete(null)}
+              className="cursor-pointer border-slate-600 text-slate-300 hover:bg-slate-700"
+            >
+              إلغاء
+            </Button>
+            <Button
+              onClick={confirmDelete}
+              disabled={deleteAdminMutation.isPending}
+              className="cursor-pointer bg-red-400 text-white hover:bg-red-300 "
+            >
+              {deleteAdminMutation.isPending ? "جاري الحذف..." : "تأكيد الحذف"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

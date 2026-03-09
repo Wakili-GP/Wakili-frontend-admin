@@ -17,6 +17,7 @@ export default defineConfig({
         target: "http://wakili.runasp.net",
         changeOrigin: true,
         rewrite: (path) => path,
+        timeout: 100000,
       },
     },
   },

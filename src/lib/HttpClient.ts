@@ -1,50 +1,48 @@
-import axios, {
-  type AxiosInstance,
-  type InternalAxiosRequestConfig,
-  type AxiosResponse,
-} from "axios";
-
-const API_BASE_URL =
+import axios, { AxiosError } from "axios";
+const baseURL =
   import.meta.env.MODE === "development"
     ? "/api"
     : import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
-
-const httpClient: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
+const httpClient = axios.create({
+  baseURL: baseURL,
+  headers: {
+    "Content-Type": "application/json",
+  },
   timeout: 30000,
 });
 
+// Request interceptor — attach token
 httpClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    config.headers = config.headers ?? {};
+  (config) => {
     const token = localStorage.getItem("adminToken");
     if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error),
+  (error: AxiosError) => Promise.reject(error),
 );
 
+// Response interceptor — handle 401/403 + normalize errors
 httpClient.interceptors.response.use(
-  (response: AxiosResponse) => {
-    console.log(response);
-    if (
-      response.data &&
-      typeof response.data === "object" &&
-      "success" in response.data &&
-      "data" in response.data
-    ) {
-      response.data = response.data.data;
-    }
-    return response;
-  },
-  (error) => {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
       localStorage.removeItem("adminToken");
+      window.location.href = "/login";
     }
-    return Promise.reject(error);
+
+    if (error.response?.status === 403) {
+      window.location.href = "/unauthorized";
+    }
+
+    // Normalize error message for consumers
+    const message =
+      (error.response?.data as { message?: string })?.message ??
+      error.message ??
+      "An unexpected error occurred";
+
+    return Promise.reject(new Error(message));
   },
 );
 
