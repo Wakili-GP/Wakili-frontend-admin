@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
 import {
   Scale,
   Plus,
@@ -28,7 +28,6 @@ import {
   Search,
   FolderOpen,
   AlertTriangle,
-  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -41,159 +40,97 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-type LawCategory = {
+import { useQuery } from "@tanstack/react-query";
+import SpecializationService from "@/services/specializations.service";
+interface LawCategory {
   id: string;
   name: string;
   description: string;
   createdAt: string;
   isActive: boolean;
-};
-
-const initialCategories: LawCategory[] = [
-  {
-    id: "1",
-    name: "القانون المدني",
-    description: "يشمل العقود والمعاملات المدنية",
-    createdAt: "2024-01-01",
-    isActive: true,
-  },
-  {
-    id: "2",
-    name: "القانون الجنائي",
-    description: "يتعامل مع الجرائم والعقوبات",
-    createdAt: "2024-01-01",
-    isActive: true,
-  },
-  {
-    id: "3",
-    name: "قانون الأسرة",
-    description: "يشمل الزواج والطلاق والحضانة",
-    createdAt: "2024-01-01",
-    isActive: true,
-  },
-  {
-    id: "4",
-    name: "القانون التجاري",
-    description: "يتعامل مع الشركات والأعمال التجارية",
-    createdAt: "2024-01-01",
-    isActive: true,
-  },
-  {
-    id: "5",
-    name: "قانون العمل",
-    description: "ينظم علاقات العمل بين الموظفين وأصحاب العمل",
-    createdAt: "2024-01-01",
-    isActive: true,
-  },
-];
+}
 
 const LawCategoriesManagement = () => {
-  const [categories, setCategories] =
-    useState<LawCategory[]>(initialCategories);
-  const [filteredCategories, setFilteredCategories] =
-    useState<LawCategory[]>(initialCategories);
-
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
 
+  // Fetch Categories
+  const {
+    data: categories,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["lawCategories"],
+    queryFn: SpecializationService.getAll,
+  });
+
+  // Modals state
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const [formErrors, setFormErrors] = useState<{ name?: string }>({});
+  // Form state
+  const [newCategory, setNewCategory] = useState({ name: "", description: "" });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const [newCategory, setNewCategory] = useState({
-    name: "",
-    description: "",
-    isActive: true,
-  });
+  // const validateCategoryForm = () => {
+  //   const errors: Record<string, string> = {};
+  //   if (!newCategory.name.trim()) errors.name = "اسم الفئة مطلوب";
+  //   if (categories.some((c) => c.name === newCategory.name.trim()))
+  //     errors.name = "هذه الفئة موجودة بالفعل";
+  //   setFormErrors(errors);
+  //   return Object.keys(errors).length === 0;
+  // };
 
-  useEffect(() => {
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-  }, []);
+  // const handleAddCategory = () => {
+  //   if (!validateCategoryForm()) return;
 
-  useEffect(() => {
-    const filtered = categories.filter(
-      (cat) =>
-        cat.name.includes(searchQuery) || cat.description.includes(searchQuery),
-    );
+  //   const category: LawCategory = {
+  //     id: Date.now().toString(),
+  //     name: newCategory.name.trim(),
+  //     description: newCategory.description.trim(),
+  //     createdAt: new Date().toISOString().split("T")[0],
+  //     isActive: true,
+  //   };
 
-    setFilteredCategories(filtered);
-  }, [searchQuery, categories]);
+  //   setCategories([...categories, category]);
+  //   setNewCategory({ name: "", description: "" });
+  //   setShowAddCategoryModal(false);
+  //   setFormErrors({});
+  //   toast.success("تمت إضافة الفئة بنجاح");
+  // };
 
-  const handleToggleActive = (id: string) => {
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.id === id ? { ...cat, isActive: !cat.isActive } : cat,
-      ),
-    );
+  // const handleToggleActive = (id: string) => {
+  //   setCategories(
+  //     categories.map((c) =>
+  //       c.id === id ? { ...c, isActive: !c.isActive } : c,
+  //     ),
+  //   );
+  //   const category = categories.find((c) => c.id === id);
+  //   if (category) {
+  //     toast.success(category.isActive ? "تم تعطيل الفئة" : "تم تفعيل الفئة");
+  //   }
+  // };
 
-    toast.success("تم تحديث حالة الفئة");
-  };
+  // const handleDeleteCategory = (id: string) => {
+  //   setCategories(categories.filter((c) => c.id !== id));
+  //   setDeleteConfirmId(null);
+  //   toast.success("تم حذف الفئة بنجاح");
+  // };
 
-  const handleAddCategory = () => {
-    setFormErrors({});
-
-    if (!newCategory.name.trim()) {
-      setFormErrors({ name: "اسم الفئة مطلوب" });
-      return;
-    }
-
-    setIsSaving(true);
-
-    setTimeout(() => {
-      const category: LawCategory = {
-        id: Date.now().toString(),
-        name: newCategory.name,
-        description: newCategory.description,
-        createdAt: new Date().toISOString(),
-        isActive: newCategory.isActive,
-      };
-
-      setCategories((prev) => [...prev, category]);
-
-      toast.success("تم إضافة الفئة بنجاح");
-
-      setNewCategory({
-        name: "",
-        description: "",
-        isActive: true,
-      });
-
-      setShowAddCategoryModal(false);
-      setIsSaving(false);
-    }, 600);
-  };
-
-  const handleDeleteCategory = (id: string) => {
-    setIsSaving(true);
-
-    setTimeout(() => {
-      setCategories((prev) => prev.filter((cat) => cat.id !== id));
-      setDeleteConfirmId(null);
-
-      toast.success("تم حذف الفئة");
-      setIsSaving(false);
-    }, 500);
-  };
+  // const filteredCategories = categories.filter(
+  //   (c) => c.name.includes(searchQuery) || c.description.includes(searchQuery),
+  // );
 
   return (
     <div className="space-y-6">
       {/* Header */}
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">إدارة فئات القانون</h1>
           <p className="text-slate-400 mt-1">إنشاء وإدارة فئات القانون</p>
         </div>
-
         <Button
           onClick={() => setShowAddCategoryModal(true)}
-          disabled={isLoading}
-          className="bg-primary hover:bg-primary/90"
+          className="cursor-pointer bg-primary hover:bg-primary/90"
         >
           <Plus className="w-4 h-4 ml-2" />
           إضافة فئة
@@ -201,18 +138,16 @@ const LawCategoriesManagement = () => {
       </div>
 
       {/* Stats */}
-
       <Card className="bg-slate-800/50 border-slate-700">
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center">
               <Scale className="w-6 h-6 text-white" />
             </div>
-
             <div>
               <p className="text-sm text-slate-400">فئات القانون</p>
               <p className="text-3xl font-bold text-white">
-                {categories.length}
+                {categories?.length}
               </p>
             </div>
           </div>
@@ -220,10 +155,8 @@ const LawCategoriesManagement = () => {
       </Card>
 
       {/* Search */}
-
       <div className="relative">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -232,92 +165,72 @@ const LawCategoriesManagement = () => {
         />
       </div>
 
-      {/* Table */}
-
+      {/* Categories Table */}
       <Card className="bg-slate-800/50 border-slate-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Scale className="w-5 h-5 text-amber-500" />
-            فئات القانون ({filteredCategories.length})
+            فئات القانون ({categories?.length})
           </CardTitle>
         </CardHeader>
-
         <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-slate-400 mr-2" />
-              <p className="text-slate-400">جاري تحميل البيانات...</p>
-            </div>
-          ) : filteredCategories.length > 0 ? (
+          {categories ? (
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-700">
-                  <TableHead className="text-center text-slate-400">
+                <TableRow className="border-slate-700 hover:bg-slate-900/50">
+                  <TableHead className="text-slate-400 text-center">
                     اسم الفئة
                   </TableHead>
-
-                  <TableHead className="text-center text-slate-400">
+                  <TableHead className="text-slate-400 text-center">
                     الوصف
                   </TableHead>
-
-                  <TableHead className="text-center text-slate-400">
-                    الحالة
-                  </TableHead>
-
-                  <TableHead className="text-center text-slate-400">
+                  <TableHead className="text-slate-400 text-center">
                     تاريخ الإنشاء
                   </TableHead>
-
-                  <TableHead className="text-center text-slate-400">
+                  <TableHead className="text-slate-400 text-center">
+                    الحالة
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
                     الإجراءات
                   </TableHead>
                 </TableRow>
               </TableHeader>
-
               <TableBody>
-                {filteredCategories.map((category) => (
+                {categories?.map((category) => (
                   <TableRow
                     key={category.id}
-                    className="border-slate-700 text-center"
+                    className="border-slate-700 hover:bg-slate-900/50"
                   >
-                    <TableCell className="text-white font-medium">
+                    <TableCell className="text-white font-medium text-center">
                       {category.name}
                     </TableCell>
-
-                    <TableCell className="text-slate-300 max-w-xs truncate">
+                    <TableCell className="text-slate-300 max-w-xs truncate text-center">
                       {category.description}
                     </TableCell>
-
-                    <TableCell>
+                    <TableCell className="text-slate-400 text-center">
+                      {new Date(category.createdAt).toLocaleDateString(
+                        "ar-EG",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        },
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <Switch
-                          checked={category.isActive}
-                          onCheckedChange={() =>
-                            handleToggleActive(category.id)
-                          }
-                        />
-
+                        <Switch dir="rtl" checked={category.isActive} />
                         <span
-                          className={`text-sm ${
-                            category.isActive
-                              ? "text-green-400"
-                              : "text-slate-500"
-                          }`}
+                          className={`text-sm ${category.isActive ? "text-green-400" : "text-slate-500"}`}
                         >
                           {category.isActive ? "مفعّل" : "معطّل"}
                         </span>
                       </div>
                     </TableCell>
-
-                    <TableCell className="text-slate-400">
-                      {new Date(category.createdAt).toLocaleDateString("ar-SA")}
-                    </TableCell>
-
-                    <TableCell>
+                    <TableCell className="text-center">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setDeleteConfirmId(category.id)}
                         className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -336,42 +249,40 @@ const LawCategoriesManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Add Modal */}
-
+      {/* Add Category Modal */}
       <Dialog
         open={showAddCategoryModal}
         onOpenChange={setShowAddCategoryModal}
       >
         <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-white text-center">
+            <DialogTitle className="text-white flex justify-center gap-2">
+              <Scale className="w-5 h-5 text-white" />
               إضافة فئة قانون جديدة
             </DialogTitle>
-            <DialogDescription className="text-center text-slate-400">
+            <DialogDescription className="text-slate-400 text-center">
               أدخل بيانات الفئة الجديدة
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
               <Label className="text-slate-300">اسم الفئة *</Label>
-
               <Input
                 value={newCategory.name}
                 onChange={(e) =>
                   setNewCategory({ ...newCategory, name: e.target.value })
                 }
-                className="bg-slate-900 border-slate-600 text-white"
+                placeholder="مثال: القانون المدني"
+                className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${formErrors.name ? "border-red-500" : ""}`}
               />
-
               {formErrors.name && (
-                <p className="text-red-400 text-sm mt-1">{formErrors.name}</p>
+                <p className="text-sm text-red-400">{formErrors.name}</p>
               )}
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label className="text-slate-300">الوصف</Label>
-
               <Textarea
                 value={newCategory.description}
                 onChange={(e) =>
@@ -380,54 +291,51 @@ const LawCategoriesManagement = () => {
                     description: e.target.value,
                   })
                 }
-                className="bg-slate-900 border-slate-600 text-white"
+                placeholder="وصف موجز للفئة..."
+                className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 min-h-25"
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="mt-6">
             <Button
               variant="destructive"
-              onClick={() => setShowAddCategoryModal(false)}
+              onClick={() => {
+                setShowAddCategoryModal(false);
+                setFormErrors({});
+                setNewCategory({ name: "", description: "" });
+              }}
             >
               إلغاء
             </Button>
-
-            <Button onClick={handleAddCategory}>
-              <Plus className="w-4 h-4 ml-2" />
+            <Button variant="default">
+              <Plus className=" w-4 h-4 ml-2" />
               إضافة الفئة
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
-
+      {/* Delete Confirmation Dialog */}
       <AlertDialog
         open={!!deleteConfirmId}
         onOpenChange={() => setDeleteConfirmId(null)}
       >
         <AlertDialogContent className="bg-slate-800 border-slate-700" dir="rtl">
-          <AlertDialogHeader className="text-center">
-            <AlertDialogTitle className="text-white flex items-center justify-center gap-2">
-              <AlertTriangle className="w-6 h-6 text-red-500" />
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
               تأكيد الحذف
             </AlertDialogTitle>
-
             <AlertDialogDescription className="text-slate-400">
-              هل أنت متأكد من حذف هذه الفئة؟
+              هل أنت متأكد من حذف هذه الفئة؟ لا يمكن التراجع عن هذا الإجراء.
             </AlertDialogDescription>
           </AlertDialogHeader>
-
           <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-
-            <AlertDialogAction
-              className="bg-red-500 hover:bg-red-600"
-              onClick={() =>
-                deleteConfirmId && handleDeleteCategory(deleteConfirmId)
-              }
-            >
+            <AlertDialogCancel className="bg-slate-700 text-white hover:bg-slate-600">
+              إلغاء
+            </AlertDialogCancel>
+            <AlertDialogAction className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90">
               حذف
             </AlertDialogAction>
           </AlertDialogFooter>

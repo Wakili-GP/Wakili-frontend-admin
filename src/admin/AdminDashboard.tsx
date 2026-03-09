@@ -138,7 +138,6 @@ const AdminDashboard = () => {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
     reset,
   } = useForm<CreateAdminFormData>({
     resolver: zodResolver(createAdminSchema),
@@ -148,7 +147,7 @@ const AdminDashboard = () => {
       email: "",
       password: "",
       confirmPassword: "",
-      role: "admin",
+      role: "Admin",
     },
   });
 
@@ -161,7 +160,9 @@ const AdminDashboard = () => {
     queryKey: ["admins"],
     queryFn: AdminServices.getAllAdmins,
     staleTime: 5 * 60 * 1000,
-    retry: 2,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
+    refetchOnWindowFocus: false,
   });
 
   const queryClient = useQueryClient();
@@ -175,7 +176,7 @@ const AdminDashboard = () => {
         lastName: input.lastName,
         email: input.email,
         password: input.password,
-        role: "admin",
+        role: "Admin",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admins"] });
@@ -214,13 +215,13 @@ const AdminDashboard = () => {
 
   const getRoleBadge = (role: string) => {
     switch (role.toLowerCase()) {
-      case "admin":
+      case "Admin":
         return (
           <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
             مشرف رئيسي
           </Badge>
         );
-      case "moderator":
+      case "Moderator":
         return (
           <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
             مشرف
@@ -669,17 +670,13 @@ const AdminDashboard = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-6 flex justify-center items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setAdminToDelete(null)}
-              className="cursor-pointer border-slate-600 text-slate-300 hover:bg-slate-700"
-            >
+            <Button variant="outline" onClick={() => setAdminToDelete(null)}>
               إلغاء
             </Button>
             <Button
               onClick={confirmDelete}
               disabled={deleteAdminMutation.isPending}
-              className="cursor-pointer bg-red-400 text-white hover:bg-red-300 "
+              variant="destructive"
             >
               {deleteAdminMutation.isPending ? "جاري الحذف..." : "تأكيد الحذف"}
             </Button>

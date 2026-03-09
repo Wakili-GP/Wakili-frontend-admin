@@ -18,7 +18,7 @@ export const createAdminSchema = z
 
     confirmPassword: z.string(),
 
-    role: z.enum(["admin", "moderator"]),
+    role: "Admin",
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "كلمات المرور غير متطابقة",
