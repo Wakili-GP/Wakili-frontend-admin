@@ -40,85 +40,63 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useQuery } from "@tanstack/react-query";
-import SpecializationService from "@/services/specializations.service";
-interface LawCategory {
-  id: string;
-  name: string;
-  description: string;
-  createdAt: string;
-  isActive: boolean;
-}
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import lawCategoriesService from "@/services/specializations.service";
+import {
+  LawCategorySchema,
+  type LawCategoryInput,
+} from "@/validation/category.schema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const LawCategoriesManagement = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Fetch Categories
-  const {
-    data: categories,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["lawCategories"],
-    queryFn: SpecializationService.getAll,
-  });
-
   // Modals state
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
+  // Search Query
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Form state
-  const [newCategory, setNewCategory] = useState({ name: "", description: "" });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<LawCategoryInput>({
+    resolver: zodResolver(LawCategorySchema),
+    defaultValues: {
+      name: "",
+      description: "",
+    },
+  });
 
-  // const validateCategoryForm = () => {
-  //   const errors: Record<string, string> = {};
-  //   if (!newCategory.name.trim()) errors.name = "اسم الفئة مطلوب";
-  //   if (categories.some((c) => c.name === newCategory.name.trim()))
-  //     errors.name = "هذه الفئة موجودة بالفعل";
-  //   setFormErrors(errors);
-  //   return Object.keys(errors).length === 0;
-  // };
+  // Fetch Categories
+  const { data: categories } = useQuery({
+    queryKey: ["lawCategories"],
+    queryFn: () => lawCategoriesService.getAll(),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  // const handleAddCategory = () => {
-  //   if (!validateCategoryForm()) return;
-
-  //   const category: LawCategory = {
-  //     id: Date.now().toString(),
-  //     name: newCategory.name.trim(),
-  //     description: newCategory.description.trim(),
-  //     createdAt: new Date().toISOString().split("T")[0],
-  //     isActive: true,
-  //   };
-
-  //   setCategories([...categories, category]);
-  //   setNewCategory({ name: "", description: "" });
-  //   setShowAddCategoryModal(false);
-  //   setFormErrors({});
-  //   toast.success("تمت إضافة الفئة بنجاح");
-  // };
-
-  // const handleToggleActive = (id: string) => {
-  //   setCategories(
-  //     categories.map((c) =>
-  //       c.id === id ? { ...c, isActive: !c.isActive } : c,
-  //     ),
-  //   );
-  //   const category = categories.find((c) => c.id === id);
-  //   if (category) {
-  //     toast.success(category.isActive ? "تم تعطيل الفئة" : "تم تفعيل الفئة");
-  //   }
-  // };
-
-  // const handleDeleteCategory = (id: string) => {
-  //   setCategories(categories.filter((c) => c.id !== id));
-  //   setDeleteConfirmId(null);
-  //   toast.success("تم حذف الفئة بنجاح");
-  // };
-
-  // const filteredCategories = categories.filter(
-  //   (c) => c.name.includes(searchQuery) || c.description.includes(searchQuery),
-  // );
+  const queryClient = useQueryClient();
+  // Add New Category Mutation
+  const AddCategoryMutation = useMutation({
+    mutationKey: ["lawCategories", "Add"],
+    mutationFn: (data: LawCategoryInput) =>
+      lawCategoriesService.addCategory({
+        ...data,
+        isActive: true,
+      }),
+    onSuccess: () => {
+      toast.success("تم إضافة الفئة بنجاح");
+      queryClient.invalidateQueries({ queryKey: ["lawCategories"] });
+      setShowAddCategoryModal(false);
+      reset();
+    },
+    onError: () => {
+      toast.error("حدث خطأ أثناء إضافة الفئة");
+    },
+  });
 
   return (
     <div className="space-y-6">
@@ -269,31 +247,27 @@ const LawCategoriesManagement = () => {
             <div className="space-y-2">
               <Label className="text-slate-300">اسم الفئة *</Label>
               <Input
-                value={newCategory.name}
-                onChange={(e) =>
-                  setNewCategory({ ...newCategory, name: e.target.value })
-                }
+                {...register("name")}
                 placeholder="مثال: القانون المدني"
-                className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${formErrors.name ? "border-red-500" : ""}`}
+                className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${errors.name ? "border-red-500" : ""}`}
               />
-              {formErrors.name && (
-                <p className="text-sm text-red-400">{formErrors.name}</p>
+              {errors.name && (
+                <p className="text-sm text-red-400">{errors.name.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
               <Label className="text-slate-300">الوصف</Label>
               <Textarea
-                value={newCategory.description}
-                onChange={(e) =>
-                  setNewCategory({
-                    ...newCategory,
-                    description: e.target.value,
-                  })
-                }
+                {...register("description")}
                 placeholder="وصف موجز للفئة..."
                 className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 min-h-25"
               />
+              {errors.description && (
+                <p className="text-sm text-red-400">
+                  {errors.description.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -302,13 +276,15 @@ const LawCategoriesManagement = () => {
               variant="destructive"
               onClick={() => {
                 setShowAddCategoryModal(false);
-                setFormErrors({});
-                setNewCategory({ name: "", description: "" });
+                reset();
               }}
             >
               إلغاء
             </Button>
-            <Button variant="default">
+            <Button
+              variant="default"
+              onClick={handleSubmit((data) => AddCategoryMutation.mutate(data))}
+            >
               <Plus className=" w-4 h-4 ml-2" />
               إضافة الفئة
             </Button>

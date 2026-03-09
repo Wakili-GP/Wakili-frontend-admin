@@ -18,10 +18,14 @@ export interface SpeciliazationInput {
 
 const BASE = "/Specializations";
 
-const SpecializationService = {
+const lawCategoriesService = {
   getAll: async (): Promise<Specialization[]> => {
     const response = await httpClient.get(BASE);
     return response.data.data;
   },
+  addCategory: async (data: SpeciliazationInput): Promise<void> => {
+    const response = await httpClient.post(BASE, data);
+    return response.data.data;
+  },
 };
-export default SpecializationService;
+export default lawCategoriesService;

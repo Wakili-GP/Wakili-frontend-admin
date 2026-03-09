@@ -12,13 +12,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -158,7 +151,7 @@ const AdminDashboard = () => {
     error: adminsError,
   } = useQuery({
     queryKey: ["admins"],
-    queryFn: AdminServices.getAllAdmins,
+    queryFn: () => AdminServices.getAllAdmins(),
     staleTime: 5 * 60 * 1000,
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
@@ -178,6 +171,8 @@ const AdminDashboard = () => {
         password: input.password,
         role: "Admin",
       }),
+    onMutate: () => console.log("mutation started"), // ← add this
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admins"] });
       toast.success("تمت إضافة المشرف بنجاح");
@@ -213,24 +208,24 @@ const AdminDashboard = () => {
     }
   };
 
-  const getRoleBadge = (role: string) => {
-    switch (role.toLowerCase()) {
-      case "Admin":
-        return (
-          <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
-            مشرف رئيسي
-          </Badge>
-        );
-      case "Moderator":
-        return (
-          <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
-            مشرف
-          </Badge>
-        );
-      default:
-        return <Badge variant="secondary">{role}</Badge>;
-    }
-  };
+  // const getRoleBadge = (role: string) => {
+  //   switch (role.toLowerCase()) {
+  //     case "Admin":
+  //       return (
+  //         <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
+  //           مشرف رئيسي
+  //         </Badge>
+  //       );
+  //     case "Moderator":
+  //       return (
+  //         <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
+  //           مشرف
+  //         </Badge>
+  //       );
+  //     default:
+  //       return <Badge variant="secondary">{role}</Badge>;
+  //   }
+  // };
 
   if (adminsLoading) {
     return (
