@@ -45,7 +45,16 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  createAdminSchema,
+  type CreateAdminFormData,
+} from "@/validation/admin.schema";
+import { useCreateAdmin } from "@/hooks/admins/useCreateAdmin";
+import { useAdmins } from "@/hooks/admins/useAdmins";
+import AdminServices from "@/services/admins.service";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 const stats = [
   {
     title: "إجمالي المستخدمين",
@@ -120,134 +129,107 @@ const notifications = [
   { type: "notification", count: 128, label: "إشعارات مُرسلة اليوم" },
 ];
 
-interface Admin {
-  id: string;
-  name: string;
-  email: string;
-  role: "super_admin" | "admin" | "moderator";
-  createdAt: string;
-  status: "active" | "inactive";
-}
-
-const initialAdmins: Admin[] = [
-  {
-    id: "1",
-    name: "المشرف الرئيسي",
-    email: "admin@wakili.me",
-    role: "super_admin",
-    createdAt: "2024-01-01",
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "أحمد محمد",
-    email: "ahmed@wakili.me",
-    role: "admin",
-    createdAt: "2024-03-15",
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "سارة علي",
-    email: "sara@wakili.me",
-    role: "moderator",
-    createdAt: "2024-06-20",
-    status: "active",
-  },
-];
-
 const AdminDashboard = () => {
   const [showAddAdminModal, setShowAddAdminModal] = useState(false);
-  const [admins, setAdmins] = useState<Admin[]>(initialAdmins);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Form state
-  const [newAdmin, setNewAdmin] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "admin" as "super_admin" | "admin" | "moderator",
+  // Fetching Admins
+  const queryClient = useQueryClient();
+  const { admins } = useAdmins();
+
+  const deleteAdminMutation = useMutation({
+    mutationFn: (id: string) => AdminServices.deleteAdmin(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["Admins"] });
+      toast.success("تم حذف المشرف");
+    },
+    onError: () => {
+      toast.error("حدث خطأ أثناء حذف المشرف");
+    },
   });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-
-    if (!newAdmin.name.trim()) errors.name = "الاسم مطلوب";
-    if (!newAdmin.email.trim()) errors.email = "البريد الإلكتروني مطلوب";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newAdmin.email))
-      errors.email = "بريد إلكتروني غير صالح";
-    if (admins.some((a) => a.email === newAdmin.email))
-      errors.email = "البريد الإلكتروني مستخدم بالفعل";
-    if (!newAdmin.password) errors.password = "كلمة المرور مطلوبة";
-    else if (newAdmin.password.length < 8)
-      errors.password = "يجب أن تكون 8 أحرف على الأقل";
-    if (newAdmin.password !== newAdmin.confirmPassword)
-      errors.confirmPassword = "كلمات المرور غير متطابقة";
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+  const handleDeleteAdmin = (id: string) => {
+    deleteAdminMutation.mutate(id);
   };
-
-  const handleAddAdmin = () => {
-    if (!validateForm()) return;
-
-    const admin: Admin = {
-      id: Date.now().toString(),
-      name: newAdmin.name,
-      email: newAdmin.email,
-      role: newAdmin.role,
-      createdAt: new Date().toISOString().split("T")[0],
-      status: "active",
-    };
-
-    setAdmins([...admins, admin]);
-    setNewAdmin({
-      name: "",
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    reset,
+  } = useForm<CreateAdminFormData>({
+    resolver: zodResolver(createAdminSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
       confirmPassword: "",
-      role: "admin",
-    });
-    setShowAddAdminModal(false);
-    toast.success("تمت إضافة المشرف بنجاح");
-  };
+      role: "Admin",
+    },
+  });
 
-  const handleDeleteAdmin = (id: string) => {
-    const admin = admins.find((a) => a.id === id);
-    if (admin?.role === "super_admin") {
-      toast.error("لا يمكن حذف المشرف الرئيسي");
-      return;
-    }
-    setAdmins(admins.filter((a) => a.id !== id));
-    toast.success("تم حذف المشرف");
+  // Creating a new admin
+  const createAdminMutation = useCreateAdmin();
+  const onSubmit = (data: CreateAdminFormData) => {
+    createAdminMutation.mutate(
+      {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+        role: data.role,
+      },
+      {
+        onSuccess: () => {
+          toast.success("تمت إضافة المشرف بنجاح");
+          reset();
+          setShowAddAdminModal(false);
+        },
+      },
+    );
   };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case "super_admin":
+      case "Admin":
         return (
           <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
             مشرف رئيسي
           </Badge>
         );
-      case "admin":
+      case "Moderator":
         return (
           <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
             مشرف
-          </Badge>
-        );
-      case "moderator":
-        return (
-          <Badge className="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30">
-            مراقب
           </Badge>
         );
       default:
         return <Badge variant="secondary">{role}</Badge>;
     }
   };
+
+  // if (adminsLoading) {
+  //   return (
+  //     <div className="flex items-center justify-center py-12">
+  //       <div className="text-center">
+  //         <Loader className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-4" />
+  //         <p className="text-slate-400">جاري تحميل البيانات...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
+  // if (adminsError) {
+  //   return (
+  //     <Card className="bg-red-500/10 border-red-500/20">
+  //       <CardContent className="p-4 flex items-center gap-3">
+  //         <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+  //         <p className="text-red-300">{adminsError.message}</p>
+  //       </CardContent>
+  //     </Card>
+  //   );
+  // }
 
   return (
     <div className="space-y-6">
@@ -288,7 +270,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div
-                  className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}
+                  className={`w-12 h-12 rounded-xl bg-linear-to-br ${stat.color} flex items-center justify-center`}
                 >
                   <stat.icon className="w-6 h-6 text-white" />
                 </div>
@@ -461,7 +443,7 @@ const AdminDashboard = () => {
                   className="border-slate-700 hover:bg-slate-900/70 transition-colors duration-200 cursor-pointer"
                 >
                   <TableCell className="text-white font-medium text-center">
-                    {admin.name}
+                    {admin.firstName} {admin.lastName}
                   </TableCell>
                   <TableCell className="text-slate-300 text-center">
                     {admin.email}
@@ -470,17 +452,21 @@ const AdminDashboard = () => {
                     {getRoleBadge(admin.role)}
                   </TableCell>
                   <TableCell className="text-slate-400 text-center">
-                    {admin.createdAt}
+                    {new Date(admin.createdAt).toLocaleDateString("ar-EG", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
                   </TableCell>
                   <TableCell className="text-center">
                     <Badge
                       className={
-                        admin.status === "active"
+                        admin.status === "Active"
                           ? "bg-emerald-500/20 text-emerald-400"
                           : "bg-red-500/20 text-red-400"
                       }
                     >
-                      {admin.status === "active" ? "نشط" : "غير نشط"}
+                      {admin.status === "Active" ? "نشط" : "غير نشط"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">
@@ -488,7 +474,7 @@ const AdminDashboard = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteAdmin(admin.id)}
-                      disabled={admin.role === "super_admin"}
+                      disabled={admin.role === "Admin"}
                       className="text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -513,171 +499,163 @@ const AdminDashboard = () => {
               أدخل بيانات المشرف الجديد لإضافته إلى النظام
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 mt-4">
-            {/* Name Row */}
-            <div className="space-y-2">
-              <Label className="text-slate-300">الاسم</Label>
-              <div className="flex gap-4">
-                {/* First Name */}
-                <div className="flex-1">
-                  <Input
-                    value={newAdmin.firstName || ""}
-                    onChange={(e) =>
-                      setNewAdmin({ ...newAdmin, firstName: e.target.value })
-                    }
-                    placeholder="الاسم الأول"
-                    className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
-                      formErrors.firstName ? "border-red-500" : ""
-                    }`}
-                  />
-                  {formErrors.firstName && (
-                    <p className="text-sm text-red-400">
-                      {formErrors.firstName}
-                    </p>
-                  )}
-                </div>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="space-y-4 mt-4">
+              {/* Name Row */}
+              <div className="space-y-2">
+                <Label className="text-slate-300">الاسم</Label>
+                <div className="flex gap-4">
+                  {/* First Name */}
+                  <div className="flex-1">
+                    <Input
+                      {...register("firstName")}
+                      placeholder="الاسم الأول"
+                      className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
+                        errors.firstName ? "border-red-500" : ""
+                      }`}
+                    />
+                    {errors.firstName && (
+                      <p className="text-sm text-red-400">
+                        {errors.firstName?.message}
+                      </p>
+                    )}
+                  </div>
 
-                {/* Last Name */}
-                <div className="flex-1">
-                  <Input
-                    value={newAdmin.lastName || ""}
-                    onChange={(e) =>
-                      setNewAdmin({ ...newAdmin, lastName: e.target.value })
-                    }
-                    placeholder="اسم العائلة"
-                    className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
-                      formErrors.lastName ? "border-red-500" : ""
-                    }`}
-                  />
-                  {formErrors.lastName && (
-                    <p className="text-sm text-red-400">
-                      {formErrors.lastName}
-                    </p>
-                  )}
+                  {/* Last Name */}
+                  <div className="flex-1">
+                    <Input
+                      {...register("lastName")}
+                      placeholder="اسم العائلة"
+                      className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
+                        errors.lastName ? "border-red-500" : ""
+                      }`}
+                    />
+                    {errors.lastName && (
+                      <p className="text-sm text-red-400">
+                        {errors.lastName?.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Email */}
-            <div className="space-y-2">
-              <Label className="text-slate-300">البريد الإلكتروني</Label>
-              <Input
-                type="email"
-                value={newAdmin.email}
-                onChange={(e) =>
-                  setNewAdmin({ ...newAdmin, email: e.target.value })
-                }
-                placeholder="example@wakili.me"
-                className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
-                  formErrors.email ? "border-red-500" : ""
-                }`}
-              />
-              {formErrors.email && (
-                <p className="text-sm text-red-400">{formErrors.email}</p>
-              )}
-            </div>
-
-            {/* Password */}
-            <div className="space-y-2">
-              <Label className="text-slate-300">كلمة المرور</Label>
-              <div className="relative">
+              {/* Email */}
+              <div className="space-y-2">
+                <Label className="text-slate-300">البريد الإلكتروني</Label>
                 <Input
-                  type={showPassword ? "text" : "password"}
-                  value={newAdmin.password}
-                  onChange={(e) =>
-                    setNewAdmin({ ...newAdmin, password: e.target.value })
-                  }
-                  placeholder="أدخل كلمة مرور قوية"
-                  className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 pl-10 ${
-                    formErrors.password ? "border-red-500" : ""
+                  type="email"
+                  {...register("email")}
+                  placeholder="example@wakili.me"
+                  className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
+                    errors.email ? "border-red-500" : ""
                   }`}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
+                {errors.email && (
+                  <p className="text-sm text-red-400">
+                    {errors.email?.message}
+                  </p>
+                )}
               </div>
-              {formErrors.password && (
-                <p className="text-sm text-red-400">{formErrors.password}</p>
-              )}
-            </div>
 
-            {/* Confirm Password */}
-            <div className="space-y-2">
-              <Label className="text-slate-300">تأكيد كلمة المرور</Label>
-              <Input
-                type="password"
-                value={newAdmin.confirmPassword}
-                onChange={(e) =>
-                  setNewAdmin({
-                    ...newAdmin,
-                    confirmPassword: e.target.value,
-                  })
-                }
-                placeholder="أعد إدخال كلمة المرور"
-                className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
-                  formErrors.confirmPassword ? "border-red-500" : ""
-                }`}
-              />
-              {formErrors.confirmPassword && (
-                <p className="text-sm text-red-400">
-                  {formErrors.confirmPassword}
-                </p>
-              )}
-            </div>
+              {/* Password */}
+              <div className="space-y-2">
+                <Label className="text-slate-300">كلمة المرور</Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    {...register("password")}
+                    placeholder="أدخل كلمة مرور قوية"
+                    className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 pl-10 ${
+                      errors.password ? "border-red-500" : ""
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-red-400">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
 
-            {/* Role */}
-            <div className="space-y-2">
-              <Label className="text-slate-300">الدور</Label>
-              <Select
-                value={newAdmin.role}
-                onValueChange={(value: "super_admin" | "admin" | "moderator") =>
-                  setNewAdmin({ ...newAdmin, role: value })
-                }
+              {/* Confirm Password */}
+              <div className="space-y-2">
+                <Label className="text-slate-300">تأكيد كلمة المرور</Label>
+                <Input
+                  type="password"
+                  {...register("confirmPassword")}
+                  placeholder="أعد إدخال كلمة المرور"
+                  className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
+                    errors.confirmPassword ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.confirmPassword && (
+                  <p className="text-sm text-red-400">
+                    {errors.confirmPassword?.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Role */}
+              <div className="space-y-2">
+                <Label className="text-slate-300">الدور</Label>
+                <Select
+                  defaultValue="Admin"
+                  onValueChange={(value: "Admin" | "Moderator") =>
+                    setValue("role", value)
+                  }
+                >
+                  <SelectTrigger className="cursor-pointer bg-slate-900 border-slate-600 text-white justify-end">
+                    <SelectValue placeholder="اختر الدور" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700">
+                    <SelectItem
+                      value="Admin"
+                      className="text-white hover:bg-slate-700 cursor-pointer justify-end"
+                    >
+                      مشرف
+                    </SelectItem>
+                    <SelectItem
+                      value="Moderator"
+                      className="text-white hover:bg-slate-700 cursor-pointer justify-end"
+                    >
+                      مراقب
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter className="mt-6 flex justify-center gap-3">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setShowAddAdminModal(false)}
+                className="cursor-pointer border-red-500/40 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors duration-200"
               >
-                <SelectTrigger className="cursor-pointer bg-slate-900 border-slate-600 text-white justify-end">
-                  <SelectValue placeholder="اختر الدور" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem
-                    value="admin"
-                    className="text-white hover:bg-slate-700 cursor-pointer justify-end"
-                  >
-                    مشرف
-                  </SelectItem>
-                  <SelectItem
-                    value="moderator"
-                    className="text-white hover:bg-slate-700 cursor-pointer justify-end"
-                  >
-                    مراقب
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter className="mt-6 flex justify-center gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setShowAddAdminModal(false)}
-              className="cursor-pointer border-red-500/40 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors duration-200"
-            >
-              إلغاء
-            </Button>
+                إلغاء
+              </Button>
 
-            <Button
-              onClick={handleAddAdmin}
-              className="cursor-pointer bg-emerald-600 text-white hover:bg-emerald-500 transition-colors duration-200"
-            >
-              إضافة المشرف
-            </Button>
-          </DialogFooter>
+              <Button
+                type="submit"
+                className="cursor-pointer bg-emerald-600 text-white hover:bg-emerald-500 transition-colors duration-200"
+                disabled={createAdminMutation.isPending}
+              >
+                {createAdminMutation.isPending
+                  ? "جاري الإضافة..."
+                  : "إضافة المشرف"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
