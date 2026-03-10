@@ -140,7 +140,6 @@ const AdminDashboard = () => {
       email: "",
       password: "",
       confirmPassword: "",
-      role: "Admin",
     },
   });
 
@@ -171,8 +170,6 @@ const AdminDashboard = () => {
         password: input.password,
         role: "Admin",
       }),
-    onMutate: () => console.log("mutation started"), // ← add this
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admins"] });
       toast.success("تمت إضافة المشرف بنجاح");

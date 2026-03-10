@@ -13,7 +13,7 @@ export interface Specialization {
 export interface SpeciliazationInput {
   name: string;
   description: string;
-  isActive: true;
+  isActive: boolean;
 }
 
 const BASE = "/Specializations";
@@ -25,6 +25,13 @@ const lawCategoriesService = {
   },
   addCategory: async (data: SpeciliazationInput): Promise<void> => {
     const response = await httpClient.post(BASE, data);
+    return response.data.data;
+  },
+  deActivateCategory: async (
+    id: number,
+    data: SpeciliazationInput,
+  ): Promise<void> => {
+    const response = await httpClient.put(`${BASE}/${id}`, data);
     return response.data.data;
   },
 };

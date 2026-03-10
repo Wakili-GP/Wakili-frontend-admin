@@ -41,7 +41,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import lawCategoriesService from "@/services/specializations.service";
+import lawCategoriesService, {
+  type SpeciliazationInput,
+} from "@/services/specializations.service";
 import {
   LawCategorySchema,
   type LawCategoryInput,
@@ -95,6 +97,20 @@ const LawCategoriesManagement = () => {
     },
     onError: () => {
       toast.error("حدث خطأ أثناء إضافة الفئة");
+    },
+  });
+
+  // Toggle Category Active State Mutation
+  const ToggleActivityMutation = useMutation({
+    mutationKey: ["lawCategories", "ToggleActivity"],
+    mutationFn: ({ id, data }: { id: number; data: SpeciliazationInput }) =>
+      lawCategoriesService.deActivateCategory(id, data),
+    onSuccess: () => {
+      toast.success("تم تحديث حالة الفئة بنجاح");
+      queryClient.invalidateQueries({ queryKey: ["lawCategories"] });
+    },
+    onError: () => {
+      toast.error("حدث خطأ أثناء تحديث حالة الفئة");
     },
   });
 
@@ -197,7 +213,20 @@ const LawCategoriesManagement = () => {
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <Switch dir="rtl" checked={category.isActive} />
+                        <Switch
+                          dir="rtl"
+                          checked={category.isActive}
+                          onCheckedChange={() =>
+                            ToggleActivityMutation.mutate({
+                              id: category.id,
+                              data: {
+                                name: category.name,
+                                description: category.description,
+                                isActive: !category.isActive,
+                              },
+                            })
+                          }
+                        />
                         <span
                           className={`text-sm ${category.isActive ? "text-green-400" : "text-slate-500"}`}
                         >
