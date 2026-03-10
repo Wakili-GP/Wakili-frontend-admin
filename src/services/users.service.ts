@@ -20,5 +20,9 @@ const UserService = {
     const response = await httpClient.delete(`${BASE}/${id}`);
     return response.data.data;
   },
+  toggleUserStatus: async (id: string): Promise<void> => {
+    const response = await httpClient.put(`${BASE}/toggle-status/${id}`);
+    return response.data.data;
+  },
 };
 export default UserService;

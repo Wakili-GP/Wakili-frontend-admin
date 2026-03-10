@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +47,7 @@ const UserManagement = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [userToToggle, setUserToToggle] = useState<UserType | null>(null);
 
   // Seach Query and Active Tabs
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,6 +60,7 @@ const UserManagement = () => {
   });
 
   const queryClient = useQueryClient();
+
   // Deleting a User
   const deleteUserMutation = useMutation({
     mutationKey: ["users", "delete"],
@@ -73,6 +75,19 @@ const UserManagement = () => {
     },
   });
 
+  // Toggling User Status
+  const toggleUserStatusMutation = useMutation({
+    mutationKey: ["users", "toggleStatus"],
+    mutationFn: (id: string) => UserService.toggleUserStatus(id),
+    onSuccess: () => {
+      toast.success("تم تحديث حالة المستخدم بنجاح");
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setUserToToggle(null);
+    },
+    onError: () => {
+      toast.error("حدث خطأ أثناء تحديث حالة المستخدم. حاول مرة أخرى.");
+    },
+  });
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -307,12 +322,18 @@ const UserManagement = () => {
                             عرض التفاصيل
                           </DropdownMenuItem>
                           {user.status === "Active" ? (
-                            <DropdownMenuItem className="cursor-pointer text-red-400 focus:text-red-300 focus:bg-red-500/10">
+                            <DropdownMenuItem
+                              onClick={() => setUserToToggle(user)}
+                              className="cursor-pointer text-red-400 focus:text-red-300 focus:bg-red-500/10"
+                            >
                               <Ban className="w-4 h-4 ml-2" />
                               تعليق الحساب
                             </DropdownMenuItem>
                           ) : (
-                            <DropdownMenuItem className="cursor-pointer text-emerald-400 focus:text-emerald-300 focus:bg-emerald-500/10">
+                            <DropdownMenuItem
+                              onClick={() => setUserToToggle(user)}
+                              className="cursor-pointer text-emerald-400 focus:text-emerald-300 focus:bg-emerald-500/10"
+                            >
                               <RefreshCw className="w-4 h-4 ml-2" />
                               استعادة الحساب
                             </DropdownMenuItem>
@@ -441,25 +462,38 @@ const UserManagement = () => {
       </Dialog>
 
       {/* Suspend Dialog */}
-      <Dialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
-        <DialogContent className="bg-slate-800 border-slate-700">
-          <DialogHeader>
-            <DialogTitle className="text-white">تأكيد تعليق الحساب</DialogTitle>
-            <DialogDescription className="text-slate-400">
-              {/* هل أنت متأكد من تعليق حساب {selectedUser?.name}؟ سيتم منع المستخدم */}
-              من الوصول إلى المنصة.
+
+      <Dialog open={!!userToToggle} onOpenChange={() => setUserToToggle(null)}>
+        <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+          <DialogHeader className="mt-4">
+            <DialogTitle className="text-white text-center">
+              {userToToggle?.status === "Active"
+                ? "تأكيد تعليق الحساب"
+                : "تأكيد استعادة الحساب"}
+            </DialogTitle>
+            <DialogDescription className="text-slate-400 text-center">
+              هل أنت متأكد من{" "}
+              {userToToggle?.status === "Active" ? "تعليق" : "استعادة"} حساب{" "}
+              {userToToggle?.firstName} {userToToggle?.lastName}؟ سيتم منع
+              المستخدم من الوصول إلى المنصة.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setSuspendDialogOpen(false)}
-              className="border-slate-600 text-slate-300"
-            >
+          <DialogFooter className="mt-6 flex justify-center items-center gap-3">
+            <Button variant="outline" onClick={() => setUserToToggle(null)}>
               إلغاء
             </Button>
-            <Button className="bg-red-500 hover:bg-red-600 text-white">
-              تأكيد التعليق
+            <Button
+              onClick={() => toggleUserStatusMutation.mutate(userToToggle!.id)}
+              disabled={toggleUserStatusMutation.isPending}
+              variant="destructive"
+            >
+              {toggleUserStatusMutation.isPending &&
+              userToToggle?.status === "Active"
+                ? "جاري التعليق..."
+                : toggleUserStatusMutation.isPending &&
+                    userToToggle?.status !== "Active"
+                  ? "جاري الاستعادة..."
+                  : "تأكيد التعليق"}
             </Button>
           </DialogFooter>
         </DialogContent>
