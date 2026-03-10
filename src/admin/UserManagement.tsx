@@ -1,4 +1,4 @@
-import { use, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,10 +44,9 @@ import UserService, { type User as UserType } from "@/services/users.service";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const UserManagement = () => {
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [userToToggle, setUserToToggle] = useState<UserType | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
 
   // Seach Query and Active Tabs
   const [searchQuery, setSearchQuery] = useState("");
@@ -317,7 +316,10 @@ const UserManagement = () => {
                           align="end"
                           className="bg-slate-800 border-slate-700"
                         >
-                          <DropdownMenuItem className="cursor-pointer text-slate-300 focus:text-white focus:bg-slate-700">
+                          <DropdownMenuItem
+                            onClick={() => setSelectedUser(user)}
+                            className="cursor-pointer text-slate-300 focus:text-white focus:bg-slate-700"
+                          >
                             <Eye className="w-4 h-4 ml-2" />
                             عرض التفاصيل
                           </DropdownMenuItem>
@@ -357,29 +359,29 @@ const UserManagement = () => {
           ) : (
             <div className="text-center py-12">
               <FolderOpen className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-              <p className="text-slate-400">لا توجد فئات مطابقة للبحث</p>
+              <p className="text-slate-400">لا يوجد مستخدمين مطابقين للبحث</p>
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* View Dialog */}
-      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+      {/* <Dialog open={!!selectedUser} onOpenChange={setSelectedUser}>
         <DialogContent className="bg-slate-800 border-slate-700">
           <DialogHeader>
             <DialogTitle className="text-white">تفاصيل المستخدم</DialogTitle>
           </DialogHeader>
-          {/* {selectedUser && (
+          {selectedUser && (
             <div className="space-y-4">
               <div className="flex items-center gap-4 p-4 rounded-lg bg-slate-900/50">
                 <div
                   className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                    selectedUser.type === "lawyer"
+                    selectedUser.userType === "lawyer"
                       ? "bg-purple-500/20"
                       : "bg-blue-500/20"
                   }`}
                 >
-                  {selectedUser.type === "lawyer" ? (
+                  {selectedUser.userType === "lawyer" ? (
                     <Briefcase className="w-8 h-8 text-purple-400" />
                   ) : (
                     <User className="w-8 h-8 text-blue-400" />
@@ -387,7 +389,7 @@ const UserManagement = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">
-                    {selectedUser.name}
+                    {selectedUser.firstName} {selectedUser.lastName}
                   </h3>
                   <p className="text-slate-400">{selectedUser.email}</p>
                 </div>
@@ -397,15 +399,15 @@ const UserManagement = () => {
                 <div className="p-4 rounded-lg bg-slate-900/50">
                   <p className="text-xs text-slate-400 mb-1">نوع الحساب</p>
                   <p className="text-white font-medium">
-                    {selectedUser.type === "lawyer" ? "محامي" : "عميل"}
+                    {selectedUser.userType === "Lawyer" ? "محامي" : "عميل"}
                   </p>
                 </div>
                 <div className="p-4 rounded-lg bg-slate-900/50">
                   <p className="text-xs text-slate-400 mb-1">الحالة</p>
                   <p
-                    className={`font-medium ${selectedUser.status === "active" ? "text-emerald-400" : "text-red-400"}`}
+                    className={`font-medium ${selectedUser.status === "Active" ? "text-emerald-400" : "text-red-400"}`}
                   >
-                    {selectedUser.status === "active" ? "نشط" : "معلق"}
+                    {selectedUser.status === "Active" ? "نشط" : "معلق"}
                   </p>
                 </div>
                 {selectedUser.specialty && (
@@ -437,7 +439,7 @@ const UserManagement = () => {
               </div>
 
               <DialogFooter>
-                {selectedUser.status === "active" ? (
+                {selectedUser.status === "Active" ? (
                   <Button
                     variant="outline"
                     onClick={() => setSuspendDialogOpen(true)}
@@ -457,9 +459,9 @@ const UserManagement = () => {
                 )}
               </DialogFooter>
             </div>
-          )} */}
+          )}
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       {/* Suspend Dialog */}
 

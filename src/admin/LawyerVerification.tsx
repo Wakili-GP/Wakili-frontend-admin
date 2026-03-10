@@ -5,6 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -30,387 +38,62 @@ import {
   Award,
   Clock,
   Filter,
+  Briefcase,
+  FolderOpen,
 } from "lucide-react";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import verificationService from "@/services/verification.service";
 
-interface VerificationDocument {
-  name: string;
-  url: string;
-  type: string;
-  uploadedAt: string;
-}
-
-interface Education {
-  degreeType: string;
-  fieldOfStudy: string;
-  university: string;
-  graduationYear: string;
-}
-
-interface Certification {
-  name: string;
-  issuingOrg: string;
-  yearObtained: string;
-  documentUrl?: string;
-}
-
-interface Experience {
-  jobTitle: string;
-  organization: string;
-  startYear: string;
-  endYear: string;
-  isCurrent: boolean;
-  description: string;
-}
-
-interface VerificationRequest {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  specialty: string[];
-  submittedAt: string;
-  status: "pending" | "approved" | "rejected";
-  profileImage: string;
-  bio: string;
-  location: {
-    country: string;
-    city: string;
-  };
-  yearsExperience: number;
-  sessionTypes: string[];
-  education: Education[];
-  certifications: Certification[];
-  workExperience: Experience[];
-  documents: {
-    governmentId: boolean;
-    governmentIdUrl?: string;
-    professionalLicense: boolean;
-    professionalLicenseUrl?: string;
-    identityVerification: boolean;
-    educationCertificates: VerificationDocument[];
-  };
-  licenseNumber: string;
-  issuingAuthority: string;
-  licenseYear: string;
-  barNumber: string;
-}
-
-const mockRequests: VerificationRequest[] = [
-  {
-    id: "1",
-    name: "أحمد محمد علي",
-    email: "ahmed@example.com",
-    phone: "+20 100 123 4567",
-    specialty: ["القانون الجنائي", "القانون التجاري"],
-    submittedAt: "2024-01-15",
-    status: "pending",
-    profileImage:
-      "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop",
-    bio: "محامي متخصص في القضايا الجنائية والتجارية مع خبرة تزيد عن 10 سنوات في المحاكم المصرية",
-    location: { country: "مصر", city: "القاهرة" },
-    yearsExperience: 10,
-    sessionTypes: ["مكتب", "هاتف"],
-    education: [
-      {
-        degreeType: "بكالوريوس",
-        fieldOfStudy: "القانون",
-        university: "جامعة القاهرة",
-        graduationYear: "2012",
-      },
-      {
-        degreeType: "ماجستير",
-        fieldOfStudy: "القانون الجنائي",
-        university: "جامعة عين شمس",
-        graduationYear: "2015",
-      },
-    ],
-    certifications: [
-      {
-        name: "شهادة التحكيم التجاري الدولي",
-        issuingOrg: "مركز القاهرة للتحكيم",
-        yearObtained: "2018",
-        documentUrl: "#",
-      },
-      {
-        name: "دبلوم القانون الدولي",
-        issuingOrg: "الأكاديمية العربية",
-        yearObtained: "2020",
-        documentUrl: "#",
-      },
-    ],
-    workExperience: [
-      {
-        jobTitle: "محامي رئيسي",
-        organization: "مكتب العدالة للمحاماة",
-        startYear: "2018",
-        endYear: "",
-        isCurrent: true,
-        description:
-          "إدارة القضايا الجنائية والتجارية الكبرى والتمثيل أمام المحاكم العليا",
-      },
-      {
-        jobTitle: "محامي مساعد",
-        organization: "مكتب النور للمحاماة",
-        startYear: "2012",
-        endYear: "2018",
-        isCurrent: false,
-        description: "المساعدة في إعداد المذكرات القانونية وحضور الجلسات",
-      },
-    ],
-    documents: {
-      governmentId: true,
-      governmentIdUrl: "#",
-      professionalLicense: true,
-      professionalLicenseUrl: "#",
-      identityVerification: true,
-      educationCertificates: [
-        {
-          name: "شهادة البكالوريوس",
-          url: "#",
-          type: "pdf",
-          uploadedAt: "2024-01-10",
-        },
-        {
-          name: "شهادة الماجستير",
-          url: "#",
-          type: "pdf",
-          uploadedAt: "2024-01-10",
-        },
-      ],
-    },
-    licenseNumber: "12345",
-    issuingAuthority: "نقابة المحامين المصرية",
-    licenseYear: "2012",
-    barNumber: "12345",
-  },
-  {
-    id: "2",
-    name: "سارة أحمد محمود",
-    email: "sara@example.com",
-    phone: "+20 101 234 5678",
-    specialty: ["قانون الأسرة"],
-    submittedAt: "2024-01-14",
-    status: "pending",
-    profileImage:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop",
-    bio: "محامية متخصصة في قضايا الأسرة والأحوال الشخصية",
-    location: { country: "مصر", city: "الإسكندرية" },
-    yearsExperience: 5,
-    sessionTypes: ["مكتب", "هاتف"],
-    education: [
-      {
-        degreeType: "بكالوريوس",
-        fieldOfStudy: "القانون",
-        university: "جامعة الإسكندرية",
-        graduationYear: "2018",
-      },
-    ],
-    certifications: [],
-    workExperience: [
-      {
-        jobTitle: "محامية",
-        organization: "مكتب الأسرة للمحاماة",
-        startYear: "2019",
-        endYear: "",
-        isCurrent: true,
-        description: "التعامل مع قضايا الطلاق والحضانة والنفقة",
-      },
-    ],
-    documents: {
-      governmentId: true,
-      governmentIdUrl: "#",
-      professionalLicense: true,
-      professionalLicenseUrl: "#",
-      identityVerification: false,
-      educationCertificates: [
-        {
-          name: "شهادة البكالوريوس",
-          url: "#",
-          type: "pdf",
-          uploadedAt: "2024-01-12",
-        },
-      ],
-    },
-    licenseNumber: "67890",
-    issuingAuthority: "نقابة المحامين المصرية",
-    licenseYear: "2019",
-    barNumber: "67890",
-  },
-  {
-    id: "3",
-    name: "خالد عبدالله حسن",
-    email: "khaled@example.com",
-    phone: "+20 102 345 6789",
-    specialty: ["القانون التجاري"],
-    submittedAt: "2024-01-13",
-    status: "approved",
-    profileImage:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
-    bio: "خبير في القانون التجاري والشركات مع 15 عاماً من الخبرة",
-    location: { country: "مصر", city: "الجيزة" },
-    yearsExperience: 15,
-    sessionTypes: ["مكتب"],
-    education: [
-      {
-        degreeType: "دكتوراه",
-        fieldOfStudy: "القانون التجاري",
-        university: "جامعة القاهرة",
-        graduationYear: "2012",
-      },
-    ],
-    certifications: [
-      {
-        name: "شهادة التحكيم الدولي",
-        issuingOrg: "ICC",
-        yearObtained: "2015",
-        documentUrl: "#",
-      },
-    ],
-    workExperience: [
-      {
-        jobTitle: "شريك مؤسس",
-        organization: "مكتب حسن والشركاء",
-        startYear: "2015",
-        endYear: "",
-        isCurrent: true,
-        description: "إدارة المكتب والقضايا التجارية الكبرى",
-      },
-    ],
-    documents: {
-      governmentId: true,
-      governmentIdUrl: "#",
-      professionalLicense: true,
-      professionalLicenseUrl: "#",
-      identityVerification: true,
-      educationCertificates: [],
-    },
-    licenseNumber: "11111",
-    issuingAuthority: "نقابة المحامين المصرية",
-    licenseYear: "2008",
-    barNumber: "11111",
-  },
-  {
-    id: "4",
-    name: "منى إبراهيم سعيد",
-    email: "mona@example.com",
-    phone: "+20 103 456 7890",
-    specialty: ["قانون العمل"],
-    submittedAt: "2024-01-12",
-    status: "rejected",
-    profileImage:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop",
-    bio: "محامية متخصصة في قانون العمل والعلاقات العمالية",
-    location: { country: "مصر", city: "المنصورة" },
-    yearsExperience: 3,
-    sessionTypes: ["هاتف"],
-    education: [
-      {
-        degreeType: "بكالوريوس",
-        fieldOfStudy: "القانون",
-        university: "جامعة المنصورة",
-        graduationYear: "2020",
-      },
-    ],
-    certifications: [],
-    workExperience: [
-      {
-        jobTitle: "محامية مبتدئة",
-        organization: "مكتب العمل للمحاماة",
-        startYear: "2021",
-        endYear: "",
-        isCurrent: true,
-        description: "متابعة القضايا العمالية",
-      },
-    ],
-    documents: {
-      governmentId: true,
-      governmentIdUrl: "#",
-      professionalLicense: false,
-      identityVerification: true,
-      educationCertificates: [],
-    },
-    licenseNumber: "22222",
-    issuingAuthority: "نقابة المحامين المصرية",
-    licenseYear: "2021",
-    barNumber: "22222",
-  },
-];
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "Pending":
+      return (
+        <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20">
+          معلق
+        </Badge>
+      );
+    case "Approved":
+      return (
+        <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+          موافق عليه
+        </Badge>
+      );
+    case "Rejected":
+      return (
+        <Badge className="bg-red-500/10 text-red-400 border-red-500/20">
+          مرفوض
+        </Badge>
+      );
+    default:
+      return null;
+  }
+};
 
 const LawyerVerification = () => {
-  const [requests, setRequests] = useState<VerificationRequest[]>(mockRequests);
-  const [selectedRequest, setSelectedRequest] =
-    useState<VerificationRequest | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Status Filters
   const [statusFilter, setStatusFilter] = useState("all");
-  const { toast } = useToast();
+  const statusMap: Record<string, number | undefined> = {
+    all: undefined,
+    pending: 0,
+    approved: 1,
+    rejected: 2,
+  };
 
-  const filteredRequests = requests.filter((request) => {
-    const matchesSearch =
-      request.name.includes(searchQuery) || request.email.includes(searchQuery);
-    const matchesStatus =
-      statusFilter === "all" || request.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  // Fetching Request Table
+  const { data: requests } = useQuery({
+    queryKey: ["verificationRequests", statusFilter],
+    queryFn: async () =>
+      verificationService.getVerificationRequests(
+        statusMap[statusFilter || "all"],
+      ),
   });
-
-  const handleApprove = (id: string) => {
-    setRequests(
-      requests.map((r) =>
-        r.id === id ? { ...r, status: "approved" as const } : r,
-      ),
-    );
-    setViewDialogOpen(false);
-    toast({
-      title: "تمت الموافقة",
-      description: "تم توثيق حساب المحامي بنجاح وإرسال إشعار له",
-    });
-  };
-
-  const handleReject = () => {
-    if (!selectedRequest || !rejectionReason) return;
-
-    setRequests(
-      requests.map((r) =>
-        r.id === selectedRequest.id ? { ...r, status: "rejected" as const } : r,
-      ),
-    );
-    setRejectDialogOpen(false);
-    setViewDialogOpen(false);
-    setRejectionReason("");
-    toast({
-      title: "تم الرفض",
-      description: "تم رفض طلب التوثيق وإرسال إشعار للمحامي بأسباب الرفض",
-      variant: "destructive",
-    });
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return (
-          <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20">
-            معلق
-          </Badge>
-        );
-      case "approved":
-        return (
-          <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-            موافق عليه
-          </Badge>
-        );
-      case "rejected":
-        return (
-          <Badge className="bg-red-500/10 text-red-400 border-red-500/20">
-            مرفوض
-          </Badge>
-        );
-      default:
-        return null;
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -429,7 +112,7 @@ const LawyerVerification = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-white">
-                {requests.filter((r) => r.status === "pending").length}
+                {requests?.filter((req) => req.status === "Pending")?.length}
               </p>
               <p className="text-sm text-slate-400">طلبات معلقة</p>
             </div>
@@ -442,7 +125,7 @@ const LawyerVerification = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-white">
-                {requests.filter((r) => r.status === "approved").length}
+                {requests?.filter((req) => req.status === "Approved")?.length}
               </p>
               <p className="text-sm text-slate-400">تمت الموافقة</p>
             </div>
@@ -455,7 +138,7 @@ const LawyerVerification = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-white">
-                {requests.filter((r) => r.status === "rejected").length}
+                {requests?.filter((req) => req.status === "Rejected")?.length}
               </p>
               <p className="text-sm text-slate-400">مرفوضة</p>
             </div>
@@ -476,16 +159,28 @@ const LawyerVerification = () => {
                 className="pr-10 bg-slate-900/50 border-slate-600 text-white"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48 bg-slate-900/50 border-slate-600 text-white">
+            <Select
+              dir="rtl"
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+            >
+              <SelectTrigger className="cursor-pointer w-full md:w-48 bg-slate-900/50 border-slate-600 text-white">
                 <Filter className="w-4 h-4 ml-2" />
                 <SelectValue placeholder="فلترة حسب الحالة" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">جميع الحالات</SelectItem>
-                <SelectItem value="pending">معلق</SelectItem>
-                <SelectItem value="approved">موافق عليه</SelectItem>
-                <SelectItem value="rejected">مرفوض</SelectItem>
+                <SelectItem className="cursor-pointer" value="all">
+                  جميع الحالات
+                </SelectItem>
+                <SelectItem className="cursor-pointer" value="pending">
+                  معلق
+                </SelectItem>
+                <SelectItem className="cursor-pointer" value="approved">
+                  موافق عليه
+                </SelectItem>
+                <SelectItem className="cursor-pointer" value="rejected">
+                  مرفوض
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -501,73 +196,87 @@ const LawyerVerification = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-700">
-                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
+          {requests ? (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-slate-700 hover:bg-slate-900/50">
+                  <TableHead className="text-slate-400 text-right">
                     المحامي
-                  </th>
-                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
                     التخصص
-                  </th>
-                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
                     تاريخ التقديم
-                  </th>
-                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
-                    المستندات
-                  </th>
-                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
                     الحالة
-                  </th>
-                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
                     الإجراءات
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRequests.map((request) => (
-                  <tr
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {requests?.map((request) => (
+                  <TableRow
                     key={request.id}
-                    className="border-b border-slate-700/50 hover:bg-slate-700/20"
+                    className="border-slate-700 hover:bg-slate-900/50"
                   >
-                    <td className="py-4 px-4">
-                      <div>
-                        <p className="text-white font-medium">{request.name}</p>
-                        <p className="text-xs text-slate-400">
-                          {request.email}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-slate-300">
-                      {request.specialty}
-                    </td>
-                    <td className="py-4 px-4 text-slate-300">
-                      {request.submittedAt}
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex gap-1">
-                        <div
-                          className={`w-6 h-6 rounded flex items-center justify-center ${request.documents.governmentId ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
-                        >
-                          <IdCard className="w-3 h-3" />
+                    <TableCell className="text-white font-medium text-right w-54">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-500/20">
+                          {request.profileImageUrl ? (
+                            <img
+                              src={request.profileImageUrl}
+                              alt={`${request.firstName} ${request.lastName}`}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <Briefcase className="w-5 h-5 text-purple-400" />
+                          )}
                         </div>
-                        <div
-                          className={`w-6 h-6 rounded flex items-center justify-center ${request.documents.professionalLicense ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
-                        >
-                          <Award className="w-3 h-3" />
-                        </div>
-                        <div
-                          className={`w-6 h-6 rounded flex items-center justify-center ${request.documents.identityVerification ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
-                        >
-                          <FileText className="w-3 h-3" />
+                        <div>
+                          <p className="text-white font-medium">
+                            {request.firstName} {request.lastName}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {request.email}
+                          </p>
                         </div>
                       </div>
-                    </td>
-                    <td className="py-4 px-4">
+                    </TableCell>
+                    <TableCell className="text-slate-300 text-center">
+                      {request.specializations
+                        ?.split(",")
+                        .map((s: string, i: number) => (
+                          <Badge
+                            variant="outline"
+                            className={
+                              i & 1
+                                ? "border-purple-500/20 text-purple-400"
+                                : "border-blue-500/20 text-blue-400"
+                            }
+                            key={i}
+                          >
+                            {s.trim()}
+                          </Badge>
+                        ))}
+                    </TableCell>
+                    <TableCell className="text-slate-400 text-center">
+                      {new Date(request.submittedAt).toLocaleDateString(
+                        "ar-EG",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        },
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
                       {getStatusBadge(request.status)}
-                    </td>
-                    <td className="py-4 px-4">
+                    </TableCell>
+                    <TableCell className="text-center">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -580,12 +289,17 @@ const LawyerVerification = () => {
                         <Eye className="w-4 h-4 ml-1" />
                         عرض
                       </Button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-12">
+              <FolderOpen className="w-16 h-16 mx-auto text-slate-600 mb-4" />
+              <p className="text-slate-400">لا يوجد مستخدمين مطابقين للبحث</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -654,7 +368,7 @@ const LawyerVerification = () => {
                   <div className="p-3 rounded-lg bg-slate-800/50">
                     <p className="text-xs text-slate-400 mb-1">التخصصات</p>
                     <div className="flex flex-wrap gap-1">
-                      {selectedRequest.specialty.map((s, i) => (
+                      {selectedRequest.specialty.map((s: string, i: number) => (
                         <Badge
                           key={i}
                           className="bg-amber-500/10 text-amber-400 text-xs"
@@ -667,15 +381,17 @@ const LawyerVerification = () => {
                   <div className="p-3 rounded-lg bg-slate-800/50">
                     <p className="text-xs text-slate-400 mb-1">أنواع الجلسات</p>
                     <div className="flex flex-wrap gap-1">
-                      {selectedRequest.sessionTypes.map((s, i) => (
-                        <Badge
-                          key={i}
-                          variant="outline"
-                          className="border-slate-600 text-slate-300 text-xs"
-                        >
-                          {s}
-                        </Badge>
-                      ))}
+                      {selectedRequest.sessionTypes.map(
+                        (s: string, i: number) => (
+                          <Badge
+                            key={i}
+                            variant="outline"
+                            className="border-slate-600 text-slate-300 text-xs"
+                          >
+                            {s}
+                          </Badge>
+                        ),
+                      )}
                     </div>
                   </div>
                 </div>
@@ -689,19 +405,21 @@ const LawyerVerification = () => {
                 </h3>
                 {selectedRequest.education.length > 0 ? (
                   <div className="space-y-3">
-                    {selectedRequest.education.map((edu, i) => (
-                      <div
-                        key={i}
-                        className="p-3 rounded-lg bg-slate-800/50 border-r-2 border-amber-500"
-                      >
-                        <p className="text-white font-medium">
-                          {edu.degreeType} في {edu.fieldOfStudy}
-                        </p>
-                        <p className="text-slate-400 text-sm">
-                          {edu.university} - {edu.graduationYear}
-                        </p>
-                      </div>
-                    ))}
+                    {selectedRequest.education.map(
+                      (edu: Record<string, string>, i: number) => (
+                        <div
+                          key={i}
+                          className="p-3 rounded-lg bg-slate-800/50 border-r-2 border-amber-500"
+                        >
+                          <p className="text-white font-medium">
+                            {edu.degreeType} في {edu.fieldOfStudy}
+                          </p>
+                          <p className="text-slate-400 text-sm">
+                            {edu.university} - {edu.graduationYear}
+                          </p>
+                        </div>
+                      ),
+                    )}
                   </div>
                 ) : (
                   <p className="text-slate-400">لا توجد مؤهلات علمية مسجلة</p>
@@ -716,30 +434,34 @@ const LawyerVerification = () => {
                 </h3>
                 {selectedRequest.certifications.length > 0 ? (
                   <div className="space-y-3">
-                    {selectedRequest.certifications.map((cert, i) => (
-                      <div
-                        key={i}
-                        className="p-3 rounded-lg bg-slate-800/50 flex items-center justify-between"
-                      >
-                        <div>
-                          <p className="text-white font-medium">{cert.name}</p>
-                          <p className="text-slate-400 text-sm">
-                            {cert.issuingOrg} - {cert.yearObtained}
-                          </p>
+                    {selectedRequest.certifications.map(
+                      (cert: Record<string, string>, i: number) => (
+                        <div
+                          key={i}
+                          className="p-3 rounded-lg bg-slate-800/50 flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="text-white font-medium">
+                              {cert.name}
+                            </p>
+                            <p className="text-slate-400 text-sm">
+                              {cert.issuingOrg} - {cert.yearObtained}
+                            </p>
+                          </div>
+                          {cert.documentUrl && (
+                            <a
+                              href={cert.documentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-amber-400 hover:text-amber-300 text-sm flex items-center gap-1"
+                            >
+                              <FileText className="w-4 h-4" />
+                              عرض
+                            </a>
+                          )}
                         </div>
-                        {cert.documentUrl && (
-                          <a
-                            href={cert.documentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-amber-400 hover:text-amber-300 text-sm flex items-center gap-1"
-                          >
-                            <FileText className="w-4 h-4" />
-                            عرض
-                          </a>
-                        )}
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 ) : (
                   <p className="text-slate-400">لا توجد شهادات مهنية مسجلة</p>
@@ -754,37 +476,42 @@ const LawyerVerification = () => {
                 </h3>
                 {selectedRequest.workExperience.length > 0 ? (
                   <div className="space-y-3">
-                    {selectedRequest.workExperience.map((exp, i) => (
-                      <div
-                        key={i}
-                        className="p-3 rounded-lg bg-slate-800/50 border-r-2 border-emerald-500"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="text-white font-medium">
-                              {exp.jobTitle}
-                            </p>
-                            <p className="text-slate-300 text-sm">
-                              {exp.organization}
-                            </p>
+                    {selectedRequest.workExperience.map(
+                      (
+                        exp: Record<string, string | number | boolean>,
+                        i: number,
+                      ) => (
+                        <div
+                          key={i}
+                          className="p-3 rounded-lg bg-slate-800/50 border-r-2 border-emerald-500"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="text-white font-medium">
+                                {exp.jobTitle}
+                              </p>
+                              <p className="text-slate-300 text-sm">
+                                {exp.organization}
+                              </p>
+                            </div>
+                            <Badge
+                              className={
+                                exp.isCurrent
+                                  ? "bg-emerald-500/10 text-emerald-400"
+                                  : "bg-slate-700 text-slate-300"
+                              }
+                            >
+                              {exp.isCurrent
+                                ? "حالياً"
+                                : `${exp.startYear} - ${exp.endYear}`}
+                            </Badge>
                           </div>
-                          <Badge
-                            className={
-                              exp.isCurrent
-                                ? "bg-emerald-500/10 text-emerald-400"
-                                : "bg-slate-700 text-slate-300"
-                            }
-                          >
-                            {exp.isCurrent
-                              ? "حالياً"
-                              : `${exp.startYear} - ${exp.endYear}`}
-                          </Badge>
+                          <p className="text-slate-400 text-sm mt-2">
+                            {exp.description}
+                          </p>
                         </div>
-                        <p className="text-slate-400 text-sm mt-2">
-                          {exp.description}
-                        </p>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 ) : (
                   <p className="text-slate-400">لا توجد خبرات عملية مسجلة</p>
@@ -912,7 +639,7 @@ const LawyerVerification = () => {
                     </p>
                     <div className="space-y-2">
                       {selectedRequest.documents.educationCertificates.map(
-                        (doc, i) => (
+                        (doc: Record<string, string>, i: number) => (
                           <div
                             key={i}
                             className="flex items-center justify-between p-2 rounded bg-slate-800/30"
@@ -937,7 +664,7 @@ const LawyerVerification = () => {
                 )}
               </div>
 
-              {selectedRequest.status === "pending" && (
+              {selectedRequest.status === "Pending" && (
                 <DialogFooter className="gap-2">
                   <Button
                     variant="outline"
@@ -950,7 +677,7 @@ const LawyerVerification = () => {
                     رفض
                   </Button>
                   <Button
-                    onClick={() => handleApprove(selectedRequest.id)}
+                    onClick={() => null}
                     className="bg-emerald-500 hover:bg-emerald-600 text-white"
                   >
                     <CheckCircle className="w-4 h-4 ml-2" />
@@ -963,7 +690,6 @@ const LawyerVerification = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Reject Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent className="bg-slate-800 border-slate-700">
           <DialogHeader>
@@ -976,7 +702,7 @@ const LawyerVerification = () => {
             placeholder="اكتب أسباب الرفض هنا..."
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
-            className="bg-slate-900/50 border-slate-600 text-white min-h-[120px]"
+            className="bg-slate-900/50 border-slate-600 text-white min-h-30"
           />
           <DialogFooter>
             <Button
@@ -987,7 +713,7 @@ const LawyerVerification = () => {
               إلغاء
             </Button>
             <Button
-              onClick={handleReject}
+              onClick={() => null}
               disabled={!rejectionReason}
               className="bg-red-500 hover:bg-red-600 text-white"
             >
