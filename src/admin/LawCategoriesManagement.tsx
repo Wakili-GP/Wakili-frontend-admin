@@ -50,11 +50,15 @@ import {
 } from "@/validation/category.schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const LawCategoriesManagement = () => {
   // Modals state
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+  // Active Tabs
+  const [activeTab, setActiveTab] = useState<"all" | "active">("all");
 
   // Search Query
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,6 +82,14 @@ const LawCategoriesManagement = () => {
     queryKey: ["lawCategories"],
     queryFn: () => lawCategoriesService.getAll(),
     staleTime: 5 * 60 * 1000,
+  });
+
+  // Filtered Categories
+  const filteredCategories = categories?.filter((c) => {
+    const matchesSearch =
+      c.name.includes(searchQuery) || c.description?.includes(searchQuery);
+    const matchesTab = activeTab === "all" ? true : c.isActive;
+    return matchesSearch && matchesTab;
   });
 
   const queryClient = useQueryClient();
@@ -122,6 +134,7 @@ const LawCategoriesManagement = () => {
     onSuccess: () => {
       toast.success("تم حذف الفئة بنجاح");
       queryClient.invalidateQueries({ queryKey: ["lawCategories"] });
+      setDeleteConfirmId(null);
     },
     onError: () => {
       toast.error("حدث خطأ أثناء حذف الفئة");
@@ -171,7 +184,7 @@ const LawCategoriesManagement = () => {
               <div>
                 <p className="text-sm text-slate-400">الفئات النشطة</p>
                 <p className="text-3xl font-bold text-white">
-                  {categories?.filter((c) => c.isActive).length ?? 0}
+                  {filteredCategories?.filter((c) => c.isActive).length ?? 0}
                 </p>
               </div>
             </div>
@@ -179,27 +192,47 @@ const LawCategoriesManagement = () => {
         </Card>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-        <Input
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="ابحث..."
-          className="pr-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
-        />
-      </div>
+      {/* Tabs & Search */}
+      <Card className="bg-slate-800/50 border-slate-700">
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <Tabs
+              className="w-full md:w-auto"
+              value={activeTab}
+              onValueChange={(val) => setActiveTab(val as "all" | "active")}
+            >
+              <TabsList className="bg-slate-900/50">
+                <TabsTrigger className="cursor-pointer" value="all">
+                  جميع الفئات
+                </TabsTrigger>
+                <TabsTrigger className="cursor-pointer" value="active">
+                  الفئات النشطة
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div className="relative w-full md:w-64">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                placeholder="ابحث..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-10 bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Categories Table */}
       <Card className="bg-slate-800/50 border-slate-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Scale className="w-5 h-5 text-amber-500" />
-            فئات القانون ({categories?.length})
+            فئات القانون ({filteredCategories?.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {categories ? (
+          {filteredCategories ? (
             <Table>
               <TableHeader>
                 <TableRow className="border-slate-700 hover:bg-slate-900/50">
@@ -221,7 +254,7 @@ const LawCategoriesManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {categories?.map((category) => (
+                {filteredCategories?.map((category) => (
                   <TableRow
                     key={category.id}
                     className="border-slate-700 hover:bg-slate-900/50"
@@ -270,9 +303,7 @@ const LawCategoriesManagement = () => {
                         variant="ghost"
                         size="sm"
                         className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                        onClick={() =>
-                          DeleteActivityMutation.mutate({ id: category.id })
-                        }
+                        onClick={() => setDeleteConfirmId(category.id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -362,11 +393,11 @@ const LawCategoriesManagement = () => {
       >
         <AlertDialogContent className="bg-slate-800 border-slate-700" dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white flex items-center gap-2">
+            <AlertDialogTitle className="text-red-500 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-500" />
               تأكيد الحذف
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
+            <AlertDialogDescription className="text-white">
               هل أنت متأكد من حذف هذه الفئة؟ لا يمكن التراجع عن هذا الإجراء.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -374,7 +405,15 @@ const LawCategoriesManagement = () => {
             <AlertDialogCancel className="bg-slate-700 text-white hover:bg-slate-600">
               إلغاء
             </AlertDialogCancel>
-            <AlertDialogAction className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteConfirmId) {
+                  DeleteActivityMutation.mutate({ id: deleteConfirmId });
+                  setDeleteConfirmId(null);
+                }
+              }}
+              className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               حذف
             </AlertDialogAction>
           </AlertDialogFooter>
