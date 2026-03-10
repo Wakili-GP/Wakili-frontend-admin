@@ -197,6 +197,7 @@ const LawCategoriesManagement = () => {
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <Tabs
+              dir="rtl"
               className="w-full md:w-auto"
               value={activeTab}
               onValueChange={(val) => setActiveTab(val as "all" | "active")}

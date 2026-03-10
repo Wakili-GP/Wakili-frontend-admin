@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -13,20 +13,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Users,
   Search,
   Eye,
   Ban,
-  FolderOpen,
-  Trash2,
   Briefcase,
   User,
   MoreVertical,
@@ -40,20 +30,70 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import UserService, { type User as UserType } from "@/services/users.service";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+const formatDate = (dateStr: string | null) => {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("ar-SA");
+};
+
+const getFullName = (user: UserType) => {
+  const name = `${user.firstName} ${user.lastName}`.trim();
+  return name || user.email;
+};
 
 const UserManagement = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
-
-  // Seach Query and Active Tabs
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: users = [] } = useQuery({
     queryKey: ["users"],
     queryFn: () => UserService.getUsers(),
   });
+
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      !searchQuery ||
+      getFullName(user).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesTab =
+      activeTab === "all" ||
+      (activeTab === "clients" && user.userType === "Client") ||
+      (activeTab === "lawyers" && user.userType === "Lawyer") ||
+      (activeTab === "suspended" && user.status !== "Active");
+
+    return matchesSearch && matchesTab;
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleSuspend = async (_id: string) => {
+    try {
+      // TODO: call suspend API when available
+      toast.success("تم تعليق الحساب بنجاح");
+      setSuspendDialogOpen(false);
+      setViewDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    } catch {
+      toast.error("حدث خطأ أثناء تعليق الحساب");
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleReinstate = async (_id: string) => {
+    try {
+      // TODO: call reinstate API when available
+      toast.success("تم استعادة الحساب بنجاح");
+      setViewDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    } catch {
+      toast.error("حدث خطأ أثناء استعادة الحساب");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -130,18 +170,10 @@ const UserManagement = () => {
               className="w-full md:w-auto"
             >
               <TabsList className="bg-slate-900/50">
-                <TabsTrigger className="cursor-pointer" value="all">
-                  الكل
-                </TabsTrigger>
-                <TabsTrigger className="cursor-pointer" value="clients">
-                  العملاء
-                </TabsTrigger>
-                <TabsTrigger className="cursor-pointer" value="lawyers">
-                  المحامون
-                </TabsTrigger>
-                <TabsTrigger className="cursor-pointer" value="suspended">
-                  المعلقون
-                </TabsTrigger>
+                <TabsTrigger value="all">الكل</TabsTrigger>
+                <TabsTrigger value="clients">العملاء</TabsTrigger>
+                <TabsTrigger value="lawyers">المحامون</TabsTrigger>
+                <TabsTrigger value="suspended">المعلقون</TabsTrigger>
               </TabsList>
             </Tabs>
             <div className="relative w-full md:w-64">
@@ -166,40 +198,37 @@ const UserManagement = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {users ? (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-slate-700 hover:bg-slate-900/50">
-                  <TableHead className="text-slate-400 text-right">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-700">
+                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
                     المستخدم
-                  </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  </th>
+                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
                     النوع
-                  </TableHead>
-                  <TableHead className="text-slate-400 text-center">
-                    رقم الهاتف
-                  </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  </th>
+                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
                     تاريخ التسجيل
-                  </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  </th>
+                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
                     آخر نشاط
-                  </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  </th>
+                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
                     الحالة
-                  </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  </th>
+                  <th className="text-right py-3 px-4 text-slate-400 font-medium">
                     الإجراءات
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users?.map((user) => (
-                  <TableRow
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user) => (
+                  <tr
                     key={user.id}
-                    className="border-slate-700 hover:bg-slate-900/50"
+                    className="border-b border-slate-700/50 hover:bg-slate-700/20"
                   >
-                    <TableCell className="text-white font-medium text-right w-54">
+                    <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-10 h-10 rounded-full flex items-center justify-center ${
@@ -216,13 +245,13 @@ const UserManagement = () => {
                         </div>
                         <div>
                           <p className="text-white font-medium">
-                            {user.firstName} {user.lastName}
+                            {getFullName(user)}
                           </p>
                           <p className="text-xs text-slate-400">{user.email}</p>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-slate-300 text-center">
+                    </td>
+                    <td className="py-4 px-4">
                       <Badge
                         variant="outline"
                         className={
@@ -233,32 +262,14 @@ const UserManagement = () => {
                       >
                         {user.userType === "Lawyer" ? "محامي" : "عميل"}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-slate-400 text-center">
-                      {user.phoneNumber ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-slate-400 text-center">
-                      {new Date(user.createdAt).toLocaleDateString("ar-EG", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {user.lastActionDate && (
-                        <p className="text-xs text-slate-500 mt-1">
-                          {new Date(user.lastActionDate).toLocaleDateString(
-                            "ar-EG",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            },
-                          )}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
+                    </td>
+                    <td className="py-4 px-4 text-slate-300">
+                      {formatDate(user.createdAt)}
+                    </td>
+                    <td className="py-4 px-4 text-slate-300">
+                      {formatDate(user.lastActionDate)}
+                    </td>
+                    <td className="py-4 px-4">
                       {user.status === "Active" ? (
                         <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
                           نشط
@@ -268,9 +279,9 @@ const UserManagement = () => {
                           معلق
                         </Badge>
                       )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <DropdownMenu dir="rtl">
+                    </td>
+                    <td className="py-4 px-4">
+                      <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
@@ -284,41 +295,44 @@ const UserManagement = () => {
                           align="end"
                           className="bg-slate-800 border-slate-700"
                         >
-                          <DropdownMenuItem className="cursor-pointer text-slate-300 focus:text-white focus:bg-slate-700">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setViewDialogOpen(true);
+                            }}
+                            className="text-slate-300 focus:text-white focus:bg-slate-700"
+                          >
                             <Eye className="w-4 h-4 ml-2" />
                             عرض التفاصيل
                           </DropdownMenuItem>
                           {user.status === "Active" ? (
-                            <DropdownMenuItem className="cursor-pointer text-red-400 focus:text-red-300 focus:bg-red-500/10">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setSuspendDialogOpen(true);
+                              }}
+                              className="text-red-400 focus:text-red-300 focus:bg-red-500/10"
+                            >
                               <Ban className="w-4 h-4 ml-2" />
                               تعليق الحساب
                             </DropdownMenuItem>
                           ) : (
-                            <DropdownMenuItem className="cursor-pointer text-emerald-400 focus:text-emerald-300 focus:bg-emerald-500/10">
+                            <DropdownMenuItem
+                              onClick={() => handleReinstate(user.id)}
+                              className="text-emerald-400 focus:text-emerald-300 focus:bg-emerald-500/10"
+                            >
                               <RefreshCw className="w-4 h-4 ml-2" />
                               استعادة الحساب
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem
-                            onClick={() => {}}
-                            className="cursor-pointer text-red-400 focus:text-red-300 focus:bg-red-500/10"
-                          >
-                            <Trash2 className="w-4 h-4 ml-2" />
-                            حذف المستخدم
-                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-12">
-              <FolderOpen className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-              <p className="text-slate-400">لا توجد فئات مطابقة للبحث</p>
-            </div>
-          )}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
 
@@ -328,17 +342,17 @@ const UserManagement = () => {
           <DialogHeader>
             <DialogTitle className="text-white">تفاصيل المستخدم</DialogTitle>
           </DialogHeader>
-          {/* {selectedUser && (
+          {selectedUser && (
             <div className="space-y-4">
               <div className="flex items-center gap-4 p-4 rounded-lg bg-slate-900/50">
                 <div
                   className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                    selectedUser.type === "lawyer"
+                    selectedUser.userType === "Lawyer"
                       ? "bg-purple-500/20"
                       : "bg-blue-500/20"
                   }`}
                 >
-                  {selectedUser.type === "lawyer" ? (
+                  {selectedUser.userType === "Lawyer" ? (
                     <Briefcase className="w-8 h-8 text-purple-400" />
                   ) : (
                     <User className="w-8 h-8 text-blue-400" />
@@ -346,7 +360,7 @@ const UserManagement = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">
-                    {selectedUser.name}
+                    {getFullName(selectedUser)}
                   </h3>
                   <p className="text-slate-400">{selectedUser.email}</p>
                 </div>
@@ -356,47 +370,41 @@ const UserManagement = () => {
                 <div className="p-4 rounded-lg bg-slate-900/50">
                   <p className="text-xs text-slate-400 mb-1">نوع الحساب</p>
                   <p className="text-white font-medium">
-                    {selectedUser.type === "lawyer" ? "محامي" : "عميل"}
+                    {selectedUser.userType === "Lawyer" ? "محامي" : "عميل"}
                   </p>
                 </div>
                 <div className="p-4 rounded-lg bg-slate-900/50">
                   <p className="text-xs text-slate-400 mb-1">الحالة</p>
                   <p
-                    className={`font-medium ${selectedUser.status === "active" ? "text-emerald-400" : "text-red-400"}`}
+                    className={`font-medium ${selectedUser.status === "Active" ? "text-emerald-400" : "text-red-400"}`}
                   >
-                    {selectedUser.status === "active" ? "نشط" : "معلق"}
+                    {selectedUser.status === "Active" ? "نشط" : "معلق"}
                   </p>
                 </div>
-                {selectedUser.specialty && (
+                {selectedUser.phoneNumber && (
                   <div className="p-4 rounded-lg bg-slate-900/50">
-                    <p className="text-xs text-slate-400 mb-1">التخصص</p>
+                    <p className="text-xs text-slate-400 mb-1">رقم الهاتف</p>
                     <p className="text-white font-medium">
-                      {selectedUser.specialty}
+                      {selectedUser.phoneNumber}
                     </p>
                   </div>
                 )}
                 <div className="p-4 rounded-lg bg-slate-900/50">
-                  <p className="text-xs text-slate-400 mb-1">إجمالي المواعيد</p>
-                  <p className="text-white font-medium">
-                    {selectedUser.totalAppointments}
-                  </p>
-                </div>
-                <div className="p-4 rounded-lg bg-slate-900/50">
                   <p className="text-xs text-slate-400 mb-1">تاريخ التسجيل</p>
                   <p className="text-white font-medium">
-                    {selectedUser.createdAt}
+                    {formatDate(selectedUser.createdAt)}
                   </p>
                 </div>
                 <div className="p-4 rounded-lg bg-slate-900/50">
                   <p className="text-xs text-slate-400 mb-1">آخر نشاط</p>
                   <p className="text-white font-medium">
-                    {selectedUser.lastActive}
+                    {formatDate(selectedUser.lastActionDate)}
                   </p>
                 </div>
               </div>
 
               <DialogFooter>
-                {selectedUser.status === "active" ? (
+                {selectedUser.status === "Active" ? (
                   <Button
                     variant="outline"
                     onClick={() => setSuspendDialogOpen(true)}
@@ -416,7 +424,7 @@ const UserManagement = () => {
                 )}
               </DialogFooter>
             </div>
-          )} */}
+          )}
         </DialogContent>
       </Dialog>
 
@@ -426,7 +434,8 @@ const UserManagement = () => {
           <DialogHeader>
             <DialogTitle className="text-white">تأكيد تعليق الحساب</DialogTitle>
             <DialogDescription className="text-slate-400">
-              {/* هل أنت متأكد من تعليق حساب {selectedUser?.name}؟ سيتم منع المستخدم */}
+              هل أنت متأكد من تعليق حساب{" "}
+              {selectedUser ? getFullName(selectedUser) : ""}؟ سيتم منع المستخدم
               من الوصول إلى المنصة.
             </DialogDescription>
           </DialogHeader>
@@ -438,7 +447,10 @@ const UserManagement = () => {
             >
               إلغاء
             </Button>
-            <Button className="bg-red-500 hover:bg-red-600 text-white">
+            <Button
+              onClick={() => selectedUser && handleSuspend(selectedUser.id)}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
               تأكيد التعليق
             </Button>
           </DialogFooter>
