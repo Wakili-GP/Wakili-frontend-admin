@@ -16,5 +16,9 @@ const UserService = {
     const response = await httpClient.get(`${BASE}`);
     return response.data.data;
   },
+  deleteUser: async (id: string): Promise<void> => {
+    const response = await httpClient.delete(`${BASE}/${id}`);
+    return response.data.data;
+  },
 };
 export default UserService;

@@ -31,6 +31,7 @@ import {
   User,
   MoreVertical,
   RefreshCw,
+  Delete,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -40,19 +41,36 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import UserService, { type User as UserType } from "@/services/users.service";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const UserManagement = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   // Seach Query and Active Tabs
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
+  // Getting All Users
   const { data: users = [] } = useQuery({
     queryKey: ["users"],
     queryFn: () => UserService.getUsers(),
+  });
+
+  const queryClient = useQueryClient();
+  // Deleting a User
+  const deleteUserMutation = useMutation({
+    mutationKey: ["users", "delete"],
+    mutationFn: (id: string) => UserService.deleteUser(id),
+    onSuccess: () => {
+      toast.success("تم حذف المستخدم بنجاح");
+      setUserToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: () => {
+      toast.error("حدث خطأ أثناء حذف المستخدم. حاول مرة أخرى.");
+    },
   });
 
   return (
@@ -300,7 +318,9 @@ const UserManagement = () => {
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem
-                            onClick={() => {}}
+                            onClick={() => {
+                              setUserToDelete(user.id);
+                            }}
                             className="cursor-pointer text-red-400 focus:text-red-300 focus:bg-red-500/10"
                           >
                             <Trash2 className="w-4 h-4 ml-2" />
@@ -440,6 +460,31 @@ const UserManagement = () => {
             </Button>
             <Button className="bg-red-500 hover:bg-red-600 text-white">
               تأكيد التعليق
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Confirm Delete User */}
+      <Dialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+        <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+          <DialogHeader className="mt-4">
+            <DialogTitle className="text-white text-center">
+              تأكيد الحذف
+            </DialogTitle>
+            <DialogDescription className="text-slate-400 text-center">
+              هل أنت متأكد من حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-6 flex justify-center items-center gap-3">
+            <Button variant="outline" onClick={() => setUserToDelete(null)}>
+              إلغاء
+            </Button>
+            <Button
+              onClick={() => deleteUserMutation.mutate(userToDelete!)}
+              disabled={deleteUserMutation.isPending}
+              variant="destructive"
+            >
+              {deleteUserMutation.isPending ? "جاري الحذف..." : "تأكيد الحذف"}
             </Button>
           </DialogFooter>
         </DialogContent>
