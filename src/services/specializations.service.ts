@@ -34,5 +34,9 @@ const lawCategoriesService = {
     const response = await httpClient.put(`${BASE}/${id}`, data);
     return response.data.data;
   },
+  deleteActivity: async (id: number) => {
+    const response = await httpClient.delete(`${BASE}/${id}`);
+    return response.data.data;
+  },
 };
 export default lawCategoriesService;

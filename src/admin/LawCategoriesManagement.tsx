@@ -114,6 +114,19 @@ const LawCategoriesManagement = () => {
     },
   });
 
+  // Deleting Category Mutation
+  const DeleteActivityMutation = useMutation({
+    mutationKey: ["lawCategories", "Delete"],
+    mutationFn: ({ id }: { id: number }) =>
+      lawCategoriesService.deleteActivity(id),
+    onSuccess: () => {
+      toast.success("تم حذف الفئة بنجاح");
+      queryClient.invalidateQueries({ queryKey: ["lawCategories"] });
+    },
+    onError: () => {
+      toast.error("حدث خطأ أثناء حذف الفئة");
+    },
+  });
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -132,21 +145,39 @@ const LawCategoriesManagement = () => {
       </div>
 
       {/* Stats */}
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-              <Scale className="w-6 h-6 text-white" />
+
+      <div className="flex gap-4">
+        <Card className="bg-slate-800/50 border-slate-700 flex-1">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                <Scale className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-400">فئات القانون</p>
+                <p className="text-3xl font-bold text-white">
+                  {categories?.length}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-slate-400">فئات القانون</p>
-              <p className="text-3xl font-bold text-white">
-                {categories?.length}
-              </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-slate-800/50 border-slate-700 flex-1">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+                <Scale className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-400">الفئات النشطة</p>
+                <p className="text-3xl font-bold text-white">
+                  {categories?.filter((c) => c.isActive).length ?? 0}
+                </p>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Search */}
       <div className="relative">
@@ -239,6 +270,9 @@ const LawCategoriesManagement = () => {
                         variant="ghost"
                         size="sm"
                         className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                        onClick={() =>
+                          DeleteActivityMutation.mutate({ id: category.id })
+                        }
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
