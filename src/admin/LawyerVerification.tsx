@@ -42,7 +42,12 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import verificationService from "@/services/verification.service";
+import verificationService from "@/services/verification-service";
+import type {
+  Education,
+  Certification,
+  WorkExperience,
+} from "@/services/verification-service";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -70,9 +75,9 @@ const getStatusBadge = (status: string) => {
 };
 
 const LawyerVerification = () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(
+    null,
+  );
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,6 +98,14 @@ const LawyerVerification = () => {
       verificationService.getVerificationRequests(
         statusMap[statusFilter || "all"],
       ),
+  });
+
+  // Fetching A Full Request by Id
+  const { data: viewRequest } = useQuery({
+    queryKey: ["verificationRequest", selectedRequestId],
+    queryFn: () =>
+      verificationService.getVerificationRequestById(selectedRequestId!),
+    enabled: !!selectedRequestId,
   });
 
   return (
@@ -281,8 +294,7 @@ const LawyerVerification = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          setSelectedRequest(request);
-                          setViewDialogOpen(true);
+                          setSelectedRequestId(request.id);
                         }}
                         className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
                       >
@@ -304,18 +316,33 @@ const LawyerVerification = () => {
       </Card>
 
       {/* View Dialog - Full Details */}
-      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl max-h-[90vh] overflow-y-auto">
+      <Dialog
+        open={!!selectedRequestId}
+        onOpenChange={(open) => {
+          if (!open) setSelectedRequestId(null);
+        }}
+      >
+        <DialogContent className="bg-slate-800 border-slate-700 w-[800px] max-w-[95vw] max-h-[90vh] overflow-hidden flex flex-col [&>button]:left-4 [&>button]:right-auto">
+          {" "}
           <DialogHeader>
             <DialogTitle className="text-white text-xl">
               تفاصيل طلب التوثيق
             </DialogTitle>
             <DialogDescription className="text-slate-400">
-              مراجعة جميع البيانات المقدمة من المحامي
+              {viewRequest?.status === "Approved"
+                ? "تم الموافقة علي طلب توثيق هذا المحامي"
+                : "مراجعة جميع البيانات المقدمة من المحامي"}
             </DialogDescription>
           </DialogHeader>
-          {selectedRequest && (
-            <div className="space-y-6">
+          {viewRequest && (
+            <div
+              className="space-y-6 overflow-y-auto pl-4 -mr-2 pr-2 dialog-scroll"
+              style={{
+                direction: "rtl",
+                scrollbarWidth: "thin",
+                scrollbarColor: "#475569 transparent",
+              }}
+            >
               {/* Basic Info Section */}
               <div className="p-4 rounded-lg bg-slate-900/50">
                 <h3 className="text-lg font-semibold text-amber-400 mb-4 flex items-center gap-2">
@@ -323,17 +350,23 @@ const LawyerVerification = () => {
                   المعلومات الأساسية
                 </h3>
                 <div className="flex items-start gap-4 mb-4">
-                  <img
-                    src={selectedRequest.profileImage}
-                    alt={selectedRequest.name}
-                    className="w-20 h-20 rounded-full object-cover border-2 border-amber-500/30"
-                  />
+                  {viewRequest.profileImage ? (
+                    <img
+                      src={viewRequest.profileImage}
+                      alt={viewRequest.firstName}
+                      className="w-20 h-20 rounded-full object-cover border-2 border-amber-500/30"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center border-2 border-amber-500/30">
+                      <Briefcase className="w-8 h-8 text-purple-400" />
+                    </div>
+                  )}
                   <div className="flex-1">
                     <h4 className="text-xl font-bold text-white">
-                      {selectedRequest.name}
+                      {viewRequest.firstName} {viewRequest.lastName}
                     </h4>
-                    <p className="text-slate-400 text-sm mt-1">
-                      {selectedRequest.bio}
+                    <p className="text-slate-400 text-sm mt-1 wrap-break-word whitespace-pre-wrap">
+                      {viewRequest.bio}
                     </p>
                   </div>
                 </div>
@@ -342,33 +375,29 @@ const LawyerVerification = () => {
                     <p className="text-xs text-slate-400 mb-1">
                       البريد الإلكتروني
                     </p>
-                    <p className="text-white text-sm">
-                      {selectedRequest.email}
-                    </p>
+                    <p className="text-white text-sm">{viewRequest.email}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-800/50">
                     <p className="text-xs text-slate-400 mb-1">رقم الهاتف</p>
-                    <p className="text-white text-sm">
-                      {selectedRequest.phone}
-                    </p>
+                    <p className="text-white text-sm">{viewRequest.phone}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-800/50">
                     <p className="text-xs text-slate-400 mb-1">الموقع</p>
                     <p className="text-white text-sm">
-                      {selectedRequest.location.city}،{" "}
-                      {selectedRequest.location.country}
+                      {viewRequest.location.city}،{" "}
+                      {viewRequest.location.country}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-800/50">
                     <p className="text-xs text-slate-400 mb-1">سنوات الخبرة</p>
                     <p className="text-white text-sm">
-                      {selectedRequest.yearsExperience} سنة
+                      {viewRequest.yearsExperience} سنة
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-800/50">
                     <p className="text-xs text-slate-400 mb-1">التخصصات</p>
                     <div className="flex flex-wrap gap-1">
-                      {selectedRequest.specialty.map((s: string, i: number) => (
+                      {viewRequest.specialty.map((s: string, i: number) => (
                         <Badge
                           key={i}
                           className="bg-amber-500/10 text-amber-400 text-xs"
@@ -381,17 +410,15 @@ const LawyerVerification = () => {
                   <div className="p-3 rounded-lg bg-slate-800/50">
                     <p className="text-xs text-slate-400 mb-1">أنواع الجلسات</p>
                     <div className="flex flex-wrap gap-1">
-                      {selectedRequest.sessionTypes.map(
-                        (s: string, i: number) => (
-                          <Badge
-                            key={i}
-                            variant="outline"
-                            className="border-slate-600 text-slate-300 text-xs"
-                          >
-                            {s}
-                          </Badge>
-                        ),
-                      )}
+                      {viewRequest.sessionTypes.map((s: string, i: number) => (
+                        <Badge
+                          key={i}
+                          variant="outline"
+                          className="border-slate-600 text-slate-300 text-xs"
+                        >
+                          {s}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -403,23 +430,21 @@ const LawyerVerification = () => {
                   <Award className="w-5 h-5" />
                   المؤهلات العلمية
                 </h3>
-                {selectedRequest.education.length > 0 ? (
+                {viewRequest.education.length > 0 ? (
                   <div className="space-y-3">
-                    {selectedRequest.education.map(
-                      (edu: Record<string, string>, i: number) => (
-                        <div
-                          key={i}
-                          className="p-3 rounded-lg bg-slate-800/50 border-r-2 border-amber-500"
-                        >
-                          <p className="text-white font-medium">
-                            {edu.degreeType} في {edu.fieldOfStudy}
-                          </p>
-                          <p className="text-slate-400 text-sm">
-                            {edu.university} - {edu.graduationYear}
-                          </p>
-                        </div>
-                      ),
-                    )}
+                    {viewRequest.education.map((edu: Education, i: number) => (
+                      <div
+                        key={i}
+                        className="p-3 rounded-lg bg-slate-800/50 border-r-2 border-amber-500"
+                      >
+                        <p className="text-white font-medium">
+                          {edu.degreeType} في {edu.fieldOfStudy}
+                        </p>
+                        <p className="text-slate-400 text-sm">
+                          {edu.university} - {edu.graduationYear}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-slate-400">لا توجد مؤهلات علمية مسجلة</p>
@@ -432,10 +457,10 @@ const LawyerVerification = () => {
                   <FileText className="w-5 h-5" />
                   الشهادات المهنية
                 </h3>
-                {selectedRequest.certifications.length > 0 ? (
+                {viewRequest.certifications.length > 0 ? (
                   <div className="space-y-3">
-                    {selectedRequest.certifications.map(
-                      (cert: Record<string, string>, i: number) => (
+                    {viewRequest.certifications.map(
+                      (cert: Certification, i: number) => (
                         <div
                           key={i}
                           className="p-3 rounded-lg bg-slate-800/50 flex items-center justify-between"
@@ -474,13 +499,10 @@ const LawyerVerification = () => {
                   <Clock className="w-5 h-5" />
                   الخبرات العملية
                 </h3>
-                {selectedRequest.workExperience.length > 0 ? (
+                {viewRequest.workExperience.length > 0 ? (
                   <div className="space-y-3">
-                    {selectedRequest.workExperience.map(
-                      (
-                        exp: Record<string, string | number | boolean>,
-                        i: number,
-                      ) => (
+                    {viewRequest.workExperience.map(
+                      (exp: WorkExperience, i: number) => (
                         <div
                           key={i}
                           className="p-3 rounded-lg bg-slate-800/50 border-r-2 border-emerald-500"
@@ -491,22 +513,23 @@ const LawyerVerification = () => {
                                 {exp.jobTitle}
                               </p>
                               <p className="text-slate-300 text-sm">
-                                {exp.organization}
+                                {exp.organizationName}
                               </p>
                             </div>
                             <Badge
                               className={
-                                exp.isCurrent
+                                exp.isCurrentJob
                                   ? "bg-emerald-500/10 text-emerald-400"
                                   : "bg-slate-700 text-slate-300"
                               }
                             >
-                              {exp.isCurrent
+                              {exp.isCurrentJob
                                 ? "حالياً"
                                 : `${exp.startYear} - ${exp.endYear}`}
                             </Badge>
                           </div>
-                          <p className="text-slate-400 text-sm mt-2">
+                          // Work experience description
+                          <p className="text-slate-400 text-sm mt-2 wrap-break-word whitespace-pre-wrap">
                             {exp.description}
                           </p>
                         </div>
@@ -528,19 +551,19 @@ const LawyerVerification = () => {
                   <div className="p-3 rounded-lg bg-slate-800/50">
                     <p className="text-xs text-slate-400 mb-1">رقم الرخصة</p>
                     <p className="text-white font-medium">
-                      {selectedRequest.licenseNumber}
+                      {viewRequest.licenseNumber}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-800/50">
                     <p className="text-xs text-slate-400 mb-1">جهة الإصدار</p>
                     <p className="text-white font-medium">
-                      {selectedRequest.issuingAuthority}
+                      {viewRequest.issuingAuthority}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-800/50">
                     <p className="text-xs text-slate-400 mb-1">سنة الإصدار</p>
                     <p className="text-white font-medium">
-                      {selectedRequest.licenseYear}
+                      {viewRequest.licenseYear}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-800/50">
@@ -548,7 +571,7 @@ const LawyerVerification = () => {
                       رقم القيد بالنقابة
                     </p>
                     <p className="text-white font-medium">
-                      {selectedRequest.barNumber}
+                      {viewRequest.barNumber}
                     </p>
                   </div>
                 </div>
@@ -560,14 +583,14 @@ const LawyerVerification = () => {
                       <span className="text-slate-300">الهوية الحكومية</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {selectedRequest.documents.governmentId ? (
+                      {viewRequest.documents.governmentId ? (
                         <>
                           <Badge className="bg-emerald-500/10 text-emerald-400">
                             تم الرفع
                           </Badge>
-                          {selectedRequest.documents.governmentIdUrl && (
+                          {viewRequest.documents.governmentIdUrl && (
                             <a
-                              href={selectedRequest.documents.governmentIdUrl}
+                              href={viewRequest.documents.governmentIdUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-amber-400 hover:text-amber-300 text-sm"
@@ -589,15 +612,15 @@ const LawyerVerification = () => {
                       <span className="text-slate-300">رخصة المحاماة</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {selectedRequest.documents.professionalLicense ? (
+                      {viewRequest.documents.professionalLicense ? (
                         <>
                           <Badge className="bg-emerald-500/10 text-emerald-400">
                             تم الرفع
                           </Badge>
-                          {selectedRequest.documents.professionalLicenseUrl && (
+                          {viewRequest.documents.professionalLicenseUrl && (
                             <a
                               href={
-                                selectedRequest.documents.professionalLicenseUrl
+                                viewRequest.documents.professionalLicenseUrl
                               }
                               target="_blank"
                               rel="noopener noreferrer"
@@ -619,7 +642,7 @@ const LawyerVerification = () => {
                       <FileText className="w-4 h-4 text-slate-400" />
                       <span className="text-slate-300">التحقق من الهوية</span>
                     </div>
-                    {selectedRequest.documents.identityVerification ? (
+                    {viewRequest.documents.identityVerification ? (
                       <Badge className="bg-emerald-500/10 text-emerald-400">
                         تم التحقق
                       </Badge>
@@ -632,14 +655,14 @@ const LawyerVerification = () => {
                 </div>
 
                 {/* Education Certificates */}
-                {selectedRequest.documents.educationCertificates.length > 0 && (
+                {viewRequest.documents.educationCertificates.length > 0 && (
                   <div className="mt-4">
                     <p className="text-sm text-slate-400 mb-2">
                       الشهادات التعليمية المرفقة:
                     </p>
                     <div className="space-y-2">
-                      {selectedRequest.documents.educationCertificates.map(
-                        (doc: Record<string, string>, i: number) => (
+                      {viewRequest.documents.educationCertificates.map(
+                        (doc: { name: string; url: string }, i: number) => (
                           <div
                             key={i}
                             className="flex items-center justify-between p-2 rounded bg-slate-800/30"
@@ -664,7 +687,7 @@ const LawyerVerification = () => {
                 )}
               </div>
 
-              {selectedRequest.status === "Pending" && (
+              {viewRequest.status === "Pending" && (
                 <DialogFooter className="gap-2">
                   <Button
                     variant="outline"

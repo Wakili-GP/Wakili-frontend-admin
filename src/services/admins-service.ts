@@ -1,5 +1,5 @@
 import httpClient from "@/lib/HttpClient";
-import type { ApiResponse } from "@/services/auth.service";
+import type { ApiResponse } from "@/services/auth-service";
 
 export interface Admin {
   id: string;

@@ -4,3 +4,18 @@
 html {
   font-family: "Cairo", sans-serif;
 }
+
+/* Custom scrollbar for dialog */
+.dialog-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.dialog-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dialog-scroll::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+.dialog-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}

@@ -44,7 +44,7 @@ import {
   createAdminSchema,
   type CreateAdminFormData,
 } from "@/validation/admin.schema";
-import AdminServices from "@/services/admins.service";
+import AdminServices from "@/services/admins-service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Spinner } from "@/components/ui/spinner";
 const stats = [

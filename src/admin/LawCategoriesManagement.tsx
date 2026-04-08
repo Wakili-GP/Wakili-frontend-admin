@@ -43,7 +43,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import lawCategoriesService, {
   type SpeciliazationInput,
-} from "@/services/specializations.service";
+} from "@/services/specializations-service";
 import {
   LawCategorySchema,
   type LawCategoryInput,

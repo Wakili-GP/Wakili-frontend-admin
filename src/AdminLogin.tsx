@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Shield, Eye, EyeOff, Loader } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
-import { type AdminLoginInput } from "./services/auth.service";
+import { type AdminLoginInput } from "./services/auth-service";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/context/AuthContext";

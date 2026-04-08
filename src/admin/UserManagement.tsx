@@ -40,7 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import UserService, { type User as UserType } from "@/services/users.service";
+import UserService, { type User as UserType } from "@/services/users-service";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const UserManagement = () => {
