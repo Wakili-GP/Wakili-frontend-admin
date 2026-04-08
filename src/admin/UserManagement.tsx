@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +38,8 @@ import {
   User,
   MoreVertical,
   RefreshCw,
-  Delete,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -41,6 +49,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import UserService, { type User as UserType } from "@/services/users-service";
+import { formatDateTime, timeAgo } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const UserManagement = () => {
@@ -49,14 +58,51 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
 
   // Seach Query and Active Tabs
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const apiFilters = useMemo(() => {
+    let userType: "Lawyer" | "Client" | undefined;
+    let status: 0 | 1 | undefined;
+
+    if (activeTab === "clients") userType = "Client";
+    if (activeTab === "lawyers") userType = "Lawyer";
+    if (activeTab === "suspended") status = 1;
+
+    return {
+      name: searchQuery || undefined,
+      userType,
+      status,
+    };
+  }, [activeTab, searchQuery]);
 
   // Getting All Users
   const { data: users = [] } = useQuery({
-    queryKey: ["users"],
-    queryFn: () => UserService.getUsers(),
+    queryKey: ["users", pageNumber, pageSize, apiFilters],
+    queryFn: () =>
+      UserService.getUsers({
+        Page: pageNumber,
+        PageSize: pageSize,
+        Name: apiFilters.name,
+        userType: apiFilters.userType,
+        Status: apiFilters.status,
+      }),
+    placeholderData: (previousData) => previousData,
   });
+
+  const canGoPrevious = pageNumber > 1;
+  const canGoNext = users.length === pageSize;
 
   const queryClient = useQueryClient();
 
@@ -158,7 +204,10 @@ const UserManagement = () => {
             <Tabs
               dir="rtl"
               value={activeTab}
-              onValueChange={setActiveTab}
+              onValueChange={(value) => {
+                setActiveTab(value);
+                setPageNumber(1);
+              }}
               className="w-full md:w-auto"
             >
               <TabsList className="bg-slate-900/50">
@@ -180,8 +229,11 @@ const UserManagement = () => {
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="البحث..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchInput}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  setPageNumber(1);
+                }}
                 className="pr-10 bg-slate-900/50 border-slate-600 text-white"
               />
             </div>
@@ -192,13 +244,21 @@ const UserManagement = () => {
       {/* Users Table */}
       <Card className="bg-slate-800/50 border-slate-700">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-amber-500" />
-            قائمة المستخدمين
-          </CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="text-white flex items-center gap-2">
+              <Users className="w-5 h-5 text-amber-500" />
+              قائمة المستخدمين
+            </CardTitle>
+            <Badge
+              variant="outline"
+              className="text-slate-300 border-slate-600"
+            >
+              صفحة {pageNumber}
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent>
-          {users ? (
+          {users.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow className="border-slate-700 hover:bg-slate-900/50">
@@ -226,7 +286,7 @@ const UserManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users?.map((user) => (
+                {users.map((user) => (
                   <TableRow
                     key={user.id}
                     className="border-slate-700 hover:bg-slate-900/50"
@@ -270,25 +330,20 @@ const UserManagement = () => {
                       {user.phoneNumber ?? "—"}
                     </TableCell>
                     <TableCell className="text-slate-400 text-center">
-                      {new Date(user.createdAt).toLocaleDateString("ar-EG", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {user.lastActionDate && (
-                        <p className="text-xs text-slate-500 mt-1">
-                          {new Date(user.lastActionDate).toLocaleDateString(
-                            "ar-EG",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            },
-                          )}
+                      <div className="space-y-1">
+                        <p> {formatDateTime(user.createdAt)}</p>
+                        <p className="text-xs text-slate-500">
+                          {timeAgo(user.createdAt)}
                         </p>
-                      )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-slate-400 text-center">
+                      <div className="space-y-1">
+                        <p>{formatDateTime(user.lastActionDate)}</p>
+                        <p className="text-xs text-slate-500">
+                          {timeAgo(user.lastActionDate)}
+                        </p>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
                       {user.status === "Active" ? (
@@ -362,26 +417,90 @@ const UserManagement = () => {
               <p className="text-slate-400">لا يوجد مستخدمين مطابقين للبحث</p>
             </div>
           )}
+
+          <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-3">
+            <div className="flex items-center gap-2">
+              <Select
+                value={String(pageSize)}
+                onValueChange={(value) => {
+                  setPageSize(Number(value));
+                  setPageNumber(1);
+                }}
+              >
+                <SelectTrigger className="cursor-pointer w-28 bg-slate-900/50 border-slate-600 text-slate-200">
+                  <SelectValue placeholder="الحجم" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700 text-slate-200">
+                  <SelectItem className="cursor-pointer" value="8">
+                    8
+                  </SelectItem>
+                  <SelectItem className="cursor-pointer" value="10">
+                    10
+                  </SelectItem>
+                  <SelectItem className="cursor-pointer" value="15">
+                    15
+                  </SelectItem>
+                  <SelectItem className="cursor-pointer" value="20">
+                    20
+                  </SelectItem>
+                  <SelectItem className="cursor-pointer" value="50">
+                    50
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant="outline"
+                size="icon"
+                className="border-slate-600 text-slate-300"
+                disabled={!canGoPrevious}
+                onClick={() => setPageNumber((prev) => Math.max(1, prev - 1))}
+                title="الصفحة السابقة"
+                aria-label="الصفحة السابقة"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="border-slate-600 text-slate-300"
+                disabled={!canGoNext}
+                onClick={() => setPageNumber((prev) => prev + 1)}
+                title="الصفحة التالية"
+                aria-label="الصفحة التالية"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       {/* View Dialog */}
-      {/* <Dialog open={!!selectedUser} onOpenChange={setSelectedUser}>
-        <DialogContent className="bg-slate-800 border-slate-700">
+      <Dialog
+        open={!!selectedUser}
+        onOpenChange={(open) => {
+          if (!open) setSelectedUser(null);
+        }}
+      >
+        <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-white">تفاصيل المستخدم</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              ملخص بيانات المستخدم
+            </DialogDescription>
           </DialogHeader>
           {selectedUser && (
             <div className="space-y-4">
               <div className="flex items-center gap-4 p-4 rounded-lg bg-slate-900/50">
                 <div
                   className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                    selectedUser.userType === "lawyer"
+                    selectedUser.userType === "Lawyer"
                       ? "bg-purple-500/20"
                       : "bg-blue-500/20"
                   }`}
                 >
-                  {selectedUser.userType === "lawyer" ? (
+                  {selectedUser.userType === "Lawyer" ? (
                     <Briefcase className="w-8 h-8 text-purple-400" />
                   ) : (
                     <User className="w-8 h-8 text-blue-400" />
@@ -410,58 +529,50 @@ const UserManagement = () => {
                     {selectedUser.status === "Active" ? "نشط" : "معلق"}
                   </p>
                 </div>
-                {selectedUser.specialty && (
-                  <div className="p-4 rounded-lg bg-slate-900/50">
-                    <p className="text-xs text-slate-400 mb-1">التخصص</p>
-                    <p className="text-white font-medium">
-                      {selectedUser.specialty}
-                    </p>
-                  </div>
-                )}
                 <div className="p-4 rounded-lg bg-slate-900/50">
-                  <p className="text-xs text-slate-400 mb-1">إجمالي المواعيد</p>
+                  <p className="text-xs text-slate-400 mb-1">رقم الهاتف</p>
                   <p className="text-white font-medium">
-                    {selectedUser.totalAppointments}
+                    {selectedUser.phoneNumber ?? "—"}
                   </p>
                 </div>
                 <div className="p-4 rounded-lg bg-slate-900/50">
                   <p className="text-xs text-slate-400 mb-1">تاريخ التسجيل</p>
                   <p className="text-white font-medium">
-                    {selectedUser.createdAt}
+                    {new Date(selectedUser.createdAt).toLocaleDateString(
+                      "ar-EG",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      },
+                    )}
                   </p>
                 </div>
                 <div className="p-4 rounded-lg bg-slate-900/50">
                   <p className="text-xs text-slate-400 mb-1">آخر نشاط</p>
                   <p className="text-white font-medium">
-                    {selectedUser.lastActive}
+                    {selectedUser.lastActionDate
+                      ? new Date(
+                          selectedUser.lastActionDate,
+                        ).toLocaleDateString("ar-EG", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })
+                      : "—"}
                   </p>
                 </div>
               </div>
 
               <DialogFooter>
-                {selectedUser.status === "Active" ? (
-                  <Button
-                    variant="outline"
-                    onClick={() => setSuspendDialogOpen(true)}
-                    className="border-red-500/20 text-red-400 hover:bg-red-500/10"
-                  >
-                    <Ban className="w-4 h-4 ml-2" />
-                    تعليق الحساب
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => handleReinstate(selectedUser.id)}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white"
-                  >
-                    <RefreshCw className="w-4 h-4 ml-2" />
-                    استعادة الحساب
-                  </Button>
-                )}
+                <Button variant="outline" onClick={() => setSelectedUser(null)}>
+                  إغلاق
+                </Button>
               </DialogFooter>
             </div>
           )}
         </DialogContent>
-      </Dialog> */}
+      </Dialog>
 
       {/* Suspend Dialog */}
 

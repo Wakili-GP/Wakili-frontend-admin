@@ -41,7 +41,7 @@ const navItems = [
     icon: GraduationCap,
   },
   {
-    path: "/categories",
+    path: "/specializations",
     label: "فئات القانون",
     icon: Scale,
   },
