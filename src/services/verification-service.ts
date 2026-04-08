@@ -1,4 +1,4 @@
-import httpClient from "@/lib/HttpClient";
+import httpClient from "@/services/api/HttpClient";
 
 interface ApiResponse<T> {
   data: T;

@@ -51,6 +51,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatDateTime, timeAgo } from "@/lib/utils";
 
 const SpecializationsManagement = () => {
   // Modals state
@@ -62,41 +63,6 @@ const SpecializationsManagement = () => {
 
   // Search Query
   const [searchQuery, setSearchQuery] = useState("");
-
-  const timeAgo = (dateValue?: string | null) => {
-    if (!dateValue) return "-";
-
-    const now = new Date();
-    const date = new Date(dateValue);
-
-    const diff = now.getTime() - date.getTime();
-
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (minutes < 1) return "الآن";
-    if (minutes < 60) return `منذ ${minutes} دقيقة`;
-    if (hours < 24) return `منذ ${hours} ساعة`;
-    if (days < 7) return `منذ ${days} يوم`;
-
-    return date.toLocaleDateString("ar-EG");
-  };
-
-  const formatDateTime = (dateValue?: string | null) => {
-    if (!dateValue) return "-";
-    const date = new Date(dateValue);
-    if (Number.isNaN(date.getTime())) return "-";
-
-    return date.toLocaleString("ar-EG", {
-      timeZone: "Africa/Cairo",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   // Form state
   const {

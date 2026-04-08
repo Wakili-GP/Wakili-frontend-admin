@@ -21,9 +21,6 @@ import {
 } from "@/components/ui/table";
 import {
   Users,
-  UserCheck,
-  Calendar,
-  MessageSquare,
   TrendingUp,
   Clock,
   CheckCircle,
@@ -47,84 +44,16 @@ import {
 import AdminServices from "@/services/admins-service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Spinner } from "@/components/ui/spinner";
-const stats = [
-  {
-    title: "إجمالي المستخدمين",
-    value: "2,847",
-    change: "+12%",
-    icon: Users,
-    color: "from-blue-500 to-blue-600",
-  },
-  {
-    title: "طلبات التوثيق المعلقة",
-    value: "23",
-    change: "-5%",
-    icon: UserCheck,
-    color: "from-amber-500 to-amber-600",
-  },
-  {
-    title: "المواعيد هذا الشهر",
-    value: "1,284",
-    change: "+18%",
-    icon: Calendar,
-    color: "from-emerald-500 to-emerald-600",
-  },
-  {
-    title: "المراجعات الجديدة",
-    value: "156",
-    change: "+8%",
-    icon: MessageSquare,
-    color: "from-purple-500 to-purple-600",
-  },
-];
-
-const recentActivities = [
-  {
-    type: "verification",
-    message: "طلب توثيق جديد من المحامي أحمد محمد",
-    time: "منذ 5 دقائق",
-    icon: UserCheck,
-    status: "pending",
-  },
-  {
-    type: "review",
-    message: "تم الإبلاغ عن مراجعة للمحامي سارة أحمد",
-    time: "منذ 15 دقيقة",
-    icon: MessageSquare,
-    status: "flagged",
-  },
-  {
-    type: "user",
-    message: "تم تسجيل عميل جديد: محمد علي",
-    time: "منذ 30 دقيقة",
-    icon: Users,
-    status: "success",
-  },
-  {
-    type: "appointment",
-    message: "تم إكمال 15 جلسة استشارية اليوم",
-    time: "منذ ساعة",
-    icon: Calendar,
-    status: "success",
-  },
-  {
-    type: "verification",
-    message: "تمت الموافقة على توثيق المحامي خالد عبدالله",
-    time: "منذ ساعتين",
-    icon: CheckCircle,
-    status: "success",
-  },
-];
-
-const notifications = [
-  { type: "email", count: 45, label: "رسائل مُرسلة اليوم" },
-  { type: "notification", count: 128, label: "إشعارات مُرسلة اليوم" },
-];
+import { notifications, recentActivities, stats } from "@/data/admin-dashboard";
+import { useAuth } from "@/context/AuthContext";
+import { formatDateTime, timeAgo } from "@/lib/utils";
 
 const AdminDashboard = () => {
   const [showAddAdminModal, setShowAddAdminModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState<string | null>(null);
+
+  const { user } = useAuth();
 
   // Form Setup
   const {
@@ -205,24 +134,24 @@ const AdminDashboard = () => {
     }
   };
 
-  // const getRoleBadge = (role: string) => {
-  //   switch (role.toLowerCase()) {
-  //     case "Admin":
-  //       return (
-  //         <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
-  //           مشرف رئيسي
-  //         </Badge>
-  //       );
-  //     case "Moderator":
-  //       return (
-  //         <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
-  //           مشرف
-  //         </Badge>
-  //       );
-  //     default:
-  //       return <Badge variant="secondary">{role}</Badge>;
-  //   }
-  // };
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case "SuperAdmin":
+        return (
+          <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
+            مشرف رئيسي
+          </Badge>
+        );
+      case "Admin":
+        return (
+          <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
+            مشرف
+          </Badge>
+        );
+      default:
+        return <Badge variant="secondary">{role}</Badge>;
+    }
+  };
 
   if (adminsLoading) {
     return (
@@ -254,13 +183,15 @@ const AdminDashboard = () => {
           <h1 className="text-2xl font-bold text-white">نظرة عامة</h1>
           <p className="text-slate-400 mt-1">مرحباً بك في لوحة تحكم المشرف</p>
         </div>
-        <Button
-          onClick={() => setShowAddAdminModal(true)}
-          className="cursor-pointer bg-primary hover:bg-primary/90"
-        >
-          <UserPlus className="w-4 h-4 ml-2" />
-          إضافة مشرف جديد
-        </Button>
+        {user?.userType === "SuperAdmin" && (
+          <Button
+            onClick={() => setShowAddAdminModal(true)}
+            className="cursor-pointer bg-primary hover:bg-primary/90"
+          >
+            <UserPlus className="w-4 h-4 ml-2" />
+            إضافة مشرف جديد
+          </Button>
+        )}
       </div>
 
       {/* Stats Grid */}
@@ -464,16 +395,15 @@ const AdminDashboard = () => {
                     {admin.email}
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
-                      مشرف رئيسي
-                    </Badge>
+                    {getRoleBadge(admin.role)}
                   </TableCell>
                   <TableCell className="text-slate-400 text-center">
-                    {new Date(admin.createdAt).toLocaleDateString("ar-EG", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
+                    <div className="space-y-1">
+                      <p> {formatDateTime(admin.createdAt)}</p>
+                      <p className="text-xs text-slate-500">
+                        {timeAgo(admin.createdAt)}
+                      </p>
+                    </div>
                   </TableCell>
                   <TableCell className="text-center">
                     <Badge
@@ -490,6 +420,9 @@ const AdminDashboard = () => {
                     <Button
                       variant="ghost"
                       size="sm"
+                      disabled={
+                        admin.id === user?.id || admin.role === "SuperAdmin"
+                      }
                       onClick={() => handleDeleteAdmin(admin.id)}
                       className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50"
                     >

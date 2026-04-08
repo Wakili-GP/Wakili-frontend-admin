@@ -1,4 +1,4 @@
-import httpClient from "@/lib/HttpClient";
+import httpClient from "@/services/api/HttpClient";
 
 export interface Specialization {
   id: number;
