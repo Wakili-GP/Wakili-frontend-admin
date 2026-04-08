@@ -41,18 +41,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import lawCategoriesService, {
-  type SpeciliazationInput,
+import specializationsService, {
+  type SpecializationInput,
 } from "@/services/specializations-service";
 import {
-  LawCategorySchema,
-  type LawCategoryInput,
-} from "@/validation/category.schema";
+  SpecializationSchema,
+  type SpecializationSchemaInput,
+} from "@/schema/specializations-schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const LawCategoriesManagement = () => {
+const SpecializationsManagement = () => {
   // Modals state
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
@@ -63,81 +63,103 @@ const LawCategoriesManagement = () => {
   // Search Query
   const [searchQuery, setSearchQuery] = useState("");
 
+  const timeAgo = (dateValue?: string | null) => {
+    if (!dateValue) return "-";
+
+    const now = new Date();
+    const date = new Date(dateValue);
+
+    const diff = now.getTime() - date.getTime();
+
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (minutes < 1) return "الآن";
+    if (minutes < 60) return `منذ ${minutes} دقيقة`;
+    if (hours < 24) return `منذ ${hours} ساعة`;
+    if (days < 7) return `منذ ${days} يوم`;
+
+    return date.toLocaleDateString("ar-EG");
+  };
+
+  const formatDateTime = (dateValue?: string | null) => {
+    if (!dateValue) return "-";
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return "-";
+
+    return date.toLocaleString("ar-EG", {
+      timeZone: "Africa/Cairo",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   // Form state
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<LawCategoryInput>({
-    resolver: zodResolver(LawCategorySchema),
+  } = useForm<SpecializationSchemaInput>({
+    resolver: zodResolver(SpecializationSchema),
     defaultValues: {
       name: "",
       description: "",
     },
   });
 
-  // Fetch Categories
-  const { data: categories } = useQuery({
-    queryKey: ["lawCategories"],
-    queryFn: () => lawCategoriesService.getAll(),
-    staleTime: 5 * 60 * 1000,
+  // Fetch Specializations
+  const { data: specializations } = useQuery({
+    queryKey: ["specializations"],
+    queryFn: specializationsService.getAll,
   });
 
-  // Filtered Categories
-  const filteredCategories = categories?.filter((c) => {
+  // Filtered Specializations based on search and active tab
+  const filteredSpecializations = specializations?.filter((c) => {
     const matchesSearch =
-      c.name.includes(searchQuery) || c.description?.includes(searchQuery);
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
     const matchesTab = activeTab === "all" ? true : c.isActive;
+
     return matchesSearch && matchesTab;
   });
 
   const queryClient = useQueryClient();
-  // Add New Category Mutation
-  const AddCategoryMutation = useMutation({
-    mutationKey: ["lawCategories", "Add"],
-    mutationFn: (data: LawCategoryInput) =>
-      lawCategoriesService.addCategory({
+  const addMutation = useMutation({
+    mutationFn: (data: SpecializationSchemaInput) =>
+      specializationsService.addSpecialization({
         ...data,
         isActive: true,
       }),
     onSuccess: () => {
       toast.success("تم إضافة الفئة بنجاح");
-      queryClient.invalidateQueries({ queryKey: ["lawCategories"] });
+      queryClient.invalidateQueries({ queryKey: ["specializations"] });
       setShowAddCategoryModal(false);
       reset();
     },
-    onError: () => {
-      toast.error("حدث خطأ أثناء إضافة الفئة");
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: SpecializationInput }) =>
+      specializationsService.update(id, data),
+
+    onSuccess: () => {
+      toast.success("تم تحديث الحالة");
+      queryClient.invalidateQueries({ queryKey: ["specializations"] });
     },
   });
 
-  // Toggle Category Active State Mutation
-  const ToggleActivityMutation = useMutation({
-    mutationKey: ["lawCategories", "ToggleActivity"],
-    mutationFn: ({ id, data }: { id: number; data: SpeciliazationInput }) =>
-      lawCategoriesService.deActivateCategory(id, data),
-    onSuccess: () => {
-      toast.success("تم تحديث حالة الفئة بنجاح");
-      queryClient.invalidateQueries({ queryKey: ["lawCategories"] });
-    },
-    onError: () => {
-      toast.error("حدث خطأ أثناء تحديث حالة الفئة");
-    },
-  });
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => specializationsService.delete(id),
 
-  // Deleting Category Mutation
-  const DeleteActivityMutation = useMutation({
-    mutationKey: ["lawCategories", "Delete"],
-    mutationFn: ({ id }: { id: number }) =>
-      lawCategoriesService.deleteActivity(id),
     onSuccess: () => {
-      toast.success("تم حذف الفئة بنجاح");
-      queryClient.invalidateQueries({ queryKey: ["lawCategories"] });
-      setDeleteConfirmId(null);
-    },
-    onError: () => {
-      toast.error("حدث خطأ أثناء حذف الفئة");
+      toast.success("تم الحذف بنجاح");
+      queryClient.invalidateQueries({ queryKey: ["specializations"] });
     },
   });
   return (
@@ -169,7 +191,7 @@ const LawCategoriesManagement = () => {
               <div>
                 <p className="text-sm text-slate-400">فئات القانون</p>
                 <p className="text-3xl font-bold text-white">
-                  {categories?.length}
+                  {specializations?.length ?? 0}
                 </p>
               </div>
             </div>
@@ -184,7 +206,8 @@ const LawCategoriesManagement = () => {
               <div>
                 <p className="text-sm text-slate-400">الفئات النشطة</p>
                 <p className="text-3xl font-bold text-white">
-                  {filteredCategories?.filter((c) => c.isActive).length ?? 0}
+                  {filteredSpecializations?.filter((c) => c.isActive).length ??
+                    0}
                 </p>
               </div>
             </div>
@@ -229,11 +252,11 @@ const LawCategoriesManagement = () => {
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Scale className="w-5 h-5 text-amber-500" />
-            فئات القانون ({filteredCategories?.length})
+            فئات القانون ({filteredSpecializations?.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {filteredCategories ? (
+          {filteredSpecializations ? (
             <Table>
               <TableHeader>
                 <TableRow className="border-slate-700 hover:bg-slate-900/50">
@@ -250,12 +273,18 @@ const LawCategoriesManagement = () => {
                     الحالة
                   </TableHead>
                   <TableHead className="text-slate-400 text-center">
+                    عدد المحامين
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
+                    آخر تحديث
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
                     الإجراءات
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCategories?.map((category) => (
+                {filteredSpecializations?.map((category) => (
                   <TableRow
                     key={category.id}
                     className="border-slate-700 hover:bg-slate-900/50"
@@ -267,14 +296,12 @@ const LawCategoriesManagement = () => {
                       {category.description}
                     </TableCell>
                     <TableCell className="text-slate-400 text-center">
-                      {new Date(category.createdAt).toLocaleDateString(
-                        "ar-EG",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        },
-                      )}
+                      <div className="space-y-1">
+                        <p> {formatDateTime(category.createdOn)}</p>
+                        <p className="text-xs text-slate-500">
+                          {timeAgo(category.createdOn)}
+                        </p>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -282,7 +309,7 @@ const LawCategoriesManagement = () => {
                           dir="rtl"
                           checked={category.isActive}
                           onCheckedChange={() =>
-                            ToggleActivityMutation.mutate({
+                            toggleMutation.mutate({
                               id: category.id,
                               data: {
                                 name: category.name,
@@ -293,10 +320,21 @@ const LawCategoriesManagement = () => {
                           }
                         />
                         <span
-                          className={`text-sm ${category.isActive ? "text-green-400" : "text-slate-500"}`}
+                          className={`text-sm ${category.isActive ? "text-green-400" : "text-slate-100"}`}
                         >
                           {category.isActive ? "مفعّل" : "معطّل"}
                         </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-white text-center font-medium">
+                      {category.numOfLawyers ?? 0}
+                    </TableCell>
+                    <TableCell className="text-slate-400 text-center">
+                      <div className="space-y-1">
+                        <p>{formatDateTime(category.updatedOn)}</p>
+                        <p className="text-xs text-slate-500">
+                          {timeAgo(category.updatedOn)}
+                        </p>
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
@@ -378,7 +416,7 @@ const LawCategoriesManagement = () => {
             </Button>
             <Button
               variant="default"
-              onClick={handleSubmit((data) => AddCategoryMutation.mutate(data))}
+              onClick={handleSubmit((data) => addMutation.mutate(data))}
             >
               <Plus className=" w-4 h-4 ml-2" />
               إضافة الفئة
@@ -409,7 +447,7 @@ const LawCategoriesManagement = () => {
             <AlertDialogAction
               onClick={() => {
                 if (deleteConfirmId) {
-                  DeleteActivityMutation.mutate({ id: deleteConfirmId });
+                  deleteMutation.mutate(deleteConfirmId);
                   setDeleteConfirmId(null);
                 }
               }}
@@ -424,4 +462,4 @@ const LawCategoriesManagement = () => {
   );
 };
 
-export default LawCategoriesManagement;
+export default SpecializationsManagement;

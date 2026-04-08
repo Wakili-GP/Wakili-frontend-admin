@@ -1,16 +1,18 @@
 import httpClient from "@/lib/HttpClient";
+
 export interface Specialization {
   id: number;
   name: string;
   description: string;
+  numOfLawyers: number;
   isActive: boolean;
-  createdAt: string;
-  createdBy: string | null;
-  updatedAt: string | null;
-  updatedBy: string | null;
+  createdOn: string;
+  createdById: string | null;
+  updatedOn: string;
+  updatedById: string | null;
 }
 
-export interface SpeciliazationInput {
+export interface SpecializationInput {
   name: string;
   description: string;
   isActive: boolean;
@@ -18,25 +20,40 @@ export interface SpeciliazationInput {
 
 const BASE = "/Specializations";
 
-const lawCategoriesService = {
+const specializationsService = {
   getAll: async (): Promise<Specialization[]> => {
-    const response = await httpClient.get(BASE);
-    return response.data.data;
+    const res = await httpClient.get(BASE);
+    return res.data.data;
   },
-  addCategory: async (data: SpeciliazationInput): Promise<void> => {
-    const response = await httpClient.post(BASE, data);
-    return response.data.data;
+
+  getAllActive: async (): Promise<Specialization[]> => {
+    const res = await httpClient.get(`${BASE}/active`);
+    return res.data.data;
   },
-  deActivateCategory: async (
+
+  addSpecialization: async (
+    data: SpecializationInput,
+  ): Promise<Specialization> => {
+    const res = await httpClient.post(BASE, data);
+    return res.data.data;
+  },
+
+  getById: async (id: number): Promise<Specialization> => {
+    const res = await httpClient.get(`${BASE}/${id}`);
+    return res.data.data;
+  },
+
+  update: async (
     id: number,
-    data: SpeciliazationInput,
-  ): Promise<void> => {
-    const response = await httpClient.put(`${BASE}/${id}`, data);
-    return response.data.data;
+    data: SpecializationInput,
+  ): Promise<Specialization> => {
+    const res = await httpClient.put(`${BASE}/${id}`, data);
+    return res.data.data;
   },
-  deleteActivity: async (id: number) => {
-    const response = await httpClient.delete(`${BASE}/${id}`);
-    return response.data.data;
+
+  delete: async (id: number): Promise<void> => {
+    await httpClient.delete(`${BASE}/${id}`);
   },
 };
-export default lawCategoriesService;
+
+export default specializationsService;

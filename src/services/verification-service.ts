@@ -1,5 +1,9 @@
 import httpClient from "@/lib/HttpClient";
-import { get } from "react-hook-form";
+
+interface ApiResponse<T> {
+  data: T;
+}
+
 export interface VerificationFace {
   id: string;
   firstName: string;
@@ -72,15 +76,20 @@ const verificationService = {
   getVerificationRequests: async (
     status?: number,
   ): Promise<VerificationFace[]> => {
-    const response = await httpClient.get<VerificationFace[]>(BASE, {
-      params: status !== undefined ? { status } : {},
-    });
+    const response = await httpClient.get<ApiResponse<VerificationFace[]>>(
+      BASE,
+      {
+        params: status !== undefined ? { status } : {},
+      },
+    );
     return response.data.data;
   },
   getVerificationRequestById: async (
     id: string,
   ): Promise<VerificationRequest> => {
-    const response = await httpClient.get<VerificationRequest>(`${BASE}/${id}`);
+    const response = await httpClient.get<ApiResponse<VerificationRequest>>(
+      `${BASE}/${id}`,
+    );
     return response.data.data;
   },
 };

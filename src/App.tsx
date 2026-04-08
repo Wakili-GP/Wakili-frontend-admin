@@ -9,7 +9,7 @@ import NotFound from "./NotFound";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ReviewModeration from "./admin/ReviewModeration";
-import LawCategoriesManagement from "./admin/LawCategoriesManagement";
+import SpecializationsManagement from "./admin/SpecializationsManagement";
 import ArticlesManagement from "./admin/ArticlesManagement";
 import "./App.css";
 function App() {
@@ -26,7 +26,10 @@ function App() {
             <Route path="credentials" element={<CredentialReview />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="reviews" element={<ReviewModeration />} />
-            <Route path="categories" element={<LawCategoriesManagement />} />
+            <Route
+              path="specializations"
+              element={<SpecializationsManagement />}
+            />
             <Route path="articles" element={<ArticlesManagement />} />
           </Route>
           <Route path="*" element={<NotFound />} />

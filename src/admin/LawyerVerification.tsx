@@ -322,7 +322,7 @@ const LawyerVerification = () => {
           if (!open) setSelectedRequestId(null);
         }}
       >
-        <DialogContent className="bg-slate-800 border-slate-700 w-[800px] max-w-[95vw] max-h-[90vh] overflow-hidden flex flex-col [&>button]:left-4 [&>button]:right-auto">
+        <DialogContent className="bg-slate-800 border-slate-700 w-200 max-w-[95vw] max-h-[90vh] overflow-hidden flex flex-col [&>button]:left-4 [&>button]:right-auto">
           {" "}
           <DialogHeader>
             <DialogTitle className="text-white text-xl">
