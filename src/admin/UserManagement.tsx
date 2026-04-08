@@ -485,8 +485,10 @@ const UserManagement = () => {
       >
         <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-white">تفاصيل المستخدم</DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogTitle className="text-white text-center mt-4">
+              تفاصيل المستخدم
+            </DialogTitle>
+            <DialogDescription className="text-slate-400 text-center">
               ملخص بيانات المستخدم
             </DialogDescription>
           </DialogHeader>
