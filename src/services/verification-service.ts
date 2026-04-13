@@ -18,17 +18,35 @@ export interface VerificationFace {
   rejectedBy: string | null;
   rejectedAt: string | null;
 }
+
+export interface Meta {
+  total: number;
+  pending: number;
+  underReview: number;
+  approved: number;
+  rejected: number;
+}
+export interface VerificationRequestsTable {
+  items: VerificationFace[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalItems: number;
+  totalPages: number;
+  meta: Meta;
+}
 export interface Education {
   degreeType: string;
   fieldOfStudy: string;
   university: string;
   graduationYear: string;
+  document: string;
 }
 export interface Certification {
   name: string;
   issuingOrg: string;
   yearObtained: string;
-  documentUrl: string;
+  document: string;
 }
 export interface WorkExperience {
   jobTitle: string;
@@ -38,6 +56,15 @@ export interface WorkExperience {
   isCurrentJob: boolean;
   description: string;
 }
+
+interface Verification {
+  nationalIdFront: string;
+  nationalIdBack: string;
+  lawyerLicense: string;
+  lawyerLicenseNumber: string;
+  lawyerLicenseIssuingAuthority: string;
+  lawyerLicenseYearOfIssue: string;
+}
 export interface VerificationRequest {
   id: string;
   firstName: string;
@@ -46,7 +73,7 @@ export interface VerificationRequest {
   phone: string;
   specialty: string[];
   submittedAt: string;
-  status: "Pending" | "Approved" | "Rejected";
+  status: "Pending" | "UnderReview" | "Approved" | "Rejected";
   profileImage: string | null;
   bio: string;
   location: {
@@ -54,38 +81,39 @@ export interface VerificationRequest {
     city: string;
   };
   yearsExperience: number;
-  sessionTypes: string[];
+  sessionTypes: number[];
   education: Education[];
   certifications: Certification[];
   workExperience: WorkExperience[];
-  documents: {
-    governmentId: boolean;
-    governmentIdUrl: string;
-    professionalLicense: boolean;
-    professionalLicenseUrl: string;
-    identityVerification: boolean;
-    educationCertificates: { name: string; url: string }[];
-  };
-  licenseNumber: string;
-  issuingAuthority: string;
-  licenseYear: string;
-  barNumber: string | null;
+  verification: Verification;
 }
 
 const BASE = "Lawyers/lawyer-verification";
 const verificationService = {
   // status: 0 = Pending, 1 = UnderReview, 2 = Approved, 3 = Rejected
-
+  // DateFilter: 0 = All, 1 = Last 24 hours, 2 = Last 7 days, 3 = Last 30 days, 4 = Last Year
   getVerificationRequests: async (
+    page?: number,
+    pageSize?: number,
+    searchTerm?: string,
     status?: number,
-  ): Promise<VerificationFace[]> => {
-    const response = await httpClient.get<ApiResponse<VerificationFace[]>>(
-      BASE,
-      {
-        params: status !== undefined ? { status } : {},
+    SortDescending?: boolean, // true or false
+    DateFilter?: number,
+  ): Promise<VerificationRequestsTable> => {
+    const response = await httpClient.get<
+      ApiResponse<VerificationRequestsTable>
+    >(BASE, {
+      params: {
+        Page: page !== undefined ? page : undefined,
+        PageSize: pageSize !== undefined ? pageSize : undefined,
+        SearchTerm: searchTerm !== undefined ? searchTerm : undefined,
+        Status: status !== undefined ? status : undefined,
+        SortDescending:
+          SortDescending !== undefined ? SortDescending : undefined,
+        DateFilter: DateFilter !== undefined ? DateFilter : undefined,
       },
-    );
-    console.log("Verification Requests Response:", response.data);
+    });
+    console.log("Verification Requests Response:", response.data.data);
     return response.data.data;
   },
   getVerificationRequestById: async (
@@ -96,6 +124,13 @@ const verificationService = {
     );
     console.log("Verification Request Response:", response.data);
     return response.data.data;
+  },
+
+  rejectVerificationRequest: async (id: string, reason: string) => {
+    await httpClient.put(`Lawyers/verify/reject/${id}`, { note: reason });
+  },
+  approveVerificationRequest: async (id: string) => {
+    await httpClient.put(`Lawyers/verify/approve/${id}`);
   },
 };
 export default verificationService;
