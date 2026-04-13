@@ -54,6 +54,7 @@ const AdminDashboard = () => {
   const [adminToDelete, setAdminToDelete] = useState<string | null>(null);
 
   const { user } = useAuth();
+  const canManageAdmins = user?.userType === "SuperAdmin";
 
   // Form Setup
   const {
@@ -80,6 +81,7 @@ const AdminDashboard = () => {
   } = useQuery({
     queryKey: ["admins"],
     queryFn: () => AdminServices.getAllAdmins(),
+    enabled: canManageAdmins,
     staleTime: 5 * 60 * 1000,
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
@@ -153,7 +155,7 @@ const AdminDashboard = () => {
     }
   };
 
-  if (adminsLoading) {
+  if (canManageAdmins && adminsLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
@@ -164,7 +166,7 @@ const AdminDashboard = () => {
     );
   }
 
-  if (adminsError) {
+  if (canManageAdmins && adminsError) {
     return (
       <Card className="bg-red-500/10 border-red-500/20">
         <CardContent className="p-4 flex items-center gap-3">
@@ -351,90 +353,92 @@ const AdminDashboard = () => {
       </div>
 
       {/* Admins Table */}
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Shield className="w-5 h-5 text-amber-500" />
-            إدارة المشرفين
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-slate-700 bg-slate-800/50">
-                <TableHead className="text-slate-400 text-center">
-                  الاسم
-                </TableHead>
-                <TableHead className="text-slate-400 text-center">
-                  البريد الإلكتروني
-                </TableHead>
-                <TableHead className="text-slate-400 text-center">
-                  الدور
-                </TableHead>
-                <TableHead className="text-slate-400 text-center">
-                  تاريخ الإضافة
-                </TableHead>
-                <TableHead className="text-slate-400 text-center">
-                  الحالة
-                </TableHead>
-                <TableHead className="text-slate-400 text-center">
-                  الإجراءات
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {admins?.map((admin) => (
-                <TableRow
-                  key={admin.id}
-                  className="border-slate-700 hover:bg-slate-900/70 transition-colors duration-200 cursor-pointer"
-                >
-                  <TableCell className="text-white font-medium text-center">
-                    {admin.firstName} {admin.lastName}
-                  </TableCell>
-                  <TableCell className="text-slate-300 text-center">
-                    {admin.email}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {getRoleBadge(admin.role)}
-                  </TableCell>
-                  <TableCell className="text-slate-400 text-center">
-                    <div className="space-y-1">
-                      <p> {formatDateTime(admin.createdAt)}</p>
-                      <p className="text-xs text-slate-500">
-                        {timeAgo(admin.createdAt)}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge
-                      className={
-                        admin.status === "Active"
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : "bg-red-500/20 text-red-400"
-                      }
-                    >
-                      {admin.status === "Active" ? "نشط" : "غير نشط"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={
-                        admin.id === user?.id || admin.role === "SuperAdmin"
-                      }
-                      onClick={() => handleDeleteAdmin(admin.id)}
-                      className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
+      {canManageAdmins && (
+        <Card className="bg-slate-800/50 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Shield className="w-5 h-5 text-amber-500" />
+              إدارة المشرفين
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow className="border-slate-700 bg-slate-800/50">
+                  <TableHead className="text-slate-400 text-center">
+                    الاسم
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
+                    البريد الإلكتروني
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
+                    الدور
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
+                    تاريخ الإضافة
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
+                    الحالة
+                  </TableHead>
+                  <TableHead className="text-slate-400 text-center">
+                    الإجراءات
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {admins?.map((admin) => (
+                  <TableRow
+                    key={admin.id}
+                    className="border-slate-700 hover:bg-slate-900/70 transition-colors duration-200 cursor-pointer"
+                  >
+                    <TableCell className="text-white font-medium text-center">
+                      {admin.firstName} {admin.lastName}
+                    </TableCell>
+                    <TableCell className="text-slate-300 text-center">
+                      {admin.email}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {getRoleBadge(admin.role)}
+                    </TableCell>
+                    <TableCell className="text-slate-400 text-center">
+                      <div className="space-y-1">
+                        <p>{formatDateTime(admin.createdAt)}</p>
+                        <p className="text-xs text-slate-500">
+                          {timeAgo(admin.createdAt)}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge
+                        className={
+                          admin.status === "Active"
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : "bg-red-500/20 text-red-400"
+                        }
+                      >
+                        {admin.status === "Active" ? "نشط" : "غير نشط"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={
+                          admin.id === user?.id || admin.role === "SuperAdmin"
+                        }
+                        onClick={() => handleDeleteAdmin(admin.id)}
+                        className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add Admin Modal */}
       <Dialog open={showAddAdminModal} onOpenChange={setShowAddAdminModal}>

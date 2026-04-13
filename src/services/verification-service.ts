@@ -3,16 +3,20 @@ import httpClient from "@/services/api/HttpClient";
 interface ApiResponse<T> {
   data: T;
 }
-
+// status: 0 = Pending, 1 = UnderReview, 2 = Approved, 3 = Rejected
 export interface VerificationFace {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
-  specializations: string;
+  specializations: string[];
   profileImageUrl: string;
-  submittedAt: string;
-  status: "Pending" | "Approved" | "Rejected";
+  submittedAt: string | null;
+  status: "Pending" | "UnderReview" | "Approved" | "Rejected";
+  approvedBy: string | null;
+  approvedAt: string | null;
+  rejectedBy: string | null;
+  rejectedAt: string | null;
 }
 export interface Education {
   degreeType: string;
@@ -70,9 +74,8 @@ export interface VerificationRequest {
 
 const BASE = "Lawyers/lawyer-verification";
 const verificationService = {
-  // Pending = 0,
-  // Approved = 1,
-  // Rejected = 2
+  // status: 0 = Pending, 1 = UnderReview, 2 = Approved, 3 = Rejected
+
   getVerificationRequests: async (
     status?: number,
   ): Promise<VerificationFace[]> => {
@@ -82,6 +85,7 @@ const verificationService = {
         params: status !== undefined ? { status } : {},
       },
     );
+    console.log("Verification Requests Response:", response.data);
     return response.data.data;
   },
   getVerificationRequestById: async (
@@ -90,6 +94,7 @@ const verificationService = {
     const response = await httpClient.get<ApiResponse<VerificationRequest>>(
       `${BASE}/${id}`,
     );
+    console.log("Verification Request Response:", response.data);
     return response.data.data;
   },
 };

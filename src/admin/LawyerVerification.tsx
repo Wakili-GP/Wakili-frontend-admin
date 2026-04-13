@@ -48,8 +48,9 @@ import type {
   Certification,
   WorkExperience,
 } from "@/services/verification-service";
+import { formatDateTime, timeAgo } from "@/lib/utils";
 
-const getStatusBadge = (status: string) => {
+const getVerificatoinStatusBadge = (status: string) => {
   switch (status) {
     case "Pending":
       return (
@@ -83,12 +84,14 @@ const LawyerVerification = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Status Filters
+  // status: 0 = Pending, 1 = UnderReview, 2 = Approved, 3 = Rejected
   const [statusFilter, setStatusFilter] = useState("all");
   const statusMap: Record<string, number | undefined> = {
     all: undefined,
-    pending: 0,
-    approved: 1,
-    rejected: 2,
+    Pending: 0,
+    UnderReview: 1,
+    Approved: 2,
+    Rejected: 3,
   };
 
   // Fetching Request Table
@@ -277,25 +280,20 @@ const LawyerVerification = () => {
                         ))}
                     </TableCell>
                     <TableCell className="text-slate-400 text-center">
-                      {new Date(request.submittedAt).toLocaleDateString(
-                        "ar-EG",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        },
-                      )}
+                      <div className="space-y-1">
+                        <p> {formatDateTime(request.submittedAt)}</p>
+                        <p className="text-xs text-slate-500">
+                          {timeAgo(request.submittedAt)}
+                        </p>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      {getStatusBadge(request.status)}
+                      {getVerificatoinStatusBadge(request.status)}
                     </TableCell>
                     <TableCell className="text-center">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          setSelectedRequestId(request.id);
-                        }}
                         className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
                       >
                         <Eye className="w-4 h-4 ml-1" />
