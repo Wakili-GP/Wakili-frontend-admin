@@ -160,7 +160,7 @@ const AdminDashboard = () => {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <Spinner className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-4" />
-          <p className="text-slate-400">جاري تحميل البيانات...</p>
+          <p className="text-gray-500">جاري تحميل البيانات...</p>
         </div>
       </div>
     );
@@ -182,8 +182,8 @@ const AdminDashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">نظرة عامة</h1>
-          <p className="text-slate-400 mt-1">مرحباً بك في لوحة تحكم المشرف</p>
+          <h1 className="text-2xl font-bold text-gray-900">نظرة عامة</h1>
+          <p className="text-gray-500 mt-1">مرحباً بك في لوحة تحكم المشرف</p>
         </div>
         {user?.userType === "SuperAdmin" && (
           <Button
@@ -199,12 +199,12 @@ const AdminDashboard = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, index) => (
-          <Card key={index} className="bg-slate-800/50 border-slate-700">
+          <Card key={index} className="bg-white border-gray-200 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-slate-400">{stat.title}</p>
-                  <p className="text-3xl font-bold text-white mt-2">
+                  <p className="text-sm text-gray-500">{stat.title}</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2">
                     {stat.value}
                   </p>
                   <div className="flex items-center gap-1 mt-2">
@@ -212,15 +212,15 @@ const AdminDashboard = () => {
                     <span className="text-sm text-emerald-400">
                       {stat.change}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-gray-400">
                       من الشهر الماضي
                     </span>
                   </div>
                 </div>
                 <div
-                  className={`w-12 h-12 rounded-xl bg-linear-to-br ${stat.color} flex items-center justify-center`}
+                  className={`w-12 h-12 rounded-xl ${stat.color} flex items-center justify-center`}
                 >
-                  <stat.icon className="w-6 h-6 text-white" />
+                  <stat.icon className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
@@ -230,9 +230,9 @@ const AdminDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
-        <Card className="lg:col-span-2 bg-slate-800/50 border-slate-700">
+        <Card className="lg:col-span-2 bg-white border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <Clock className="w-5 h-5 text-amber-500" />
               النشاط الأخير
             </CardTitle>
@@ -241,7 +241,7 @@ const AdminDashboard = () => {
             {recentActivities.map((activity, index) => (
               <div
                 key={index}
-                className="flex items-start gap-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700/50 hover:bg-slate-900/70 transition-colors duration-200"
+                className="flex items-start gap-4 p-3 rounded-lg bg-gray-50 border border-gray-200/50 hover:bg-gray-100 transition-colors duration-200"
               >
                 <div
                   className={`w-10 h-10 rounded-lg flex items-center justify-center ${
@@ -255,8 +255,8 @@ const AdminDashboard = () => {
                   <activity.icon className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-white">{activity.message}</p>
-                  <p className="text-xs text-slate-500 mt-1">{activity.time}</p>
+                  <p className="text-sm text-gray-900">{activity.message}</p>
+                  <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
                 </div>
                 <Badge
                   variant={
@@ -282,9 +282,9 @@ const AdminDashboard = () => {
         {/* Quick Stats */}
         <div className="space-y-4">
           {/* Notification Stats */}
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white text-lg flex items-center gap-2">
+              <CardTitle className="text-gray-900 text-lg flex items-center gap-2">
                 <Bell className="w-5 h-5 text-amber-500" />
                 حالة الإشعارات
               </CardTitle>
@@ -293,7 +293,7 @@ const AdminDashboard = () => {
               {notifications.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 hover:bg-slate-900/70 transition-colors duration-200"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                 >
                   <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
                     {item.type === "email" ? (
@@ -303,10 +303,10 @@ const AdminDashboard = () => {
                     )}
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">
+                    <p className="text-2xl font-bold text-gray-900">
                       {item.count}
                     </p>
-                    <p className="text-xs text-slate-400">{item.label}</p>
+                    <p className="text-xs text-gray-500">{item.label}</p>
                   </div>
                 </div>
               ))}
@@ -314,37 +314,37 @@ const AdminDashboard = () => {
           </Card>
 
           {/* Account Status */}
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white text-lg flex items-center gap-2">
+              <CardTitle className="text-gray-900 text-lg flex items-center gap-2">
                 <Users className="w-5 h-5 text-amber-500" />
                 حالة الحسابات
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 hover:bg-slate-900/70 transition-colors duration-200">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm text-slate-300">محامون نشطون</span>
+                    <span className="text-sm text-gray-600">محامون نشطون</span>
                   </div>
-                  <span className="font-bold text-white">342</span>
+                  <span className="font-bold text-gray-900">342</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 hover:bg-slate-900/70 transition-colors duration-200">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-amber-400" />
-                    <span className="text-sm text-slate-300">
+                    <span className="text-sm text-gray-600">
                       في انتظار التوثيق
                     </span>
                   </div>
-                  <span className="font-bold text-white">23</span>
+                  <span className="font-bold text-gray-900">23</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 hover:bg-slate-900/70 transition-colors duration-200">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
                   <div className="flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-red-400" />
-                    <span className="text-sm text-slate-300">حسابات معلقة</span>
+                    <span className="text-sm text-gray-600">حسابات معلقة</span>
                   </div>
-                  <span className="font-bold text-white">5</span>
+                  <span className="font-bold text-gray-900">5</span>
                 </div>
               </div>
             </CardContent>
@@ -354,9 +354,9 @@ const AdminDashboard = () => {
 
       {/* Admins Table */}
       {canManageAdmins && (
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <Shield className="w-5 h-5 text-amber-500" />
               إدارة المشرفين
             </CardTitle>
@@ -364,23 +364,23 @@ const AdminDashboard = () => {
           <CardContent>
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-700 bg-slate-800/50">
-                  <TableHead className="text-slate-400 text-center">
+                <TableRow className="border-gray-200 bg-white">
+                  <TableHead className="text-gray-500 text-center">
                     الاسم
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     البريد الإلكتروني
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     الدور
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     تاريخ الإضافة
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     الحالة
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     الإجراءات
                   </TableHead>
                 </TableRow>
@@ -389,21 +389,21 @@ const AdminDashboard = () => {
                 {admins?.map((admin) => (
                   <TableRow
                     key={admin.id}
-                    className="border-slate-700 hover:bg-slate-900/70 transition-colors duration-200 cursor-pointer"
+                    className="border-gray-200 hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
                   >
-                    <TableCell className="text-white font-medium text-center">
+                    <TableCell className="text-gray-900 font-medium text-center">
                       {admin.firstName} {admin.lastName}
                     </TableCell>
-                    <TableCell className="text-slate-300 text-center">
+                    <TableCell className="text-gray-600 text-center">
                       {admin.email}
                     </TableCell>
                     <TableCell className="text-center">
                       {getRoleBadge(admin.role)}
                     </TableCell>
-                    <TableCell className="text-slate-400 text-center">
+                    <TableCell className="text-gray-500 text-center">
                       <div className="space-y-1">
                         <p>{formatDateTime(admin.createdAt)}</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-gray-400">
                           {timeAgo(admin.createdAt)}
                         </p>
                       </div>
@@ -442,13 +442,13 @@ const AdminDashboard = () => {
 
       {/* Add Admin Modal */}
       <Dialog open={showAddAdminModal} onOpenChange={setShowAddAdminModal}>
-        <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+        <DialogContent className="bg-white border-gray-200" dir="rtl">
           <DialogHeader className="mt-4">
-            <DialogTitle className="text-white flex items-center justify-center gap-2">
+            <DialogTitle className="text-gray-900 flex items-center justify-center gap-2">
               <UserPlus className="w-5 h-5" />
               إضافة مشرف جديد
             </DialogTitle>
-            <DialogDescription className="text-slate-400 text-center">
+            <DialogDescription className="text-gray-500 text-center">
               أدخل بيانات المشرف الجديد لإضافته إلى النظام
             </DialogDescription>
           </DialogHeader>
@@ -458,14 +458,14 @@ const AdminDashboard = () => {
             <div className="space-y-4 mt-4">
               {/* Name Row */}
               <div className="space-y-2">
-                <Label className="text-slate-300">الاسم</Label>
+                <Label className="text-gray-600">الاسم</Label>
                 <div className="flex gap-4">
                   {/* First Name */}
                   <div className="flex-1">
                     <Input
                       {...register("firstName")}
                       placeholder="الاسم الأول"
-                      className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
+                      className={`bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 ${
                         errors.firstName ? "border-red-500" : ""
                       }`}
                     />
@@ -481,7 +481,7 @@ const AdminDashboard = () => {
                     <Input
                       {...register("lastName")}
                       placeholder="اسم العائلة"
-                      className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
+                      className={`bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 ${
                         errors.lastName ? "border-red-500" : ""
                       }`}
                     />
@@ -496,12 +496,12 @@ const AdminDashboard = () => {
 
               {/* Email */}
               <div className="space-y-2">
-                <Label className="text-slate-300">البريد الإلكتروني</Label>
+                <Label className="text-gray-600">البريد الإلكتروني</Label>
                 <Input
                   type="email"
                   {...register("email")}
                   placeholder="example@wakili.me"
-                  className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
+                  className={`bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 ${
                     errors.email ? "border-red-500" : ""
                   }`}
                 />
@@ -514,20 +514,20 @@ const AdminDashboard = () => {
 
               {/* Password */}
               <div className="space-y-2">
-                <Label className="text-slate-300">كلمة المرور</Label>
+                <Label className="text-gray-600">كلمة المرور</Label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
                     {...register("password")}
                     placeholder="أدخل كلمة مرور قوية"
-                    className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 pl-10 ${
+                    className={`bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 pl-10 ${
                       errors.password ? "border-red-500" : ""
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -545,12 +545,12 @@ const AdminDashboard = () => {
 
               {/* Confirm Password */}
               <div className="space-y-2">
-                <Label className="text-slate-300">تأكيد كلمة المرور</Label>
+                <Label className="text-gray-600">تأكيد كلمة المرور</Label>
                 <Input
                   type="password"
                   {...register("confirmPassword")}
                   placeholder="أعد إدخال كلمة المرور"
-                  className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${
+                  className={`bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 ${
                     errors.confirmPassword ? "border-red-500" : ""
                   }`}
                 />
@@ -573,7 +573,7 @@ const AdminDashboard = () => {
 
               <Button
                 type="submit"
-                className="cursor-pointer bg-emerald-600 text-white hover:bg-emerald-500 transition-colors duration-200"
+                className="cursor-pointer bg-emerald-600 text-gray-900 hover:bg-emerald-500 transition-colors duration-200"
                 disabled={createAdminMutation.isPending}
               >
                 {createAdminMutation.isPending
@@ -589,12 +589,12 @@ const AdminDashboard = () => {
         open={!!adminToDelete}
         onOpenChange={() => setAdminToDelete(null)}
       >
-        <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+        <DialogContent className="bg-white border-gray-200" dir="rtl">
           <DialogHeader className="mt-4">
-            <DialogTitle className="text-white text-center">
+            <DialogTitle className="text-gray-900 text-center">
               تأكيد الحذف
             </DialogTitle>
-            <DialogDescription className="text-slate-400 text-center">
+            <DialogDescription className="text-gray-500 text-center">
               هل أنت متأكد من حذف هذا المشرف؟ لا يمكن التراجع عن هذا الإجراء.
             </DialogDescription>
           </DialogHeader>

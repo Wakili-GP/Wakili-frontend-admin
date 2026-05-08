@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -133,8 +133,8 @@ const SpecializationsManagement = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">إدارة فئات القانون</h1>
-          <p className="text-slate-400 mt-1">إنشاء وإدارة فئات القانون</p>
+          <h1 className="text-2xl font-bold text-gray-900">إدارة فئات القانون</h1>
+          <p className="text-gray-500 mt-1">إنشاء وإدارة فئات القانون</p>
         </div>
         <Button
           onClick={() => setShowAddCategoryModal(true)}
@@ -148,30 +148,30 @@ const SpecializationsManagement = () => {
       {/* Stats */}
 
       <div className="flex gap-4">
-        <Card className="bg-slate-800/50 border-slate-700 flex-1">
+        <Card className="bg-white border-gray-200 shadow-sm flex-1">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                <Scale className="w-6 h-6 text-white" />
+                <Scale className="w-6 h-6 text-gray-900" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">فئات القانون</p>
-                <p className="text-3xl font-bold text-white">
+                <p className="text-sm text-gray-500">فئات القانون</p>
+                <p className="text-3xl font-bold text-gray-900">
                   {specializations?.length ?? 0}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700 flex-1">
+        <Card className="bg-white border-gray-200 shadow-sm flex-1">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-                <Scale className="w-6 h-6 text-white" />
+                <Scale className="w-6 h-6 text-gray-900" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">الفئات النشطة</p>
-                <p className="text-3xl font-bold text-white">
+                <p className="text-sm text-gray-500">الفئات النشطة</p>
+                <p className="text-3xl font-bold text-gray-900">
                   {filteredSpecializations?.filter((c) => c.isActive).length ??
                     0}
                 </p>
@@ -182,7 +182,7 @@ const SpecializationsManagement = () => {
       </div>
 
       {/* Tabs & Search */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <Tabs
@@ -191,7 +191,7 @@ const SpecializationsManagement = () => {
               value={activeTab}
               onValueChange={(val) => setActiveTab(val as "all" | "active")}
             >
-              <TabsList className="bg-slate-900/50">
+              <TabsList className="bg-gray-50">
                 <TabsTrigger className="cursor-pointer" value="all">
                   جميع الفئات
                 </TabsTrigger>
@@ -201,12 +201,12 @@ const SpecializationsManagement = () => {
               </TabsList>
             </Tabs>
             <div className="relative w-full md:w-64">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <Input
                 placeholder="ابحث..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10 bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500"
+                className="pr-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400"
               />
             </div>
           </div>
@@ -214,9 +214,9 @@ const SpecializationsManagement = () => {
       </Card>
 
       {/* Categories Table */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-gray-900 flex items-center gap-2">
             <Scale className="w-5 h-5 text-amber-500" />
             فئات القانون ({filteredSpecializations?.length})
           </CardTitle>
@@ -225,26 +225,26 @@ const SpecializationsManagement = () => {
           {filteredSpecializations ? (
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-700 hover:bg-slate-900/50">
-                  <TableHead className="text-slate-400 text-center">
+                <TableRow className="border-gray-200 hover:bg-gray-50">
+                  <TableHead className="text-gray-500 text-center">
                     اسم الفئة
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     الوصف
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     تاريخ الإنشاء
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     الحالة
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     عدد المحامين
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     آخر تحديث
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     الإجراءات
                   </TableHead>
                 </TableRow>
@@ -253,18 +253,18 @@ const SpecializationsManagement = () => {
                 {filteredSpecializations?.map((category) => (
                   <TableRow
                     key={category.id}
-                    className="border-slate-700 hover:bg-slate-900/50"
+                    className="border-gray-200 hover:bg-gray-50"
                   >
-                    <TableCell className="text-white font-medium text-center">
+                    <TableCell className="text-gray-900 font-medium text-center">
                       {category.name}
                     </TableCell>
-                    <TableCell className="text-slate-300 max-w-xs truncate text-center">
+                    <TableCell className="text-gray-600 max-w-xs truncate text-center">
                       {category.description}
                     </TableCell>
-                    <TableCell className="text-slate-400 text-center">
+                    <TableCell className="text-gray-500 text-center">
                       <div className="space-y-1">
                         <p> {formatDateTime(category.createdOn)}</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-gray-400">
                           {timeAgo(category.createdOn)}
                         </p>
                       </div>
@@ -286,19 +286,19 @@ const SpecializationsManagement = () => {
                           }
                         />
                         <span
-                          className={`text-sm ${category.isActive ? "text-green-400" : "text-slate-100"}`}
+                          className={`text-sm ${category.isActive ? "text-green-400" : "text-gray-700"}`}
                         >
                           {category.isActive ? "مفعّل" : "معطّل"}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-white text-center font-medium">
+                    <TableCell className="text-gray-900 text-center font-medium">
                       {category.numOfLawyers ?? 0}
                     </TableCell>
-                    <TableCell className="text-slate-400 text-center">
+                    <TableCell className="text-gray-500 text-center">
                       <div className="space-y-1">
                         <p>{formatDateTime(category.updatedOn)}</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-gray-400">
                           {timeAgo(category.updatedOn)}
                         </p>
                       </div>
@@ -319,8 +319,8 @@ const SpecializationsManagement = () => {
             </Table>
           ) : (
             <div className="text-center py-12">
-              <FolderOpen className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-              <p className="text-slate-400">لا توجد فئات مطابقة للبحث</p>
+              <FolderOpen className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500">لا توجد فئات مطابقة للبحث</p>
             </div>
           )}
         </CardContent>
@@ -328,27 +328,28 @@ const SpecializationsManagement = () => {
 
       {/* Add Category Modal */}
       <Dialog
+        modal={false}
         open={showAddCategoryModal}
         onOpenChange={setShowAddCategoryModal}
       >
-        <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+        <DialogContent className="bg-white border-gray-200" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-white flex justify-center gap-2">
-              <Scale className="w-5 h-5 text-white" />
+            <DialogTitle className="text-gray-900 flex justify-center gap-2">
+              <Scale className="w-5 h-5 text-gray-900" />
               إضافة فئة قانون جديدة
             </DialogTitle>
-            <DialogDescription className="text-slate-400 text-center">
+            <DialogDescription className="text-gray-500 text-center">
               أدخل بيانات الفئة الجديدة
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label className="text-slate-300">اسم الفئة *</Label>
+              <Label className="text-gray-600">اسم الفئة *</Label>
               <Input
                 {...register("name")}
                 placeholder="مثال: القانون المدني"
-                className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${errors.name ? "border-red-500" : ""}`}
+                className={`bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 ${errors.name ? "border-red-500" : ""}`}
               />
               {errors.name && (
                 <p className="text-sm text-red-400">{errors.name.message}</p>
@@ -356,11 +357,11 @@ const SpecializationsManagement = () => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">الوصف</Label>
+              <Label className="text-gray-600">الوصف</Label>
               <Textarea
                 {...register("description")}
                 placeholder="وصف موجز للفئة..."
-                className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 min-h-25"
+                className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 min-h-25"
               />
               {errors.description && (
                 <p className="text-sm text-red-400">
@@ -396,18 +397,18 @@ const SpecializationsManagement = () => {
         open={!!deleteConfirmId}
         onOpenChange={() => setDeleteConfirmId(null)}
       >
-        <AlertDialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+        <AlertDialogContent className="bg-white border-gray-200" dir="rtl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-red-500 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-500" />
               تأكيد الحذف
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-white">
+            <AlertDialogDescription className="text-gray-900">
               هل أنت متأكد من حذف هذه الفئة؟ لا يمكن التراجع عن هذا الإجراء.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-slate-700 text-white hover:bg-slate-600">
+            <AlertDialogCancel className="bg-gray-100 text-gray-900 hover:bg-gray-200">
               إلغاء
             </AlertDialogCancel>
             <AlertDialogAction

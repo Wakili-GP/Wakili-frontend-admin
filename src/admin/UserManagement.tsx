@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -137,68 +137,68 @@ const UserManagement = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">إدارة المستخدمين</h1>
-        <p className="text-slate-400 mt-1">
+        <h1 className="text-2xl font-bold text-gray-900">إدارة المستخدمين</h1>
+        <p className="text-gray-500 mt-1">
           عرض وإدارة حسابات العملاء والمحامين
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
               <Users className="w-6 h-6 text-blue-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{users.length}</p>
-              <p className="text-sm text-slate-400">إجمالي المستخدمين</p>
+              <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+              <p className="text-sm text-gray-500">إجمالي المستخدمين</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
               <User className="w-6 h-6 text-emerald-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-gray-900">
                 {users.filter((u) => u.userType === "Client").length}
               </p>
-              <p className="text-sm text-slate-400">عملاء</p>
+              <p className="text-sm text-gray-500">عملاء</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
               <Briefcase className="w-6 h-6 text-purple-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-gray-900">
                 {users.filter((u) => u.userType === "Lawyer").length}
               </p>
-              <p className="text-sm text-slate-400">محامون</p>
+              <p className="text-sm text-gray-500">محامون</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
               <Ban className="w-6 h-6 text-red-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-gray-900">
                 {users.filter((u) => u.status !== "Active").length}
               </p>
-              <p className="text-sm text-slate-400">معلقون</p>
+              <p className="text-sm text-gray-500">معلقون</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Tabs & Search */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <Tabs
@@ -210,7 +210,7 @@ const UserManagement = () => {
               }}
               className="w-full md:w-auto"
             >
-              <TabsList className="bg-slate-900/50">
+              <TabsList className="bg-gray-50">
                 <TabsTrigger className="cursor-pointer" value="all">
                   الكل
                 </TabsTrigger>
@@ -226,7 +226,7 @@ const UserManagement = () => {
               </TabsList>
             </Tabs>
             <div className="relative w-full md:w-64">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <Input
                 placeholder="البحث..."
                 value={searchInput}
@@ -234,7 +234,7 @@ const UserManagement = () => {
                   setSearchInput(e.target.value);
                   setPageNumber(1);
                 }}
-                className="pr-10 bg-slate-900/50 border-slate-600 text-white"
+                className="pr-10 bg-gray-50 border-gray-200 text-gray-900"
               />
             </div>
           </div>
@@ -242,16 +242,16 @@ const UserManagement = () => {
       </Card>
 
       {/* Users Table */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <Users className="w-5 h-5 text-amber-500" />
               قائمة المستخدمين
             </CardTitle>
             <Badge
               variant="outline"
-              className="text-slate-300 border-slate-600"
+              className="text-gray-600 border-gray-200"
             >
               صفحة {pageNumber}
             </Badge>
@@ -261,26 +261,26 @@ const UserManagement = () => {
           {users.length > 0 ? (
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-700 hover:bg-slate-900/50">
-                  <TableHead className="text-slate-400 text-right">
+                <TableRow className="border-gray-200 hover:bg-gray-50">
+                  <TableHead className="text-gray-500 text-right">
                     المستخدم
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     النوع
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     رقم الهاتف
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     تاريخ التسجيل
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     آخر نشاط
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     الحالة
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     الإجراءات
                   </TableHead>
                 </TableRow>
@@ -289,9 +289,9 @@ const UserManagement = () => {
                 {users.map((user) => (
                   <TableRow
                     key={user.id}
-                    className="border-slate-700 hover:bg-slate-900/50"
+                    className="border-gray-200 hover:bg-gray-50"
                   >
-                    <TableCell className="text-white font-medium text-right w-54">
+                    <TableCell className="text-gray-900 font-medium text-right w-54">
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-10 h-10 rounded-full flex items-center justify-center ${
@@ -307,14 +307,14 @@ const UserManagement = () => {
                           )}
                         </div>
                         <div>
-                          <p className="text-white font-medium">
+                          <p className="text-gray-900 font-medium">
                             {user.firstName} {user.lastName}
                           </p>
-                          <p className="text-xs text-slate-400">{user.email}</p>
+                          <p className="text-xs text-gray-500">{user.email}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-slate-300 text-center">
+                    <TableCell className="text-gray-600 text-center">
                       <Badge
                         variant="outline"
                         className={
@@ -326,21 +326,21 @@ const UserManagement = () => {
                         {user.userType === "Lawyer" ? "محامي" : "عميل"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-slate-400 text-center">
+                    <TableCell className="text-gray-500 text-center">
                       {user.phoneNumber ?? "—"}
                     </TableCell>
-                    <TableCell className="text-slate-400 text-center">
+                    <TableCell className="text-gray-500 text-center">
                       <div className="space-y-1">
                         <p> {formatDateTime(user.createdAt)}</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-gray-400">
                           {timeAgo(user.createdAt)}
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell className="text-slate-400 text-center">
+                    <TableCell className="text-gray-500 text-center">
                       <div className="space-y-1">
                         <p>{formatDateTime(user.lastActionDate)}</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-gray-400">
                           {timeAgo(user.lastActionDate)}
                         </p>
                       </div>
@@ -362,18 +362,18 @@ const UserManagement = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-slate-400 hover:text-white"
+                            className="text-gray-500 hover:text-gray-900"
                           >
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
                           align="end"
-                          className="bg-slate-800 border-slate-700"
+                          className="bg-white border-gray-200"
                         >
                           <DropdownMenuItem
                             onClick={() => setSelectedUser(user)}
-                            className="cursor-pointer text-slate-300 focus:text-white focus:bg-slate-700"
+                            className="cursor-pointer text-gray-600 focus:text-gray-900 focus:bg-gray-100"
                           >
                             <Eye className="w-4 h-4 ml-2" />
                             عرض التفاصيل
@@ -413,8 +413,8 @@ const UserManagement = () => {
             </Table>
           ) : (
             <div className="text-center py-12">
-              <FolderOpen className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-              <p className="text-slate-400">لا يوجد مستخدمين مطابقين للبحث</p>
+              <FolderOpen className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500">لا يوجد مستخدمين مطابقين للبحث</p>
             </div>
           )}
 
@@ -427,10 +427,10 @@ const UserManagement = () => {
                   setPageNumber(1);
                 }}
               >
-                <SelectTrigger className="cursor-pointer w-28 bg-slate-900/50 border-slate-600 text-slate-200">
+                <SelectTrigger className="cursor-pointer w-28 bg-gray-50 border-gray-200 text-gray-700">
                   <SelectValue placeholder="الحجم" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 text-slate-200">
+                <SelectContent className="bg-white border-gray-200 text-gray-700">
                   <SelectItem className="cursor-pointer" value="8">
                     8
                   </SelectItem>
@@ -452,7 +452,7 @@ const UserManagement = () => {
               <Button
                 variant="outline"
                 size="icon"
-                className="border-slate-600 text-slate-300"
+                className="border-gray-200 text-gray-600"
                 disabled={!canGoPrevious}
                 onClick={() => setPageNumber((prev) => Math.max(1, prev - 1))}
                 title="الصفحة السابقة"
@@ -463,7 +463,7 @@ const UserManagement = () => {
               <Button
                 variant="outline"
                 size="icon"
-                className="border-slate-600 text-slate-300"
+                className="border-gray-200 text-gray-600"
                 disabled={!canGoNext}
                 onClick={() => setPageNumber((prev) => prev + 1)}
                 title="الصفحة التالية"
@@ -483,18 +483,18 @@ const UserManagement = () => {
           if (!open) setSelectedUser(null);
         }}
       >
-        <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+        <DialogContent className="bg-white border-gray-200" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-white text-center mt-4">
+            <DialogTitle className="text-gray-900 text-center mt-4">
               تفاصيل المستخدم
             </DialogTitle>
-            <DialogDescription className="text-slate-400 text-center">
+            <DialogDescription className="text-gray-500 text-center">
               ملخص بيانات المستخدم
             </DialogDescription>
           </DialogHeader>
           {selectedUser && (
             <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 rounded-lg bg-slate-900/50">
+              <div className="flex items-center gap-4 p-4 rounded-lg bg-gray-50">
                 <div
                   className={`w-16 h-16 rounded-full flex items-center justify-center ${
                     selectedUser.userType === "Lawyer"
@@ -509,37 +509,37 @@ const UserManagement = () => {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">
+                  <h3 className="text-xl font-bold text-gray-900">
                     {selectedUser.firstName} {selectedUser.lastName}
                   </h3>
-                  <p className="text-slate-400">{selectedUser.email}</p>
+                  <p className="text-gray-500">{selectedUser.email}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg bg-slate-900/50">
-                  <p className="text-xs text-slate-400 mb-1">نوع الحساب</p>
-                  <p className="text-white font-medium">
+                <div className="p-4 rounded-lg bg-gray-50">
+                  <p className="text-xs text-gray-500 mb-1">نوع الحساب</p>
+                  <p className="text-gray-900 font-medium">
                     {selectedUser.userType === "Lawyer" ? "محامي" : "عميل"}
                   </p>
                 </div>
-                <div className="p-4 rounded-lg bg-slate-900/50">
-                  <p className="text-xs text-slate-400 mb-1">الحالة</p>
+                <div className="p-4 rounded-lg bg-gray-50">
+                  <p className="text-xs text-gray-500 mb-1">الحالة</p>
                   <p
                     className={`font-medium ${selectedUser.status === "Active" ? "text-emerald-400" : "text-red-400"}`}
                   >
                     {selectedUser.status === "Active" ? "نشط" : "معلق"}
                   </p>
                 </div>
-                <div className="p-4 rounded-lg bg-slate-900/50">
-                  <p className="text-xs text-slate-400 mb-1">رقم الهاتف</p>
-                  <p className="text-white font-medium">
+                <div className="p-4 rounded-lg bg-gray-50">
+                  <p className="text-xs text-gray-500 mb-1">رقم الهاتف</p>
+                  <p className="text-gray-900 font-medium">
                     {selectedUser.phoneNumber ?? "—"}
                   </p>
                 </div>
-                <div className="p-4 rounded-lg bg-slate-900/50">
-                  <p className="text-xs text-slate-400 mb-1">تاريخ التسجيل</p>
-                  <p className="text-white font-medium">
+                <div className="p-4 rounded-lg bg-gray-50">
+                  <p className="text-xs text-gray-500 mb-1">تاريخ التسجيل</p>
+                  <p className="text-gray-900 font-medium">
                     {new Date(selectedUser.createdAt).toLocaleDateString(
                       "ar-EG",
                       {
@@ -550,9 +550,9 @@ const UserManagement = () => {
                     )}
                   </p>
                 </div>
-                <div className="p-4 rounded-lg bg-slate-900/50">
-                  <p className="text-xs text-slate-400 mb-1">آخر نشاط</p>
-                  <p className="text-white font-medium">
+                <div className="p-4 rounded-lg bg-gray-50">
+                  <p className="text-xs text-gray-500 mb-1">آخر نشاط</p>
+                  <p className="text-gray-900 font-medium">
                     {selectedUser.lastActionDate
                       ? new Date(
                           selectedUser.lastActionDate,
@@ -579,14 +579,14 @@ const UserManagement = () => {
       {/* Suspend Dialog */}
 
       <Dialog open={!!userToToggle} onOpenChange={() => setUserToToggle(null)}>
-        <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+        <DialogContent className="bg-white border-gray-200" dir="rtl">
           <DialogHeader className="mt-4">
-            <DialogTitle className="text-white text-center">
+            <DialogTitle className="text-gray-900 text-center">
               {userToToggle?.status === "Active"
                 ? "تأكيد تعليق الحساب"
                 : "تأكيد استعادة الحساب"}
             </DialogTitle>
-            <DialogDescription className="text-slate-400 text-center">
+            <DialogDescription className="text-gray-500 text-center">
               هل أنت متأكد من{" "}
               {userToToggle?.status === "Active" ? "تعليق" : "استعادة"} حساب{" "}
               {userToToggle?.firstName} {userToToggle?.lastName}؟ سيتم منع
@@ -615,12 +615,12 @@ const UserManagement = () => {
       </Dialog>
       {/* Confirm Delete User */}
       <Dialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
-        <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+        <DialogContent className="bg-white border-gray-200" dir="rtl">
           <DialogHeader className="mt-4">
-            <DialogTitle className="text-white text-center">
+            <DialogTitle className="text-gray-900 text-center">
               تأكيد الحذف
             </DialogTitle>
-            <DialogDescription className="text-slate-400 text-center">
+            <DialogDescription className="text-gray-500 text-center">
               هل أنت متأكد من حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.
             </DialogDescription>
           </DialogHeader>

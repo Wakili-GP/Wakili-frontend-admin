@@ -129,7 +129,29 @@ const LawyerVerification = () => {
       toast.success("تم رفض طلب التوثيق بنجاح", {
         description: "تم إرسال سبب الرفض إلى المحامي عبر البريد الإلكتروني",
       });
-      queryClient.invalidateQueries(["verificationRequests"]);
+      queryClient.invalidateQueries({ queryKey: ["verificationRequests"] });
+    },
+    onError: () => {
+      toast.error("تعذر رفض طلب التوثيق", {
+        description: "حدث خطأ أثناء تنفيذ الطلب، يرجى المحاولة مرة أخرى",
+      });
+    },
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: (requestId: string) =>
+      verificationService.approveVerificationRequest(requestId),
+    onSuccess: () => {
+      setSelectedRequestId(null);
+      toast.success("تمت الموافقة على طلب التوثيق بنجاح", {
+        description: "تم توثيق المحامي وإشعاره بالنتيجة",
+      });
+      queryClient.invalidateQueries({ queryKey: ["verificationRequests"] });
+    },
+    onError: () => {
+      toast.error("تعذرت الموافقة على الطلب", {
+        description: "حدث خطأ أثناء تنفيذ الطلب، يرجى المحاولة مرة أخرى",
+      });
     },
   });
 
@@ -146,8 +168,8 @@ const LawyerVerification = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">توثيق المحامين</h1>
-        <p className="text-slate-400 mt-1">إدارة طلبات توثيق حسابات المحامين</p>
+        <h1 className="text-2xl font-bold text-gray-900">توثيق المحامين</h1>
+        <p className="text-gray-500 mt-1">إدارة طلبات توثيق حسابات المحامين</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -157,23 +179,23 @@ const LawyerVerification = () => {
               <UserCheck className="w-6 h-6 text-blue-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-gray-900">
                 {requests?.meta.total ?? 0}
               </p>
-              <p className="text-sm text-slate-400">إجمالي الطلبات</p>
+              <p className="text-sm text-gray-500">إجمالي الطلبات</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-500/10 border-slate-500/20">
+        <Card className="bg-gray-100 border-gray-200 shadow-sm">
           <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-slate-500/20 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-slate-300" />
+            <div className="w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center">
+              <Clock className="w-6 h-6 text-gray-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-gray-900">
                 {requests?.meta.pending ?? 0}
               </p>
-              <p className="text-sm text-slate-400">غير مكتملة</p>
+              <p className="text-sm text-gray-500">غير مكتملة</p>
             </div>
           </CardContent>
         </Card>
@@ -183,10 +205,10 @@ const LawyerVerification = () => {
               <UserCheck className="w-6 h-6 text-amber-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-gray-900">
                 {requests?.meta.underReview ?? 0}
               </p>
-              <p className="text-sm text-slate-400">مكتملة وبانتظار المراجعة</p>
+              <p className="text-sm text-gray-500">مكتملة وبانتظار المراجعة</p>
             </div>
           </CardContent>
         </Card>
@@ -196,10 +218,10 @@ const LawyerVerification = () => {
               <CheckCircle className="w-6 h-6 text-emerald-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-gray-900">
                 {requests?.meta.approved ?? 0}
               </p>
-              <p className="text-sm text-slate-400">تمت الموافقة</p>
+              <p className="text-sm text-gray-500">تمت الموافقة</p>
             </div>
           </CardContent>
         </Card>
@@ -209,20 +231,20 @@ const LawyerVerification = () => {
               <XCircle className="w-6 h-6 text-red-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-gray-900">
                 {requests?.meta.rejected ?? 0}
               </p>
-              <p className="text-sm text-slate-400">مرفوضة</p>
+              <p className="text-sm text-gray-500">مرفوضة</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row md:flex-wrap gap-4">
             <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <Input
                 placeholder="البحث بالاسم أو البريد الإلكتروني..."
                 value={searchQuery}
@@ -230,7 +252,7 @@ const LawyerVerification = () => {
                   setCurrentPage(1);
                   setSearchQuery(e.target.value);
                 }}
-                className="pr-10 bg-slate-900/50 border-slate-600 text-white"
+                className="pr-10 bg-gray-50 border-gray-200 text-gray-900"
               />
             </div>
 
@@ -242,7 +264,7 @@ const LawyerVerification = () => {
                 setStatusFilter(value);
               }}
             >
-              <SelectTrigger className="cursor-pointer w-full md:w-48 bg-slate-900/50 border-slate-600 text-white">
+              <SelectTrigger className="cursor-pointer w-full md:w-48 bg-gray-50 border-gray-200 text-gray-900">
                 <Filter className="w-4 h-4 ml-2" />
                 <SelectValue placeholder="فلترة حسب الحالة" />
               </SelectTrigger>
@@ -273,7 +295,7 @@ const LawyerVerification = () => {
                 setDateFilter(value);
               }}
             >
-              <SelectTrigger className="cursor-pointer w-full md:w-48 bg-slate-900/50 border-slate-600 text-white">
+              <SelectTrigger className="cursor-pointer w-full md:w-48 bg-gray-50 border-gray-200 text-gray-900">
                 <Clock className="w-4 h-4 ml-2" />
                 <SelectValue placeholder="فلترة التاريخ" />
               </SelectTrigger>
@@ -304,7 +326,7 @@ const LawyerVerification = () => {
                 setSortDescending(value === "desc");
               }}
             >
-              <SelectTrigger className="cursor-pointer w-full md:w-40 bg-slate-900/50 border-slate-600 text-white">
+              <SelectTrigger className="cursor-pointer w-full md:w-40 bg-gray-50 border-gray-200 text-gray-900">
                 <SelectValue placeholder="اتجاه الفرز" />
               </SelectTrigger>
               <SelectContent>
@@ -320,9 +342,9 @@ const LawyerVerification = () => {
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-gray-900 flex items-center gap-2">
             <UserCheck className="w-5 h-5 text-amber-500" />
             طلبات التوثيق
           </CardTitle>
@@ -331,32 +353,32 @@ const LawyerVerification = () => {
           {isPending ? (
             <div className="text-center py-12">
               <Spinner className="w-8 h-8 mx-auto text-amber-400 mb-3" />
-              <p className="text-slate-400">جاري تحميل الطلبات...</p>
+              <p className="text-gray-500">جاري تحميل الطلبات...</p>
             </div>
           ) : paginatedRequests.length > 0 ? (
             <>
               <Table>
                 <TableHeader>
-                  <TableRow className="border-slate-700 hover:bg-slate-900/50">
-                    <TableHead className="text-slate-400 text-right">
+                  <TableRow className="border-gray-200 hover:bg-gray-50">
+                    <TableHead className="text-gray-500 text-right">
                       المحامي
                     </TableHead>
-                    <TableHead className="text-slate-400 text-center">
+                    <TableHead className="text-gray-500 text-center">
                       التخصص
                     </TableHead>
-                    <TableHead className="text-slate-400 text-center">
+                    <TableHead className="text-gray-500 text-center">
                       تاريخ التقديم
                     </TableHead>
-                    <TableHead className="text-slate-400 text-center">
+                    <TableHead className="text-gray-500 text-center">
                       تاريخ الموافقة/الرفض
                     </TableHead>
-                    <TableHead className="text-slate-400 text-center">
+                    <TableHead className="text-gray-500 text-center">
                       تمت الموافقة/الرفض بواسطة
                     </TableHead>
-                    <TableHead className="text-slate-400 text-center">
+                    <TableHead className="text-gray-500 text-center">
                       الحالة
                     </TableHead>
-                    <TableHead className="text-slate-400 text-center">
+                    <TableHead className="text-gray-500 text-center">
                       الإجراءات
                     </TableHead>
                   </TableRow>
@@ -365,9 +387,9 @@ const LawyerVerification = () => {
                   {paginatedRequests.map((request) => (
                     <TableRow
                       key={request.id}
-                      className="border-slate-700 hover:bg-slate-900/50"
+                      className="border-gray-200 hover:bg-gray-50"
                     >
-                      <TableCell className="text-white font-medium text-right w-54">
+                      <TableCell className="text-gray-900 font-medium text-right w-54">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-500/20">
                             {request.profileImageUrl ? (
@@ -381,16 +403,16 @@ const LawyerVerification = () => {
                             )}
                           </div>
                           <div>
-                            <p className="text-white font-medium">
+                            <p className="text-gray-900 font-medium">
                               {request.firstName} {request.lastName}
                             </p>
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-gray-500">
                               {request.email}
                             </p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-slate-300 text-center">
+                      <TableCell className="text-gray-600 text-center">
                         {(Array.isArray(request.specializations)
                           ? request.specializations
                           : (
@@ -410,22 +432,22 @@ const LawyerVerification = () => {
                           </Badge>
                         ))}
                       </TableCell>
-                      <TableCell className="text-slate-400 text-center">
+                      <TableCell className="text-gray-500 text-center">
                         <div className="space-y-1">
                           <p>{formatDateTime(request.submittedAt)}</p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-gray-400">
                             {timeAgo(request.submittedAt)}
                           </p>
                         </div>
                       </TableCell>
-                      <TableCell className="text-slate-400 text-center">
+                      <TableCell className="text-gray-500 text-center">
                         <div className="space-y-1">
                           {request.status === "Approved" && (
                             <>
                               <p className="text-emerald-400">
                                 {formatDateTime(request.approvedAt)}
                               </p>
-                              <p className="text-xs text-slate-500">
+                              <p className="text-xs text-gray-400">
                                 {timeAgo(request.approvedAt)}
                               </p>
                             </>
@@ -437,7 +459,7 @@ const LawyerVerification = () => {
                               <p className="text-red-400">
                                 {formatDateTime(request.rejectedAt)}
                               </p>
-                              <p className="text-xs text-slate-500">
+                              <p className="text-xs text-gray-400">
                                 {timeAgo(request.rejectedAt)}
                               </p>
                             </>
@@ -445,7 +467,7 @@ const LawyerVerification = () => {
                         </div>
                       </TableCell>
                       <TableCell
-                        className={`${request.status === "Approved" ? "text-emerald-400" : request.status === "UnderReview" ? "text-amber-400" : request.status === "Rejected" ? "text-red-400" : "text-slate-400"} text-center`}
+                        className={`${request.status === "Approved" ? "text-emerald-400" : request.status === "UnderReview" ? "text-amber-400" : request.status === "Rejected" ? "text-red-400" : "text-gray-500"} text-center`}
                       >
                         {request.status === "Approved" &&
                           "تمت الموافقة بواسطة: " + request.approvedBy}
@@ -474,7 +496,7 @@ const LawyerVerification = () => {
               </Table>
 
               <div className="mt-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-gray-500">
                   عرض {pageStart} - {pageEnd} من{" "}
                   {requests?.totalCount ?? requests?.totalItems ?? 0}
                 </p>
@@ -489,10 +511,10 @@ const LawyerVerification = () => {
                       setCurrentPage(1);
                     }}
                   >
-                    <SelectTrigger className="cursor-pointer w-28 bg-slate-900/50 border-slate-600 text-slate-200">
+                    <SelectTrigger className="cursor-pointer w-28 bg-gray-50 border-gray-200 text-gray-700">
                       <SelectValue placeholder="الحجم" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700 text-slate-200">
+                    <SelectContent className="bg-white border-gray-200 text-gray-700">
                       <SelectItem className="cursor-pointer" value="8">
                         8
                       </SelectItem>
@@ -514,7 +536,7 @@ const LawyerVerification = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="border-slate-600 text-slate-300"
+                    className="border-gray-200 text-gray-600"
                     disabled={activePage === totalPages}
                     onClick={() =>
                       setCurrentPage((prev) => Math.min(totalPages, prev + 1))
@@ -528,7 +550,7 @@ const LawyerVerification = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="border-slate-600 text-slate-300"
+                    className="border-gray-200 text-gray-600"
                     disabled={activePage === 1}
                     onClick={() =>
                       setCurrentPage((prev) => Math.max(1, prev - 1))
@@ -543,8 +565,8 @@ const LawyerVerification = () => {
             </>
           ) : (
             <div className="text-center py-12">
-              <FolderOpen className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-              <p className="text-slate-400">لا يوجد مستخدمين مطابقين للبحث</p>
+              <FolderOpen className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500">لا يوجد مستخدمين مطابقين للبحث</p>
             </div>
           )}
         </CardContent>
@@ -556,12 +578,12 @@ const LawyerVerification = () => {
           if (!open) setSelectedRequestId(null);
         }}
       >
-        <DialogContent className="bg-slate-800 border-slate-700 w-250 max-w-[95vw] max-h-[90vh] overflow-hidden flex flex-col [&>button]:left-4 [&>button]:right-auto">
+        <DialogContent className="bg-white border-gray-200 w-250 max-w-[95vw] max-h-[90vh] overflow-hidden flex flex-col [&>button]:left-4 [&>button]:right-auto">
           <DialogHeader className="mt-4">
-            <DialogTitle className="text-white text-xl text-center">
+            <DialogTitle className="text-gray-900 text-xl text-center">
               تفاصيل طلب التوثيق
             </DialogTitle>
-            <DialogDescription className="text-slate-400 text-center">
+            <DialogDescription className="text-gray-500 text-center">
               {viewRequest?.status === "Approved"
                 ? "تم الموافقة علي طلب توثيق هذا المحامي"
                 : "مراجعة جميع البيانات المقدمة من المحامي"}
@@ -577,12 +599,12 @@ const LawyerVerification = () => {
               }}
             >
               <div dir="rtl" className="space-y-6 w-full">
-                <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800/50 shadow-sm">
-                  <h3 className="text-lg font-semibold text-amber-400 mb-5 flex items-center gap-2 pb-3 border-b border-slate-800">
+                <div className="p-5 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
+                  <h3 className="text-lg font-semibold text-amber-400 mb-5 flex items-center gap-2 pb-3 border-b border-gray-200">
                     <UserCheck className="w-5 h-5" />
                     المعلومات الأساسية
                   </h3>
-                  <div className="flex items-start gap-4 mb-6 bg-slate-800/30 p-4 rounded-xl border border-slate-700/30">
+                  <div className="flex items-start gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200/30">
                     {viewRequest.profileImage ? (
                       <img
                         src={viewRequest.profileImage}
@@ -595,68 +617,68 @@ const LawyerVerification = () => {
                       </div>
                     )}
                     <div className="flex-1">
-                      <h4 className="text-2xl font-bold text-white mb-1">
+                      <h4 className="text-2xl font-bold text-gray-900 mb-1">
                         {viewRequest.firstName} {viewRequest.lastName}
                       </h4>
-                      <p className="text-slate-400 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
+                      <p className="text-gray-500 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
                         {viewRequest.bio || "لا يوجد نبذة تعريفية"}
                       </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors">
-                      <p className="text-xs text-slate-400 mb-1 flex items-center gap-1">
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors">
+                      <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                         <FolderOpen className="w-3 h-3" /> رقم المحامي التعريفي
                       </p>
-                      <p className="text-white font-medium text-sm">
+                      <p className="text-gray-900 font-medium text-sm">
                         {viewRequest.id}
                       </p>
                     </div>
-                    <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors">
-                      <p className="text-xs text-slate-400 mb-1">
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors">
+                      <p className="text-xs text-gray-500 mb-1">
                         البريد الإلكتروني
                       </p>
                       <p
-                        className="text-white font-medium text-sm truncate"
+                        className="text-gray-900 font-medium text-sm truncate"
                         title={viewRequest.email}
                       >
                         {viewRequest.email}
                       </p>
                     </div>
-                    <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors">
-                      <p className="text-xs text-slate-400 mb-1">رقم الهاتف</p>
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors">
+                      <p className="text-xs text-gray-500 mb-1">رقم الهاتف</p>
                       <p
-                        className="text-white font-medium text-sm"
+                        className="text-gray-900 font-medium text-sm"
                         style={{ direction: "ltr", textAlign: "right" }}
                       >
                         {viewRequest.phone || "-"}
                       </p>
                     </div>
-                    <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors">
-                      <p className="text-xs text-slate-400 mb-1">الموقع</p>
-                      <p className="text-white font-medium text-sm">
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors">
+                      <p className="text-xs text-gray-500 mb-1">الموقع</p>
+                      <p className="text-gray-900 font-medium text-sm">
                         {viewRequest.location.city}،{" "}
                         {viewRequest.location.country}
                       </p>
                     </div>
-                    <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors">
-                      <p className="text-xs text-slate-400 mb-1 flex items-center gap-1">
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors">
+                      <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                         <Clock className="w-3 h-3" /> تاريخ التقديم
                       </p>
-                      <p className="text-white font-medium text-sm">
+                      <p className="text-gray-900 font-medium text-sm">
                         {formatDateTime(viewRequest.submittedAt)}
                       </p>
                     </div>
-                    <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors">
-                      <p className="text-xs text-slate-400 mb-1 flex items-center gap-1">
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors">
+                      <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                         <Briefcase className="w-3 h-3" /> سنوات الخبرة
                       </p>
-                      <p className="text-white font-medium text-sm">
+                      <p className="text-gray-900 font-medium text-sm">
                         {viewRequest.yearsExperience} سنة
                       </p>
                     </div>
-                    <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors col-span-2 md:col-span-3">
-                      <p className="text-xs text-slate-400 mb-2">التخصصات</p>
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors col-span-2 md:col-span-3">
+                      <p className="text-xs text-gray-500 mb-2">التخصصات</p>
                       <div className="flex flex-wrap gap-2">
                         {viewRequest.specialty.map((s: string, i: number) => (
                           <Badge
@@ -668,8 +690,8 @@ const LawyerVerification = () => {
                         ))}
                       </div>
                     </div>
-                    <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors col-span-2 md:col-span-3 border-b-2 border-b-purple-500/20">
-                      <p className="text-xs text-slate-400 mb-2">
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors col-span-2 md:col-span-3 border-b-2 border-b-purple-500/20">
+                      <p className="text-xs text-gray-500 mb-2">
                         أنواع الجلسات
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -678,7 +700,7 @@ const LawyerVerification = () => {
                             <Badge
                               key={i}
                               variant="outline"
-                              className="border-slate-600 text-slate-300 bg-slate-800/50"
+                              className="border-gray-200 text-gray-600 bg-white"
                             >
                               {s === 0 && "مكتبية"}
                               {s === 1 && "هاتفيه"}
@@ -687,8 +709,8 @@ const LawyerVerification = () => {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors col-span-2 md:col-span-3">
-                      <p className="text-sm font-medium text-slate-300">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors col-span-2 md:col-span-3">
+                      <p className="text-sm font-medium text-gray-600">
                         حالة الطلب
                       </p>
                       <div>
@@ -698,8 +720,8 @@ const LawyerVerification = () => {
                   </div>
                 </div>
 
-                <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800/50 shadow-sm">
-                  <h3 className="text-lg font-semibold text-amber-400 mb-5 flex items-center gap-2 pb-3 border-b border-slate-800">
+                <div className="p-5 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
+                  <h3 className="text-lg font-semibold text-amber-400 mb-5 flex items-center gap-2 pb-3 border-b border-gray-200">
                     <Award className="w-5 h-5" />
                     المؤهلات العلمية
                   </h3>
@@ -709,27 +731,27 @@ const LawyerVerification = () => {
                         (edu: Education, i: number) => (
                           <div
                             key={i}
-                            className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/80 transition-colors flex flex-col justify-between gap-3 h-full"
+                            className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white transition-colors flex flex-col justify-between gap-3 h-full"
                           >
                             <div>
-                              <p className="text-white font-medium text-base mb-1">
+                              <p className="text-gray-900 font-medium text-base mb-1">
                                 {edu.degreeType} في {edu.fieldOfStudy}
                               </p>
-                              <p className="text-slate-400 text-sm flex items-center gap-1.5">
+                              <p className="text-gray-500 text-sm flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                 {edu.university}
                               </p>
-                              <p className="text-slate-500 text-sm mt-1">
+                              <p className="text-gray-400 text-sm mt-1">
                                 سنة التخرج: {edu.graduationYear}
                               </p>
                             </div>
                             {edu.document && (
-                              <div className="pt-3 mt-auto border-t border-slate-700/50">
+                              <div className="pt-3 mt-auto border-t border-gray-200/50">
                                 <a
                                   href={edu.document}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex w-full items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-amber-400 hover:text-amber-300 transition-colors text-sm font-medium"
+                                  className="inline-flex w-full items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-100 text-amber-400 hover:text-amber-300 transition-colors text-sm font-medium"
                                 >
                                   <FileText className="w-4 h-4" />
                                   عرض المستند
@@ -741,16 +763,16 @@ const LawyerVerification = () => {
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-8 bg-slate-800/20 rounded-xl border border-dashed border-slate-700/50">
-                      <p className="text-slate-400">
+                    <div className="text-center py-8 bg-gray-50/50 rounded-xl border border-dashed border-gray-300">
+                      <p className="text-gray-500">
                         لا توجد مؤهلات علمية مسجلة
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800/50 shadow-sm">
-                  <h3 className="text-lg font-semibold text-amber-400 mb-5 flex items-center gap-2 pb-3 border-b border-slate-800">
+                <div className="p-5 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
+                  <h3 className="text-lg font-semibold text-amber-400 mb-5 flex items-center gap-2 pb-3 border-b border-gray-200">
                     <FileText className="w-5 h-5" />
                     الشهادات المهنية
                   </h3>
@@ -760,27 +782,27 @@ const LawyerVerification = () => {
                         (cert: Certification, i: number) => (
                           <div
                             key={i}
-                            className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/80 transition-colors flex flex-col justify-between gap-3 h-full"
+                            className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white transition-colors flex flex-col justify-between gap-3 h-full"
                           >
                             <div>
-                              <p className="text-white font-medium text-base mb-1">
+                              <p className="text-gray-900 font-medium text-base mb-1">
                                 {cert.name}
                               </p>
-                              <p className="text-slate-400 text-sm flex items-center gap-1.5">
+                              <p className="text-gray-500 text-sm flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                 {cert.issuingOrg}
                               </p>
-                              <p className="text-slate-500 text-sm mt-1">
+                              <p className="text-gray-400 text-sm mt-1">
                                 سنة الحصول عليها: {cert.yearObtained}
                               </p>
                             </div>
                             {cert.document && (
-                              <div className="pt-3 mt-auto border-t border-slate-700/50">
+                              <div className="pt-3 mt-auto border-t border-gray-200/50">
                                 <a
                                   href={cert.document}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex w-full items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-amber-400 hover:text-amber-300 transition-colors text-sm font-medium"
+                                  className="inline-flex w-full items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-100 text-amber-400 hover:text-amber-300 transition-colors text-sm font-medium"
                                 >
                                   <FileText className="w-4 h-4" />
                                   عرض المستند
@@ -792,16 +814,16 @@ const LawyerVerification = () => {
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-8 bg-slate-800/20 rounded-xl border border-dashed border-slate-700/50">
-                      <p className="text-slate-400">
+                    <div className="text-center py-8 bg-gray-50/50 rounded-xl border border-dashed border-gray-300">
+                      <p className="text-gray-500">
                         لا توجد شهادات مهنية مسجلة
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800/50 shadow-sm">
-                  <h3 className="text-lg font-semibold text-amber-400 mb-5 flex items-center gap-2 pb-3 border-b border-slate-800">
+                <div className="p-5 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
+                  <h3 className="text-lg font-semibold text-amber-400 mb-5 flex items-center gap-2 pb-3 border-b border-gray-200">
                     <Clock className="w-5 h-5" />
                     الخبرات العملية
                   </h3>
@@ -811,11 +833,11 @@ const LawyerVerification = () => {
                         (exp: WorkExperience, i: number) => (
                           <div
                             key={i}
-                            className="p-5 rounded-xl bg-slate-800/40 border-r-4 border-slate-700/50 border-r-emerald-500 hover:bg-slate-800/60 transition-colors"
+                            className="p-5 rounded-xl bg-gray-50 border-r-4 border-gray-200/50 border-r-emerald-500 hover:bg-white/60 transition-colors"
                           >
                             <div className="flex items-start justify-between mb-3">
                               <div>
-                                <p className="text-white font-bold text-lg mb-1">
+                                <p className="text-gray-900 font-bold text-lg mb-1">
                                   {exp.jobTitle}
                                 </p>
                                 <p className="text-emerald-400 font-medium text-sm flex items-center gap-2">
@@ -827,7 +849,7 @@ const LawyerVerification = () => {
                                 className={
                                   exp.isCurrentJob
                                     ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-3 py-1"
-                                    : "bg-slate-800 text-slate-300 border-slate-600 px-3 py-1"
+                                    : "bg-white text-gray-600 border-gray-200 px-3 py-1"
                                 }
                               >
                                 {exp.isCurrentJob
@@ -835,7 +857,7 @@ const LawyerVerification = () => {
                                   : `${exp.startYear} - ${exp.endYear}`}
                               </Badge>
                             </div>
-                            <p className="text-slate-400 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap bg-slate-900/30 p-3 rounded-lg border border-slate-800">
+                            <p className="text-gray-500 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap bg-gray-50/30 p-3 rounded-lg border border-gray-200">
                               {exp.description}
                             </p>
                           </div>
@@ -843,37 +865,37 @@ const LawyerVerification = () => {
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-8 bg-slate-800/20 rounded-xl border border-dashed border-slate-700/50">
-                      <p className="text-slate-400">
+                    <div className="text-center py-8 bg-gray-50/50 rounded-xl border border-dashed border-gray-300">
+                      <p className="text-gray-500">
                         لا توجد خبرات عملية مسجلة
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800/50 shadow-sm">
-                  <h3 className="text-lg font-semibold text-amber-400 mb-5 flex items-center gap-2 pb-3 border-b border-slate-800">
+                <div className="p-5 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
+                  <h3 className="text-lg font-semibold text-amber-400 mb-5 flex items-center gap-2 pb-3 border-b border-gray-200">
                     <FolderOpen className="w-5 h-5" />
                     مستندات التوثيق
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors text-center">
-                      <p className="text-xs text-slate-400 mb-2">رقم الرخصة</p>
-                      <p className="text-white font-bold text-lg">
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors text-center">
+                      <p className="text-xs text-gray-500 mb-2">رقم الرخصة</p>
+                      <p className="text-gray-900 font-bold text-lg">
                         {viewRequest.verification.lawyerLicenseNumber || "-"}
                       </p>
                     </div>
-                    <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors text-center">
-                      <p className="text-xs text-slate-400 mb-2">جهة الإصدار</p>
-                      <p className="text-white font-bold text-lg">
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors text-center">
+                      <p className="text-xs text-gray-500 mb-2">جهة الإصدار</p>
+                      <p className="text-gray-900 font-bold text-lg">
                         {viewRequest.verification
                           .lawyerLicenseIssuingAuthority || "-"}
                       </p>
                     </div>
-                    <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors text-center">
-                      <p className="text-xs text-slate-400 mb-2">سنة الإصدار</p>
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors text-center">
+                      <p className="text-xs text-gray-500 mb-2">سنة الإصدار</p>
                       <p
-                        className="text-white font-bold text-lg"
+                        className="text-gray-900 font-bold text-lg"
                         style={{ direction: "ltr" }}
                       >
                         {viewRequest.verification.lawyerLicenseYearOfIssue ||
@@ -883,12 +905,12 @@ const LawyerVerification = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-slate-900/80 flex items-center justify-center border border-slate-700">
-                          <FileText className="w-5 h-5 text-slate-400" />
+                        <div className="w-10 h-10 rounded-lg bg-gray-50/80 flex items-center justify-center border border-gray-200">
+                          <FileText className="w-5 h-5 text-gray-500" />
                         </div>
-                        <span className="text-slate-200 font-medium">
+                        <span className="text-gray-700 font-medium">
                           بطاقة الهوية (الأمام)
                         </span>
                       </div>
@@ -917,12 +939,12 @@ const LawyerVerification = () => {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-slate-900/80 flex items-center justify-center border border-slate-700">
-                          <FileText className="w-5 h-5 text-slate-400" />
+                        <div className="w-10 h-10 rounded-lg bg-gray-50/80 flex items-center justify-center border border-gray-200">
+                          <FileText className="w-5 h-5 text-gray-500" />
                         </div>
-                        <span className="text-slate-200 font-medium">
+                        <span className="text-gray-700 font-medium">
                           بطاقة الهوية (الخلف)
                         </span>
                       </div>
@@ -951,12 +973,12 @@ const LawyerVerification = () => {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-colors">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-200/50 hover:bg-white/60 transition-colors">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-slate-900/80 flex items-center justify-center border border-slate-700">
-                          <Award className="w-5 h-5 text-slate-400" />
+                        <div className="w-10 h-10 rounded-lg bg-gray-50/80 flex items-center justify-center border border-gray-200">
+                          <Award className="w-5 h-5 text-gray-500" />
                         </div>
-                        <span className="text-slate-200 font-medium">
+                        <span className="text-gray-700 font-medium">
                           رخصة المحاماة
                         </span>
                       </div>
@@ -993,24 +1015,35 @@ const LawyerVerification = () => {
                       onClick={() => {
                         setRejectDialogOpen(true);
                       }}
+                      disabled={
+                        rejectMutation.isPending || approveMutation.isPending
+                      }
                       className="border-red-500/20 text-red-400 hover:bg-red-500/10"
                     >
                       <XCircle className="w-4 h-4 ml-2" />
                       رفض
                     </Button>
                     <Button
-                      onClick={() => null}
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                      onClick={() =>
+                        selectedRequestId &&
+                        approveMutation.mutate(selectedRequestId)
+                      }
+                      disabled={
+                        rejectMutation.isPending || approveMutation.isPending
+                      }
+                      className="bg-emerald-500 hover:bg-emerald-600 text-gray-900"
                     >
                       <CheckCircle className="w-4 h-4 ml-2" />
-                      الموافقة والتوثيق
+                      {approveMutation.isPending
+                        ? "جاري التوثيق..."
+                        : "الموافقة والتوثيق"}
                     </Button>
                   </DialogFooter>
                 )}
 
                 {viewRequest.status === "Pending" && (
                   <DialogFooter className="gap-2">
-                    <p className="text-slate-400 text-sm w-full text-center">
+                    <p className="text-gray-500 text-sm w-full text-center">
                       هذا الطلب غير مكتمل من جهة المحامي ولا يمكن اتخاذ إجراء
                       حالياً.
                     </p>
@@ -1039,10 +1072,10 @@ const LawyerVerification = () => {
       </Dialog>
 
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="bg-slate-800 border-slate-700">
+        <DialogContent className="bg-white border-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-white">رفض طلب التوثيق</DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogTitle className="text-gray-900">رفض طلب التوثيق</DialogTitle>
+            <DialogDescription className="text-gray-500">
               يرجى توضيح أسباب رفض الطلب ليتمكن المحامي من إعادة التقديم
             </DialogDescription>
           </DialogHeader>
@@ -1050,13 +1083,13 @@ const LawyerVerification = () => {
             placeholder="اكتب أسباب الرفض هنا..."
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
-            className="bg-slate-900/50 border-slate-600 text-white min-h-30"
+            className="bg-gray-50 border-gray-200 text-gray-900 min-h-30"
           />
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setRejectDialogOpen(false)}
-              className="border-slate-600 text-slate-300"
+              className="border-gray-200 text-gray-600"
             >
               إلغاء
             </Button>
@@ -1067,10 +1100,10 @@ const LawyerVerification = () => {
                   reason: rejectionReason,
                 })
               }
-              disabled={!rejectionReason}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              disabled={!rejectionReason || rejectMutation.isPending}
+              className="bg-red-500 hover:bg-red-600 text-gray-900"
             >
-              تأكيد الرفض
+              {rejectMutation.isPending ? "جاري الرفض..." : "تأكيد الرفض"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1083,7 +1116,7 @@ const getVerificatoinStatusBadge = (status: string) => {
   switch (status) {
     case "Pending":
       return (
-        <Badge className="bg-slate-500/10 text-slate-400 border-slate-500/20">
+        <Badge className="bg-gray-100 text-gray-500 border-gray-200">
           غير مكتمل
         </Badge>
       );

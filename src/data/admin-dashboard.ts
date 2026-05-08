@@ -5,34 +5,35 @@ import {
   MessageSquare,
   CheckCircle,
 } from "lucide-react";
+import type { CredentialItem } from "@/services/credential-services";
 export const stats = [
   {
     title: "إجمالي المستخدمين",
     value: "2,847",
     change: "+12%",
     icon: Users,
-    color: "from-blue-500 to-blue-600",
+    color: "bg-blue-50 text-blue-600",
   },
   {
     title: "طلبات التوثيق المعلقة",
     value: "23",
     change: "-5%",
     icon: UserCheck,
-    color: "from-amber-500 to-amber-600",
+    color: "bg-amber-50 text-amber-600",
   },
   {
     title: "المواعيد هذا الشهر",
     value: "1,284",
     change: "+18%",
     icon: Calendar,
-    color: "from-emerald-500 to-emerald-600",
+    color: "bg-emerald-50 text-emerald-600",
   },
   {
     title: "المراجعات الجديدة",
     value: "156",
     change: "+8%",
     icon: MessageSquare,
-    color: "from-purple-500 to-purple-600",
+    color: "bg-purple-50 text-purple-600",
   },
 ];
 
@@ -77,3 +78,23 @@ export const notifications = [
   { type: "email", count: 45, label: "رسائل مُرسلة اليوم" },
   { type: "notification", count: 128, label: "إشعارات مُرسلة اليوم" },
 ];
+
+export const mockCredentialPreview: CredentialItem = {
+  id: "mock-credential-1",
+  lawyerId: "mock-lawyer-1",
+  lawyerFirstName: "أحمد",
+  lawyerLastName: "السيد",
+  lawyerEmail: "ahmad.alsayed@example.com",
+  lawyerProfileImage: null,
+  type: "Education",
+  submittedAt: "2026-04-20T10:30:00.000Z",
+  status: "Pending",
+  reviewedBy: null,
+  reviewedAt: null,
+  rejectionReason: null,
+  degree: "بكالوريوس قانون",
+  fieldOfStudy: "القانون العام",
+  university: "جامعة القاهرة",
+  graduationYear: "2022",
+  documentUrl: "#",
+};

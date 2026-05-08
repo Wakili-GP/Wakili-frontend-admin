@@ -3,6 +3,18 @@
 
 html {
   font-family: "Cairo", sans-serif;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+html body[data-scroll-locked] {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+}
+
+body[data-scroll-locked] {
+  padding-right: 0 !important;
+  margin-right: 0 !important;
 }
 
 /* Custom scrollbar for dialog */
@@ -13,9 +25,15 @@ html {
   background: transparent;
 }
 .dialog-scroll::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: #cbd5e1;
   border-radius: 3px;
 }
 .dialog-scroll::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: #94a3b8;
+}
+
+/* Prevent Radix Dialog from shifting the layout in RTL */
+body[data-scroll-locked] {
+  padding-right: 0 !important;
+  padding-left: 0 !important;
 }
