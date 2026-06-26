@@ -11,6 +11,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ReviewModeration from "./admin/ReviewModeration";
 import SpecializationsManagement from "./admin/SpecializationsManagement";
 import ArticlesManagement from "./admin/ArticlesManagement";
+import AdminEarnings from "./admin/AdminEarnings";
+import AdminPayrolls from "./admin/AdminPayrolls";
+import AdminPayrollDetails from "./admin/AdminPayrollDetails";
 import "./App.css";
 function App() {
   return (
@@ -31,6 +34,9 @@ function App() {
               element={<SpecializationsManagement />}
             />
             <Route path="articles" element={<ArticlesManagement />} />
+            <Route path="earnings" element={<AdminEarnings />} />
+            <Route path="payrolls" element={<AdminPayrolls />} />
+            <Route path="payrolls/:id" element={<AdminPayrollDetails />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

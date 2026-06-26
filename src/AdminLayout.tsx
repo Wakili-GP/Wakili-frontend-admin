@@ -17,6 +17,8 @@ import {
   BookOpen,
   GraduationCap,
   Scale,
+  DollarSign,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -59,6 +61,16 @@ const navItems = [
     path: "/articles",
     label: "إدارة المقالات",
     icon: BookOpen,
+  },
+  {
+    path: "/earnings",
+    label: "الأرباح",
+    icon: DollarSign,
+  },
+  {
+    path: "/payrolls",
+    label: "كشوفات الرواتب",
+    icon: FileText,
   },
 ];
 
