@@ -324,7 +324,7 @@ const ReviewModeration = () => {
                 <TableHead className="font-semibold text-right">الذكاء الاصطناعي</TableHead>
                 <TableHead className="font-semibold text-right">التاريخ</TableHead>
                 <TableHead className="font-semibold text-right">الحالة</TableHead>
-                <TableHead className="font-semibold text-right">المشرف والتاريخ</TableHead>
+
                 <TableHead className="font-semibold text-right">إجراءات</TableHead>
               </TableRow>
             </TableHeader>
@@ -335,9 +335,9 @@ const ReviewModeration = () => {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <img
-                          src={review.client.profileImageUrl}
+                          src={review.client.profileImageUrl || undefined}
                           alt="avatar"
-                          className="w-10 h-10 rounded-full border border-gray-200 object-cover"
+                          className="w-10 h-10 rounded-full border border-gray-200 object-cover bg-gray-200"
                         />
                         <div className="flex flex-col">
                           <span className="font-medium text-gray-900">
@@ -398,16 +398,7 @@ const ReviewModeration = () => {
                         {getStatusLabel(review.visibility.toLowerCase())}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      {review.statusChangedBy && review.statusChangedAt ? (
-                        <div className="flex flex-col">
-                          <span className="font-medium text-gray-900 text-sm">{review.statusChangedBy}</span>
-                          <span className="text-xs text-gray-500">{formatDate(review.statusChangedAt)}</span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-sm">-</span>
-                      )}
-                    </TableCell>
+
                     <TableCell>
                       <div className="flex gap-2">
                         <Button

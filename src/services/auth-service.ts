@@ -27,6 +27,7 @@ export interface AuthAdmin extends Token {
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
+  error?: string;
 }
 
 const AuthServices = {

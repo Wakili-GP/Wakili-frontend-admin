@@ -1,4 +1,5 @@
-import httpClient, { type ApiResponse } from "@/services/api/httpClient";
+import httpClient from "@/services/api/HttpClient";
+import type { ApiResponse } from "@/services/auth-service";
 
 export interface EarningDto {
   id: number;

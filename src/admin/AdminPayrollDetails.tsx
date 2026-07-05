@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, FileText, Loader2, DollarSign } from "lucide-react";
+import { ArrowRight, Loader2, DollarSign } from "lucide-react";
 import adminFinancialService from "@/services/financial.service";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 

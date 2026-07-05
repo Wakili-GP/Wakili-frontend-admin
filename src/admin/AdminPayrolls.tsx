@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, Loader2, PlayCircle, CheckCircle, XCircle, Eye } from "lucide-react";
 import adminFinancialService from "@/services/financial.service";
-import httpClient from "@/services/api/httpClient";
+import httpClient from "@/services/api/HttpClient";
 import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
