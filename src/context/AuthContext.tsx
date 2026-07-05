@@ -8,7 +8,7 @@ import {
 import AuthServices, {
   type Admin,
   type AdminLoginInput,
-} from "@/services/auth.service";
+} from "@/services/auth-service";
 
 export interface AuthContextType {
   isAuthenticated: boolean;

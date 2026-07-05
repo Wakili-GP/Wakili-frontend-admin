@@ -9,8 +9,11 @@ import NotFound from "./NotFound";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ReviewModeration from "./admin/ReviewModeration";
-import LawCategoriesManagement from "./admin/LawCategoriesManagement";
-import ArticlesManagement from "./admin/ArticlesManagement";
+import SpecializationsManagement from "./admin/SpecializationsManagement";
+import ForumsManagement from "./admin/ForumsManagement";
+import AdminEarnings from "./admin/AdminEarnings";
+import AdminPayrolls from "./admin/AdminPayrolls";
+import AdminPayrollDetails from "./admin/AdminPayrollDetails";
 import "./App.css";
 function App() {
   return (
@@ -26,8 +29,14 @@ function App() {
             <Route path="credentials" element={<CredentialReview />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="reviews" element={<ReviewModeration />} />
-            <Route path="categories" element={<LawCategoriesManagement />} />
-            <Route path="articles" element={<ArticlesManagement />} />
+            <Route
+              path="specializations"
+              element={<SpecializationsManagement />}
+            />
+            <Route path="forums" element={<ForumsManagement />} />
+            <Route path="earnings" element={<AdminEarnings />} />
+            <Route path="payrolls" element={<AdminPayrolls />} />
+            <Route path="payrolls/:id" element={<AdminPayrollDetails />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

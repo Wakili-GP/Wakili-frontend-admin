@@ -1,12 +1,12 @@
-import httpClient from "@/lib/HttpClient";
-import type { ApiResponse } from "@/services/auth.service";
+import httpClient from "@/services/api/HttpClient";
+import type { ApiResponse } from "@/services/auth-service";
 
 export interface Admin {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
-  role: "Admin";
+  role: "Admin" | "SuperAdmin";
   status: "Active" | "Inactive";
   createdAt: string;
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,18 +41,19 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import lawCategoriesService, {
-  type SpeciliazationInput,
-} from "@/services/specializations.service";
+import specializationsService, {
+  type SpecializationInput,
+} from "@/services/specializations-service";
 import {
-  LawCategorySchema,
-  type LawCategoryInput,
-} from "@/validation/category.schema";
+  SpecializationSchema,
+  type SpecializationSchemaInput,
+} from "@/schema/specializations-schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatDateTime, timeAgo } from "@/lib/utils";
 
-const LawCategoriesManagement = () => {
+const SpecializationsManagement = () => {
   // Modals state
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
@@ -69,75 +70,62 @@ const LawCategoriesManagement = () => {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<LawCategoryInput>({
-    resolver: zodResolver(LawCategorySchema),
+  } = useForm<SpecializationSchemaInput>({
+    resolver: zodResolver(SpecializationSchema),
     defaultValues: {
       name: "",
       description: "",
     },
   });
 
-  // Fetch Categories
-  const { data: categories } = useQuery({
-    queryKey: ["lawCategories"],
-    queryFn: () => lawCategoriesService.getAll(),
-    staleTime: 5 * 60 * 1000,
+  // Fetch Specializations
+  const { data: specializations } = useQuery({
+    queryKey: ["specializations"],
+    queryFn: specializationsService.getAll,
   });
 
-  // Filtered Categories
-  const filteredCategories = categories?.filter((c) => {
+  // Filtered Specializations based on search and active tab
+  const filteredSpecializations = specializations?.filter((c) => {
     const matchesSearch =
-      c.name.includes(searchQuery) || c.description?.includes(searchQuery);
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
     const matchesTab = activeTab === "all" ? true : c.isActive;
+
     return matchesSearch && matchesTab;
   });
 
   const queryClient = useQueryClient();
-  // Add New Category Mutation
-  const AddCategoryMutation = useMutation({
-    mutationKey: ["lawCategories", "Add"],
-    mutationFn: (data: LawCategoryInput) =>
-      lawCategoriesService.addCategory({
+  const addMutation = useMutation({
+    mutationFn: (data: SpecializationSchemaInput) =>
+      specializationsService.addSpecialization({
         ...data,
         isActive: true,
       }),
     onSuccess: () => {
       toast.success("تم إضافة الفئة بنجاح");
-      queryClient.invalidateQueries({ queryKey: ["lawCategories"] });
+      queryClient.invalidateQueries({ queryKey: ["specializations"] });
       setShowAddCategoryModal(false);
       reset();
     },
-    onError: () => {
-      toast.error("حدث خطأ أثناء إضافة الفئة");
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: SpecializationInput }) =>
+      specializationsService.update(id, data),
+
+    onSuccess: () => {
+      toast.success("تم تحديث الحالة");
+      queryClient.invalidateQueries({ queryKey: ["specializations"] });
     },
   });
 
-  // Toggle Category Active State Mutation
-  const ToggleActivityMutation = useMutation({
-    mutationKey: ["lawCategories", "ToggleActivity"],
-    mutationFn: ({ id, data }: { id: number; data: SpeciliazationInput }) =>
-      lawCategoriesService.deActivateCategory(id, data),
-    onSuccess: () => {
-      toast.success("تم تحديث حالة الفئة بنجاح");
-      queryClient.invalidateQueries({ queryKey: ["lawCategories"] });
-    },
-    onError: () => {
-      toast.error("حدث خطأ أثناء تحديث حالة الفئة");
-    },
-  });
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => specializationsService.delete(id),
 
-  // Deleting Category Mutation
-  const DeleteActivityMutation = useMutation({
-    mutationKey: ["lawCategories", "Delete"],
-    mutationFn: ({ id }: { id: number }) =>
-      lawCategoriesService.deleteActivity(id),
     onSuccess: () => {
-      toast.success("تم حذف الفئة بنجاح");
-      queryClient.invalidateQueries({ queryKey: ["lawCategories"] });
-      setDeleteConfirmId(null);
-    },
-    onError: () => {
-      toast.error("حدث خطأ أثناء حذف الفئة");
+      toast.success("تم الحذف بنجاح");
+      queryClient.invalidateQueries({ queryKey: ["specializations"] });
     },
   });
   return (
@@ -145,8 +133,8 @@ const LawCategoriesManagement = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">إدارة فئات القانون</h1>
-          <p className="text-slate-400 mt-1">إنشاء وإدارة فئات القانون</p>
+          <h1 className="text-2xl font-bold text-gray-900">إدارة فئات القانون</h1>
+          <p className="text-gray-500 mt-1">إنشاء وإدارة فئات القانون</p>
         </div>
         <Button
           onClick={() => setShowAddCategoryModal(true)}
@@ -160,31 +148,32 @@ const LawCategoriesManagement = () => {
       {/* Stats */}
 
       <div className="flex gap-4">
-        <Card className="bg-slate-800/50 border-slate-700 flex-1">
+        <Card className="bg-white border-gray-200 shadow-sm flex-1">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                <Scale className="w-6 h-6 text-white" />
+                <Scale className="w-6 h-6 text-gray-900" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">فئات القانون</p>
-                <p className="text-3xl font-bold text-white">
-                  {categories?.length}
+                <p className="text-sm text-gray-500">فئات القانون</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {specializations?.length ?? 0}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700 flex-1">
+        <Card className="bg-white border-gray-200 shadow-sm flex-1">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-                <Scale className="w-6 h-6 text-white" />
+                <Scale className="w-6 h-6 text-gray-900" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">الفئات النشطة</p>
-                <p className="text-3xl font-bold text-white">
-                  {filteredCategories?.filter((c) => c.isActive).length ?? 0}
+                <p className="text-sm text-gray-500">الفئات النشطة</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {filteredSpecializations?.filter((c) => c.isActive).length ??
+                    0}
                 </p>
               </div>
             </div>
@@ -193,15 +182,16 @@ const LawCategoriesManagement = () => {
       </div>
 
       {/* Tabs & Search */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <Tabs
+              dir="rtl"
               className="w-full md:w-auto"
               value={activeTab}
               onValueChange={(val) => setActiveTab(val as "all" | "active")}
             >
-              <TabsList className="bg-slate-900/50">
+              <TabsList className="bg-gray-50">
                 <TabsTrigger className="cursor-pointer" value="all">
                   جميع الفئات
                 </TabsTrigger>
@@ -211,12 +201,12 @@ const LawCategoriesManagement = () => {
               </TabsList>
             </Tabs>
             <div className="relative w-full md:w-64">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <Input
                 placeholder="ابحث..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10 bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500"
+                className="pr-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400"
               />
             </div>
           </div>
@@ -224,56 +214,60 @@ const LawCategoriesManagement = () => {
       </Card>
 
       {/* Categories Table */}
-      <Card className="bg-slate-800/50 border-slate-700">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-gray-900 flex items-center gap-2">
             <Scale className="w-5 h-5 text-amber-500" />
-            فئات القانون ({filteredCategories?.length})
+            فئات القانون ({filteredSpecializations?.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {filteredCategories ? (
+          {filteredSpecializations ? (
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-700 hover:bg-slate-900/50">
-                  <TableHead className="text-slate-400 text-center">
+                <TableRow className="border-gray-200 hover:bg-gray-50">
+                  <TableHead className="text-gray-500 text-center">
                     اسم الفئة
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     الوصف
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     تاريخ الإنشاء
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
                     الحالة
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-gray-500 text-center">
+                    عدد المحامين
+                  </TableHead>
+                  <TableHead className="text-gray-500 text-center">
+                    آخر تحديث
+                  </TableHead>
+                  <TableHead className="text-gray-500 text-center">
                     الإجراءات
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCategories?.map((category) => (
+                {filteredSpecializations?.map((category) => (
                   <TableRow
                     key={category.id}
-                    className="border-slate-700 hover:bg-slate-900/50"
+                    className="border-gray-200 hover:bg-gray-50"
                   >
-                    <TableCell className="text-white font-medium text-center">
+                    <TableCell className="text-gray-900 font-medium text-center">
                       {category.name}
                     </TableCell>
-                    <TableCell className="text-slate-300 max-w-xs truncate text-center">
+                    <TableCell className="text-gray-600 max-w-xs truncate text-center">
                       {category.description}
                     </TableCell>
-                    <TableCell className="text-slate-400 text-center">
-                      {new Date(category.createdAt).toLocaleDateString(
-                        "ar-EG",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        },
-                      )}
+                    <TableCell className="text-gray-500 text-center">
+                      <div className="space-y-1">
+                        <p> {formatDateTime(category.createdOn)}</p>
+                        <p className="text-xs text-gray-400">
+                          {timeAgo(category.createdOn)}
+                        </p>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -281,7 +275,7 @@ const LawCategoriesManagement = () => {
                           dir="rtl"
                           checked={category.isActive}
                           onCheckedChange={() =>
-                            ToggleActivityMutation.mutate({
+                            toggleMutation.mutate({
                               id: category.id,
                               data: {
                                 name: category.name,
@@ -292,10 +286,21 @@ const LawCategoriesManagement = () => {
                           }
                         />
                         <span
-                          className={`text-sm ${category.isActive ? "text-green-400" : "text-slate-500"}`}
+                          className={`text-sm ${category.isActive ? "text-green-400" : "text-gray-700"}`}
                         >
                           {category.isActive ? "مفعّل" : "معطّل"}
                         </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-gray-900 text-center font-medium">
+                      {category.numOfLawyers ?? 0}
+                    </TableCell>
+                    <TableCell className="text-gray-500 text-center">
+                      <div className="space-y-1">
+                        <p>{formatDateTime(category.updatedOn)}</p>
+                        <p className="text-xs text-gray-400">
+                          {timeAgo(category.updatedOn)}
+                        </p>
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
@@ -314,8 +319,8 @@ const LawCategoriesManagement = () => {
             </Table>
           ) : (
             <div className="text-center py-12">
-              <FolderOpen className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-              <p className="text-slate-400">لا توجد فئات مطابقة للبحث</p>
+              <FolderOpen className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500">لا توجد فئات مطابقة للبحث</p>
             </div>
           )}
         </CardContent>
@@ -323,27 +328,28 @@ const LawCategoriesManagement = () => {
 
       {/* Add Category Modal */}
       <Dialog
+        modal={false}
         open={showAddCategoryModal}
         onOpenChange={setShowAddCategoryModal}
       >
-        <DialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+        <DialogContent className="bg-white border-gray-200" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-white flex justify-center gap-2">
-              <Scale className="w-5 h-5 text-white" />
+            <DialogTitle className="text-gray-900 flex justify-center gap-2">
+              <Scale className="w-5 h-5 text-gray-900" />
               إضافة فئة قانون جديدة
             </DialogTitle>
-            <DialogDescription className="text-slate-400 text-center">
+            <DialogDescription className="text-gray-500 text-center">
               أدخل بيانات الفئة الجديدة
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label className="text-slate-300">اسم الفئة *</Label>
+              <Label className="text-gray-600">اسم الفئة *</Label>
               <Input
                 {...register("name")}
                 placeholder="مثال: القانون المدني"
-                className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 ${errors.name ? "border-red-500" : ""}`}
+                className={`bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 ${errors.name ? "border-red-500" : ""}`}
               />
               {errors.name && (
                 <p className="text-sm text-red-400">{errors.name.message}</p>
@@ -351,11 +357,11 @@ const LawCategoriesManagement = () => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">الوصف</Label>
+              <Label className="text-gray-600">الوصف</Label>
               <Textarea
                 {...register("description")}
                 placeholder="وصف موجز للفئة..."
-                className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 min-h-25"
+                className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 min-h-25"
               />
               {errors.description && (
                 <p className="text-sm text-red-400">
@@ -377,7 +383,7 @@ const LawCategoriesManagement = () => {
             </Button>
             <Button
               variant="default"
-              onClick={handleSubmit((data) => AddCategoryMutation.mutate(data))}
+              onClick={handleSubmit((data) => addMutation.mutate(data))}
             >
               <Plus className=" w-4 h-4 ml-2" />
               إضافة الفئة
@@ -391,24 +397,24 @@ const LawCategoriesManagement = () => {
         open={!!deleteConfirmId}
         onOpenChange={() => setDeleteConfirmId(null)}
       >
-        <AlertDialogContent className="bg-slate-800 border-slate-700" dir="rtl">
+        <AlertDialogContent className="bg-white border-gray-200" dir="rtl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-red-500 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-500" />
               تأكيد الحذف
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-white">
+            <AlertDialogDescription className="text-gray-900">
               هل أنت متأكد من حذف هذه الفئة؟ لا يمكن التراجع عن هذا الإجراء.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-slate-700 text-white hover:bg-slate-600">
+            <AlertDialogCancel className="bg-gray-100 text-gray-900 hover:bg-gray-200">
               إلغاء
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (deleteConfirmId) {
-                  DeleteActivityMutation.mutate({ id: deleteConfirmId });
+                  deleteMutation.mutate(deleteConfirmId);
                   setDeleteConfirmId(null);
                 }
               }}
@@ -423,4 +429,4 @@ const LawCategoriesManagement = () => {
   );
 };
 
-export default LawCategoriesManagement;
+export default SpecializationsManagement;

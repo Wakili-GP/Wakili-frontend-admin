@@ -1,4 +1,4 @@
-import httpClient from "@/lib/HttpClient";
+import httpClient from "@/services/api/HttpClient";
 
 export interface AdminLoginInput {
   email: string;
@@ -27,6 +27,7 @@ export interface AuthAdmin extends Token {
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
+  error?: string;
 }
 
 const AuthServices = {
