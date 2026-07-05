@@ -42,188 +42,12 @@ import {
 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
-type ReviewType = "SYSTEM" | "LAWYER";
-
-type UserDetails = {
-  firstName: string;
-  lastName: string;
-  profileImageUrl: string;
-  email: string;
-  phoneNumber: string;
-};
-
-type LawyerDetails = {
-  firstName: string;
-  lastName: string;
-  profileImageUrl: string;
-};
-
-type Review = {
-  id: string;
-  userId: string;
-  lawyerId: string;
-  appointmentId: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
-  type: ReviewType;
-  appointmentDate: string;
-  status: "visible" | "hidden";
-  statusChangedBy?: string;
-  statusChangedAt?: string;
-  aiAnalysis: {
-    isFlagged: boolean;
-    confidence: number;
-    summary: string;
-  };
-  client: UserDetails;
-  lawyer?: LawyerDetails;
-};
-
-const mockReviews: Review[] = [
-  {
-    id: "3fa85f64-5717-4562-b3fc-2c963f66afa1",
-    userId: "usr-1",
-    lawyerId: "law-1",
-    appointmentId: "app-1",
-    rating: 5,
-    comment: "محامي ممتاز ومتعاون جداً. أنصح به بشدة لأي شخص يحتاج استشارة قانونية.",
-    createdAt: "2024-01-15T10:30:00Z",
-    type: "LAWYER",
-    appointmentDate: "2024-01-14T09:00:00Z",
-    status: "visible",
-    aiAnalysis: {
-      isFlagged: false,
-      confidence: 0.95,
-      summary: "تعليق إيجابي يمدح المحامي ويوصي به."
-    },
-    client: {
-      firstName: "محمد",
-      lastName: "أحمد",
-      profileImageUrl: "https://i.pravatar.cc/150?u=1",
-      email: "mohammed@example.com",
-      phoneNumber: "+966501234567"
-    },
-    lawyer: {
-      firstName: "أحمد",
-      lastName: "علي",
-      profileImageUrl: "https://i.pravatar.cc/150?u=law1"
-    }
-  },
-  {
-    id: "3fa85f64-5717-4562-b3fc-2c963f66afa2",
-    userId: "usr-2",
-    lawyerId: "law-2",
-    appointmentId: "app-2",
-    rating: 4,
-    comment: "المنصة سهلة الاستخدام جدا والتجربة ممتازة",
-    createdAt: "2024-01-14T15:45:00Z",
-    type: "SYSTEM",
-    appointmentDate: "2024-01-12T11:00:00Z",
-    status: "visible",
-    statusChangedBy: "سارة (مشرف)",
-    statusChangedAt: "2024-01-16T10:00:00Z",
-    aiAnalysis: {
-      isFlagged: false,
-      confidence: 0.98,
-      summary: "تقييم إيجابي للنظام وسهولة الاستخدام."
-    },
-    client: {
-      firstName: "فاطمة",
-      lastName: "حسن",
-      profileImageUrl: "https://i.pravatar.cc/150?u=2",
-      email: "fatima@example.com",
-      phoneNumber: "+966501234568"
-    }
-  },
-  {
-    id: "3fa85f64-5717-4562-b3fc-2c963f66afa3",
-    userId: "usr-3",
-    lawyerId: "law-3",
-    appointmentId: "app-3",
-    rating: 1,
-    comment: "هذا المحتوى يحتوي على كلمات غير لائقة وإساءة شخصية للمحامي.",
-    createdAt: "2024-01-13T08:15:00Z",
-    type: "LAWYER",
-    appointmentDate: "2024-01-10T14:30:00Z",
-    status: "hidden",
-    aiAnalysis: {
-      isFlagged: true,
-      confidence: 0.99,
-      summary: "يحتوي التعليق على لغة مسيئة أو غير لائقة موجهة للمحامي."
-    },
-    client: {
-      firstName: "علي",
-      lastName: "محمود",
-      profileImageUrl: "https://i.pravatar.cc/150?u=3",
-      email: "ali@example.com",
-      phoneNumber: "+966501234569"
-    },
-    lawyer: {
-      firstName: "خالد",
-      lastName: "عبدالله",
-      profileImageUrl: "https://i.pravatar.cc/150?u=law3"
-    }
-  },
-  {
-    id: "3fa85f64-5717-4562-b3fc-2c963f66afa4",
-    userId: "usr-4",
-    lawyerId: "law-1",
-    appointmentId: "app-4",
-    rating: 3,
-    comment: "التطبيق يحتاج إلى بعض التحسينات في سرعة التحميل",
-    createdAt: "2024-01-12T19:20:00Z",
-    type: "SYSTEM",
-    appointmentDate: "2024-01-11T16:00:00Z",
-    status: "hidden",
-    aiAnalysis: {
-      isFlagged: false,
-      confidence: 0.85,
-      summary: "ملاحظة نقدية بناءة بخصوص أداء التطبيق."
-    },
-    client: {
-      firstName: "منى",
-      lastName: "إبراهيم",
-      profileImageUrl: "https://i.pravatar.cc/150?u=4",
-      email: "mona@example.com",
-      phoneNumber: "+966501234570"
-    }
-  },
-  {
-    id: "3fa85f64-5717-4562-b3fc-2c963f66afa5",
-    userId: "usr-5",
-    lawyerId: "law-4",
-    appointmentId: "app-5",
-    rating: 5,
-    comment: "خدمة رائعة جدا",
-    createdAt: "2024-01-18T19:20:00Z",
-    type: "LAWYER",
-    appointmentDate: "2024-01-17T16:00:00Z",
-    status: "visible",
-    aiAnalysis: {
-      isFlagged: false,
-      confidence: 0.99,
-      summary: "تعليق قصير وإيجابي جداً."
-    },
-    client: {
-      firstName: "سعيد",
-      lastName: "صالح",
-      profileImageUrl: "https://i.pravatar.cc/150?u=5",
-      email: "saeed@example.com",
-      phoneNumber: "+966501234571"
-    },
-    lawyer: {
-      firstName: "سارة",
-      lastName: "محمود",
-      profileImageUrl: "https://i.pravatar.cc/150?u=law4"
-    }
-  }
-];
+import { type Review, reviewsService } from "../services/reviews-service";
 
 const ITEMS_PER_PAGE = 10;
 
 const ReviewModeration = () => {
-  const [reviews, setReviews] = useState<Review[]>(mockReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
@@ -231,16 +55,25 @@ const ReviewModeration = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("ALL");
   const [aiFilter, setAiFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState("recent");
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    setTimeout(() => {
+  const fetchReviews = async () => {
+    try {
+      setIsLoading(true);
+      const data = await reviewsService.getAllReviews();
+      setReviews(data);
+    } catch (error) {
+      toast.error("حدث خطأ أثناء جلب التقييمات");
+    } finally {
       setIsLoading(false);
-    }, 600);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
   }, []);
 
   const filteredReviews = useMemo(() => {
@@ -250,13 +83,13 @@ const ReviewModeration = () => {
         clientFullName.includes(searchQuery) ||
         review.comment.includes(searchQuery);
 
-      const matchesTab = activeTab === "all" || review.status === activeTab;
-      const matchesType = typeFilter === "ALL" || review.type === typeFilter;
+      const matchesTab = activeTab === "all" || review.visibility.toLowerCase() === activeTab;
       const matchesAi = aiFilter === "ALL" ||
-        (aiFilter === "FLAGGED" && review.aiAnalysis?.isFlagged) ||
-        (aiFilter === "CLEAN" && !review.aiAnalysis?.isFlagged);
+        (aiFilter === "COMPLETED" && review.aiStatus === "Completed") ||
+        (aiFilter === "PENDING" && review.aiStatus === "Pending") ||
+        (aiFilter === "FAILED" && review.aiStatus === "Failed");
 
-      return matchesSearch && matchesTab && matchesType && matchesAi;
+      return matchesSearch && matchesTab && matchesAi;
     });
 
     if (sortBy === "recent") {
@@ -270,7 +103,7 @@ const ReviewModeration = () => {
     }
 
     return result;
-  }, [reviews, searchQuery, activeTab, typeFilter, aiFilter, sortBy]);
+  }, [reviews, searchQuery, activeTab, aiFilter, sortBy]);
 
   const totalPages = Math.ceil(filteredReviews.length / ITEMS_PER_PAGE);
   const paginatedReviews = filteredReviews.slice(
@@ -280,22 +113,44 @@ const ReviewModeration = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, activeTab, typeFilter, aiFilter, sortBy]);
+  }, [searchQuery, activeTab, aiFilter, sortBy]);
 
-  const handleHide = (id: string) => {
-    setReviews((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "hidden", statusChangedBy: "المشرف الحالي", statusChangedAt: new Date().toISOString() } : r)),
-    );
-    setDetailsDialogOpen(false);
-    toast.success("تم إخفاء المراجعة");
+  const handleHide = async (id: string) => {
+    try {
+      await reviewsService.hideReview(id);
+      toast.success("تم إخفاء المراجعة");
+      setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, visibility: "Hidden" } : r)));
+      if (selectedReview?.id === id) {
+        setSelectedReview({ ...selectedReview, visibility: "Hidden" });
+      }
+      setDetailsDialogOpen(false);
+    } catch (error) {
+      toast.error("فشل في إخفاء المراجعة");
+    }
   };
 
-  const handleShow = (id: string) => {
-    setReviews((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "visible", statusChangedBy: "المشرف الحالي", statusChangedAt: new Date().toISOString() } : r)),
-    );
-    setDetailsDialogOpen(false);
-    toast.success("تم إظهار المراجعة");
+  const handleShow = async (id: string) => {
+    try {
+      await reviewsService.approveReview(id);
+      toast.success("تم إظهار المراجعة");
+      setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, visibility: "Visible" } : r)));
+      if (selectedReview?.id === id) {
+        setSelectedReview({ ...selectedReview, visibility: "Visible" });
+      }
+      setDetailsDialogOpen(false);
+    } catch (error) {
+      toast.error("فشل في إظهار المراجعة");
+    }
+  };
+
+  const handleRetryModeration = async (id: string) => {
+    try {
+      await reviewsService.retryModeration(id);
+      toast.success("تم إعادة طلب فحص الذكاء الاصطناعي");
+      fetchReviews(); // Refresh fully to get new statuses
+    } catch (error) {
+      toast.error("فشل في إعادة فحص الذكاء الاصطناعي");
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -373,7 +228,7 @@ const ReviewModeration = () => {
             <Monitor className="w-6 h-6 text-purple-500" />
             <div>
               <p className="text-2xl font-bold text-gray-900">
-                {reviews.filter((r) => r.type === "SYSTEM").length}
+                0
               </p>
               <p className="text-sm text-gray-500">مراجعات النظام</p>
             </div>
@@ -385,7 +240,7 @@ const ReviewModeration = () => {
             <Scale className="w-6 h-6 text-amber-500" />
             <div>
               <p className="text-2xl font-bold text-gray-900">
-                {reviews.filter((r) => r.type === "LAWYER").length}
+                {reviews.length}
               </p>
               <p className="text-sm text-gray-500">مراجعات المحامين</p>
             </div>
@@ -397,7 +252,7 @@ const ReviewModeration = () => {
             <EyeOff className="w-6 h-6 text-gray-500" />
             <div>
               <p className="text-2xl font-bold text-gray-900">
-                {reviews.filter((r) => r.status === "hidden").length}
+                {reviews.filter((r) => r.visibility === "Hidden").length}
               </p>
               <p className="text-sm text-gray-500">مخفية</p>
             </div>
@@ -427,16 +282,7 @@ const ReviewModeration = () => {
               />
             </div>
 
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full md:w-[140px] bg-white">
-                <SelectValue placeholder="نوع المراجعة" />
-              </SelectTrigger>
-              <SelectContent >
-                <SelectItem value="ALL">كل الأنواع</SelectItem>
-                <SelectItem value="SYSTEM">نظام</SelectItem>
-                <SelectItem value="LAWYER">محامي</SelectItem>
-              </SelectContent>
-            </Select>
+
 
             <Select value={aiFilter} onValueChange={setAiFilter}>
               <SelectTrigger className="w-full md:w-[150px] bg-white">
@@ -444,8 +290,9 @@ const ReviewModeration = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">الكل (AI)</SelectItem>
-                <SelectItem value="FLAGGED">مُبلغ عنها (AI)</SelectItem>
-                <SelectItem value="CLEAN">سليمة (AI)</SelectItem>
+                <SelectItem value="COMPLETED">مكتملة</SelectItem>
+                <SelectItem value="PENDING">قيد المعالجة</SelectItem>
+                <SelectItem value="FAILED">فشلت</SelectItem>
               </SelectContent>
             </Select>
 
@@ -505,16 +352,13 @@ const ReviewModeration = () => {
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className={`cursor-pointer transition-colors ${review.type === "SYSTEM"
-                          ? "border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100"
-                          : "border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100"
-                          }`}
+                        className="cursor-pointer transition-colors border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100"
                         onClick={() => {
                           setSelectedReview(review);
                           setDetailsDialogOpen(true);
                         }}
                       >
-                        {review.type === "SYSTEM" ? "نظام" : "محامي"}
+                        محامي
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -524,15 +368,25 @@ const ReviewModeration = () => {
                       {review.comment}
                     </TableCell>
                     <TableCell>
-                      {review.aiAnalysis?.isFlagged ? (
+                      {review.aiStatus === "Failed" ? (
+                        <Badge variant="destructive" className="bg-red-50 text-red-600 border-red-200">
+                          <Flag className="w-3 h-3 ml-1" />
+                          فشل
+                        </Badge>
+                      ) : review.visibility === "Hidden" ? (
                         <Badge variant="destructive" className="bg-red-50 text-red-600 border-red-200">
                           <Flag className="w-3 h-3 ml-1" />
                           مُبلغ
                         </Badge>
-                      ) : (
+                      ) : review.visibility === "Visible" ? (
                         <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200">
                           <CheckCircle className="w-3 h-3 ml-1" />
                           سليمة
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">
+                          <Loader className="w-3 h-3 ml-1 animate-spin" />
+                          قيد المعالجة
                         </Badge>
                       )}
                     </TableCell>
@@ -540,8 +394,8 @@ const ReviewModeration = () => {
                       {formatDate(review.createdAt)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={getStatusBadgeStyles(review.status)}>
-                        {getStatusLabel(review.status)}
+                      <Badge variant="outline" className={getStatusBadgeStyles(review.visibility.toLowerCase())}>
+                        {getStatusLabel(review.visibility.toLowerCase())}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -611,10 +465,10 @@ const ReviewModeration = () => {
       </Card>
 
       {/* Full Details Modal */}
-      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen} modal={false}>
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         <DialogContent className="bg-white border-gray-200 sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-gray-900 border-b pb-4">تفاصيل تقييم {selectedReview?.type === "SYSTEM" ? "النظام" : "المحامي"}</DialogTitle>
+            <DialogTitle className="text-gray-900 border-b pb-4">تفاصيل تقييم المحامي</DialogTitle>
           </DialogHeader>
 
           {selectedReview && (
@@ -641,19 +495,19 @@ const ReviewModeration = () => {
               <div className="border-t pt-4">
                 <h4 className="font-semibold text-gray-900 mb-2">بيانات العميل</h4>
                 <div className="flex items-start gap-3 bg-gray-50 p-3 rounded-md">
-                  <img src={selectedReview.client.profileImageUrl} alt="client" className="w-12 h-12 rounded-full object-cover" />
+                  <img src={selectedReview.client.profileImageUrl || undefined} alt="client" className="w-12 h-12 rounded-full object-cover bg-gray-200" />
                   <div>
                     <p className="font-medium text-gray-900">{selectedReview.client.firstName} {selectedReview.client.lastName}</p>
-                    <p className="text-sm text-gray-500" dir="ltr">{selectedReview.client.email} • {selectedReview.client.phoneNumber}</p>
+                    <p className="text-sm text-gray-500" dir="ltr">{selectedReview.client.email || ""} • {selectedReview.client.phoneNumber || ""}</p>
                   </div>
                 </div>
               </div>
 
-              {selectedReview.type === "LAWYER" && selectedReview.lawyer && (
+              {selectedReview.lawyer && (
                 <div className="border-t pt-4">
                   <h4 className="font-semibold text-gray-900 mb-2">بيانات المحامي</h4>
                   <div className="flex items-start gap-3 bg-gray-50 p-3 rounded-md">
-                    <img src={selectedReview.lawyer.profileImageUrl} alt="lawyer" className="w-12 h-12 rounded-full object-cover" />
+                    <img src={selectedReview.lawyer.profileImageUrl || undefined} alt="lawyer" className="w-12 h-12 rounded-full object-cover bg-gray-200" />
                     <div>
                       <p className="font-medium text-gray-900">{selectedReview.lawyer.firstName} {selectedReview.lawyer.lastName}</p>
                     </div>
@@ -664,10 +518,6 @@ const ReviewModeration = () => {
               <div className="border-t pt-4">
                 <h4 className="font-semibold text-gray-900 mb-2">معلومات التقييم والموعد</h4>
                 <div className="bg-blue-50/50 p-3 rounded-md space-y-2 text-sm border border-blue-100">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">وقت وتاريخ الموعد:</span>
-                    <span className="font-medium text-gray-900">{formatDate(selectedReview.appointmentDate)}</span>
-                  </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">تاريخ التقييم:</span>
                     <span className="font-medium text-gray-900">{formatDate(selectedReview.createdAt)}</span>
@@ -685,11 +535,11 @@ const ReviewModeration = () => {
 
               <div className="border-t pt-4">
                 <h4 className="font-semibold text-gray-900 mb-2">تحليل الذكاء الاصطناعي</h4>
-                <div className={`${selectedReview.aiAnalysis?.isFlagged ? "bg-red-50/50 border-red-100" : "bg-emerald-50/50 border-emerald-100"} p-3 rounded-md space-y-2 text-sm border`}>
+                <div className={`${selectedReview.visibility === "Hidden" ? "bg-red-50/50 border-red-100" : "bg-emerald-50/50 border-emerald-100"} p-3 rounded-md space-y-2 text-sm border`}>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">حالة التقييم:</span>
                     <span>
-                      {selectedReview.aiAnalysis?.isFlagged ? (
+                      {selectedReview.visibility === "Hidden" ? (
                         <span className="text-red-600 flex items-center text-xs font-medium"><Flag className="w-3 h-3 ml-1" />مُبلغ عنها</span>
                       ) : (
                         <span className="text-emerald-600 flex items-center text-xs font-medium"><CheckCircle className="w-3 h-3 ml-1" />سليمة</span>
@@ -698,17 +548,25 @@ const ReviewModeration = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">نسبة الثقة (Confidence):</span>
-                    <span className="font-medium text-gray-900">{((selectedReview.aiAnalysis?.confidence || 0) * 100).toFixed(0)}%</span>
+                    <span className="font-medium text-gray-900">{((selectedReview.aiConfidenceRate || 0) * 100).toFixed(0)}%</span>
                   </div>
                   <div className="pt-2 border-t border-gray-100/50">
                     <span className="block text-gray-600 mb-1">ملخص التحليل (Summary):</span>
-                    <p className="text-gray-900">{selectedReview.aiAnalysis?.summary || "لا يوجد تحليل متاح."}</p>
+                    <p className="text-gray-900">{selectedReview.aiComment || "لا يوجد تحليل متاح."}</p>
                   </div>
                 </div>
               </div>
 
               <DialogFooter className="flex gap-2 flex-col sm:flex-row mt-6 pt-4 border-t border-gray-100">
-                {selectedReview.status === "visible" ? (
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  onClick={() => handleRetryModeration(selectedReview.id)}
+                >
+                  إعادة فحص AI
+                </Button>
+                
+                {selectedReview.visibility === "Visible" ? (
                   <Button
                     variant="outline"
                     className="w-full sm:w-auto"
