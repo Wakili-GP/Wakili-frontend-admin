@@ -89,6 +89,17 @@ export interface VerificationRequest {
   verification: Verification;
 }
 
+const mapStatus = (status: string | number): "Pending" | "UnderReview" | "Approved" | "Rejected" | "Disabled" => {
+  const map: Record<string, any> = {
+    "0": "Pending",
+    "1": "UnderReview",
+    "2": "Approved",
+    "3": "Rejected",
+    "4": "Disabled"
+  };
+  return map[String(status)] || status;
+};
+
 const BASE = "Lawyers/lawyer-verification";
 const verificationService = {
   // status: 0 = Pending, 1 = UnderReview, 2 = Approved, 3 = Rejected
@@ -114,8 +125,12 @@ const verificationService = {
         DateFilter: DateFilter !== undefined ? DateFilter : undefined,
       },
     });
-    console.log("Verification Requests Response:", response.data.data);
-    return response.data.data;
+    const data = response.data.data;
+    if (data.items) {
+      data.items = data.items.map((item) => ({ ...item, status: mapStatus(item.status) }));
+    }
+    console.log("Verification Requests Response:", data);
+    return data;
   },
   getVerificationRequestById: async (
     id: string,
@@ -123,8 +138,10 @@ const verificationService = {
     const response = await httpClient.get<ApiResponse<VerificationRequest>>(
       `${BASE}/${id}`,
     );
-    console.log("Verification Request Response:", response.data);
-    return response.data.data;
+    const data = response.data.data;
+    data.status = mapStatus(data.status);
+    console.log("Verification Request Response:", data);
+    return data;
   },
 
   rejectVerificationRequest: async (id: string, reason: string) => {
