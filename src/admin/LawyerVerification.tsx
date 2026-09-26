@@ -41,6 +41,7 @@ import {
   FolderOpen,
   ChevronLeft,
   ChevronRight,
+  EyeOff,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import verificationService from "@/services/verification-service";
@@ -64,7 +65,7 @@ const LawyerVerification = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(8);
 
-  // status: 0 = Pending, 1 = UnderReview, 2 = Approved, 3 = Rejected
+  // status: 0 = Pending, 1 = UnderReview, 2 = Approved, 3 = Rejected, 4 = Disabled
   const [statusFilter, setStatusFilter] = useState("all");
   const statusMap: Record<string, number | undefined> = {
     all: undefined,
@@ -72,6 +73,7 @@ const LawyerVerification = () => {
     underReview: 1,
     approved: 2,
     rejected: 3,
+    disabled: 4,
   };
 
   // DateFilter: 0 = All, 1 = Last 24 hours, 2 = Last 7 days, 3 = Last 30 days, 4 = Last Year
@@ -112,6 +114,21 @@ const LawyerVerification = () => {
     queryFn: () =>
       verificationService.getVerificationRequestById(selectedRequestId!),
     enabled: !!selectedRequestId,
+  });
+
+  const disableMutation = useMutation({
+    mutationFn: (requestId: string) =>
+      verificationService.disableVerificationRequest(requestId),
+    onSuccess: () => {
+      setSelectedRequestId(null);
+      toast.success("تم إيقاف ظهور المحامي بنجاح");
+      queryClient.invalidateQueries({ queryKey: ["verificationRequests"] });
+    },
+    onError: () => {
+      toast.error("تعذر إيقاف المحامي", {
+        description: "حدث خطأ أثناء تنفيذ الطلب، يرجى المحاولة مرة أخرى",
+      });
+    },
   });
 
   const rejectMutation = useMutation({
@@ -172,7 +189,7 @@ const LawyerVerification = () => {
         <p className="text-gray-500 mt-1">إدارة طلبات توثيق حسابات المحامين</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <Card className="bg-blue-500/10 border-blue-500/20">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
@@ -238,6 +255,19 @@ const LawyerVerification = () => {
             </div>
           </CardContent>
         </Card>
+        <Card className="bg-slate-500/10 border-slate-500/20">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-slate-500/20 flex items-center justify-center">
+              <EyeOff className="w-6 h-6 text-slate-400" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">
+                {requests?.meta.disabled ?? 0}
+              </p>
+              <p className="text-sm text-gray-500">معطلة</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="bg-white border-gray-200 shadow-sm">
@@ -283,6 +313,9 @@ const LawyerVerification = () => {
                 </SelectItem>
                 <SelectItem className="cursor-pointer" value="rejected">
                   مرفوض
+                </SelectItem>
+                <SelectItem className="cursor-pointer" value="disabled">
+                  معطل
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -464,15 +497,19 @@ const LawyerVerification = () => {
                               </p>
                             </>
                           )}
+                          {request.status === "Disabled" && (
+                            <p className="text-slate-400">معطل</p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell
-                        className={`${request.status === "Approved" ? "text-emerald-400" : request.status === "UnderReview" ? "text-amber-400" : request.status === "Rejected" ? "text-red-400" : "text-gray-500"} text-center`}
+                        className={`${request.status === "Approved" ? "text-emerald-400" : request.status === "UnderReview" ? "text-amber-400" : request.status === "Rejected" ? "text-red-400" : request.status === "Disabled" ? "text-slate-400" : "text-gray-500"} text-center`}
                       >
                         {request.status === "Approved" &&
                           "تمت الموافقة بواسطة: " + request.approvedBy}
                         {request.status === "UnderReview" && "قيد المراجعة"}{" "}
                         {request.status === "Pending" && "غير مكتمل بعد"}
+                        {request.status === "Disabled" && "تم الإيقاف بواسطة الإدارة"}
                         {request.status === "Rejected" &&
                           "تمت الرفض بواسطة: " + request.rejectedBy}
                       </TableCell>
@@ -1051,9 +1088,38 @@ const LawyerVerification = () => {
                 )}
 
                 {viewRequest.status === "Approved" && (
-                  <DialogFooter className="gap-2">
-                    <p className="text-emerald-400 text-sm w-full text-center">
-                      تم توثيق هذا الطلب بالفعل.
+                  <DialogFooter className="gap-2 justify-center w-full">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (selectedRequestId) {
+                          disableMutation.mutate(selectedRequestId);
+                        }
+                      }}
+                      disabled={disableMutation.isPending}
+                      className="border-slate-500/20 text-slate-500 hover:bg-slate-500/10"
+                    >
+                      <EyeOff className="w-4 h-4 ml-2" />
+                      {disableMutation.isPending ? "جاري الإيقاف..." : "إيقاف الظهور"}
+                    </Button>
+                  </DialogFooter>
+                )}
+
+                {viewRequest.status === "Disabled" && (
+                  <DialogFooter className="gap-2 justify-center w-full">
+                    <Button
+                      onClick={() =>
+                        selectedRequestId &&
+                        approveMutation.mutate(selectedRequestId)
+                      }
+                      disabled={approveMutation.isPending}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-gray-900"
+                    >
+                      <CheckCircle className="w-4 h-4 ml-2" />
+                      {approveMutation.isPending ? "جاري التفعيل..." : "إعادة تفعيل الظهور"}
+                    </Button>
+                    <p className="text-slate-400 text-sm w-full text-center mt-2">
+                      تم تعطيل هذا المحامي من الظهور.
                     </p>
                   </DialogFooter>
                 )}
@@ -1136,6 +1202,12 @@ const getVerificatoinStatusBadge = (status: string) => {
       return (
         <Badge className="bg-red-500/10 text-red-400 border-red-500/20">
           مرفوض
+        </Badge>
+      );
+    case "Disabled":
+      return (
+        <Badge className="bg-slate-500/10 text-slate-400 border-slate-500/20">
+          معطل
         </Badge>
       );
     default:

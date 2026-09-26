@@ -12,7 +12,7 @@ export interface VerificationFace {
   specializations: string[];
   profileImageUrl: string;
   submittedAt: string | null;
-  status: "Pending" | "UnderReview" | "Approved" | "Rejected";
+  status: "Pending" | "UnderReview" | "Approved" | "Rejected" | "Disabled";
   approvedBy: string | null;
   approvedAt: string | null;
   rejectedBy: string | null;
@@ -25,6 +25,7 @@ export interface Meta {
   underReview: number;
   approved: number;
   rejected: number;
+  disabled: number;
 }
 export interface VerificationRequestsTable {
   items: VerificationFace[];
@@ -73,7 +74,7 @@ export interface VerificationRequest {
   phone: string;
   specialty: string[];
   submittedAt: string;
-  status: "Pending" | "UnderReview" | "Approved" | "Rejected";
+  status: "Pending" | "UnderReview" | "Approved" | "Rejected" | "Disabled";
   profileImage: string | null;
   bio: string;
   location: {
@@ -131,6 +132,9 @@ const verificationService = {
   },
   approveVerificationRequest: async (id: string) => {
     await httpClient.put(`Lawyers/verify/approve/${id}`);
+  },
+  disableVerificationRequest: async (id: string) => {
+    await httpClient.put(`Lawyers/verify/disable/${id}`);
   },
 };
 export default verificationService;

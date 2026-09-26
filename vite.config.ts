@@ -14,8 +14,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://wakili.runasp.net",
+        target: "http://localhost:5133",
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path,
         timeout: 100000,
       },
