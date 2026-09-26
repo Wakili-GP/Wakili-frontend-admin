@@ -1,0 +1,24 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://wakili.runasp.net/api/:path*"
+    },
+    {
+      "source": "/hubs/:path*",
+      "destination": "http://wakili.runasp.net/hubs/:path*"
+    },
+    {
+      "source": "/chatbot-api/:path*",
+      "destination": "https://mayarwaleedd12--wakili-api-fastapi-app.modal.run/:path*"
+    },
+    {
+      "source": "/review-api/:path*",
+      "destination": "https://nouraelkashif83--legal-ai-auditor-api.modal.run/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
