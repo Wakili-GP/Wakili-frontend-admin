@@ -71,6 +71,11 @@ const navItems = [
     label: "كشوفات الرواتب",
     icon: FileText,
   },
+  {
+    path: "/appointments",
+    label: "إدارة المواعيد",
+    icon: FileText, // or Clock/Calendar
+  },
 ];
 
 const AdminLayout = () => {

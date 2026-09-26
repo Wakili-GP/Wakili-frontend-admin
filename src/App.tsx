@@ -14,6 +14,7 @@ import ForumsManagement from "./admin/ForumsManagement";
 import AdminEarnings from "./admin/AdminEarnings";
 import AdminPayrolls from "./admin/AdminPayrolls";
 import AdminPayrollDetails from "./admin/AdminPayrollDetails";
+import AppointmentsManagement from "./admin/AppointmentsManagement";
 import "./App.css";
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
             <Route path="earnings" element={<AdminEarnings />} />
             <Route path="payrolls" element={<AdminPayrolls />} />
             <Route path="payrolls/:id" element={<AdminPayrollDetails />} />
+            <Route path="appointments" element={<AppointmentsManagement />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
